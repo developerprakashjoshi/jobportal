@@ -1,0 +1,76 @@
+#GET RECAPTCHA
+GET https://identitytoolkit.googleapis.com/v1/recaptchaParams?key={{FIREBASE_API_KEY}}
+
+###SEND MESSAGE
+POST https://www.googleapis.com/identitytoolkit/v3/relyingparty/sendVerificationCode?key={{FIREBASE_API_KEY}}
+content-type: application/json
+
+{
+    "phoneNumber": "+918828297694", 
+    "recaptchaToken": "xCZ0VDlMBGV3VbXmF5jbUSN1P94arYiAOFATPToM01IHVo_6OTVomw1vwCBlT_Nh_8FTRL9qZjlCSyei6ygaYO2_aORHQBjgnDjFNjF04DM"
+}
+
+###VERIFY OTP
+POST https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPhoneNumber?key={{FIREBASE_API_KEY}}
+content-type: application/json
+
+{
+    "code": "123456", 
+    "sessionInfo": "AHTqx5Y9IaUh4cyfZHQaxT3CuRWxgLJS9iGl07jcJOLGtwyzqxryn5y8_adOgZaZk0hjSHsC-boRE5F9f_wJWmeLooXHGzIy875hm4r_uD1IxW4cGx9anZ1R90jYf8d6hCvqrv650pYjAVBD8oQ1tDfNaa6BtkTa4w"
+}
+
+### Get all users
+GET {{API_HOST}}/users
+Authorization: Bearer {{API_KEY}}
+
+### Get a user by id
+GET {{API_HOST}}/users/1
+Authorization: Bearer {{API_KEY}}
+
+### Create a user
+POST {{API_HOST}}/users
+content-type: application/json
+Authorization: Bearer {{API_KEY}}
+
+{
+    "first_name": "Kite19",
+    "last_name": "william",
+    "email": "kite19@gmail.com",
+    "password": "apple",
+    "age": "77",
+    "type": "12",
+    "profile": {
+        "id": 1,
+        "gender": "M",
+        "photo": "SKY"
+    }
+}
+
+### Update a user
+PATCH {{API_HOST}}/users/1
+content-type: application/json
+Authorization: Bearer {{API_KEY}}
+
+{
+    "first_name": "Kite19",
+    "last_name": "william",
+    "email": "kite19@gmail.com",
+    "password": "apple",
+    "age": "77",
+    "type": "12",
+    "profile": {
+        "id": 1,
+        "gender": "M",
+        "photo": "SKY"
+    }
+}
+
+### Delete a user by id
+DELETE {{API_HOST}}/users/1
+
+### Get demo
+GET {{API_HOST}}/demo
+
+### Get test
+GET {{API_HOST}}/test
+Authorization: Bearer {{API_KEY}}

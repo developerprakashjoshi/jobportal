@@ -1,0 +1,59 @@
+
+GET {{API_HOST}}/users/count
+Authorization: Bearer {{API_KEY}}
+
+### Get all users
+GET {{API_HOST}}/users
+Authorization: Bearer {{API_KEY}}
+
+### Get a user by id
+GET {{API_HOST}}/users/1
+Authorization: Bearer {{API_KEY}}
+
+### Create a user
+POST {{API_HOST}}/users
+content-type: application/json
+Authorization: Bearer {{API_KEY}}
+
+{
+    "first_name": "Kite19",
+    "last_name": "william",
+    "email": "kite19@gmail.com",
+    "password": "apple",
+    "age": "77",
+    "type": "12",
+    "profile": {
+        "id": 1,
+        "gender": "M",
+        "photo": "SKY"
+    }
+}
+
+### Update a user
+PATCH {{API_HOST}}/users/1
+content-type: application/json
+Authorization: Bearer {{API_KEY}}
+
+{
+    "first_name": "Kite19",
+    "last_name": "william",
+    "email": "kite19@gmail.com",
+    "password": "apple",
+    "age": "77",
+    "type": "12",
+    "profile": {
+        "id": 1,
+        "gender": "M",
+        "photo": "SKY"
+    }
+}
+
+### Delete a user by id
+DELETE {{API_HOST}}/users/1
+
+### Get demo
+GET {{API_HOST}}/demo
+
+### Get test
+GET {{API_HOST}}/test
+Authorization: Bearer {{API_KEY}}
