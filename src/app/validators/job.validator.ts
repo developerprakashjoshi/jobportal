@@ -26,7 +26,7 @@ export const createJob=Joi.object({
     educationLevel:Joi.number().required(),
     yearOfExperience:Joi.number().required(),
     createdBy:Joi.string().required(),
-    status:Joi.number().required(),
+    status:Joi.string().required(),
 
 
 }).options({ abortEarly: false })
@@ -58,9 +58,10 @@ export const updateJob=Joi.object({
     educationLevel:Joi.number().optional(),
     yearOfExperience:Joi.number().optional(),
     updatedBy:Joi.string().required(),
+    status:Joi.string().optional(),
 }).options({ abortEarly: false })
 
 export const deleteJob=Joi.object({
     id:Joi.string().required(),
-    delete_by:Joi.string().required()
+    deleteBy:Joi.string().required()
 })

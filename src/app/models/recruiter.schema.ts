@@ -1,7 +1,11 @@
-import { Schema, Document, model } from 'mongoose';
+import mongoose,{ Schema, Document, model } from 'mongoose';
 
 
 export enum IsHire {
+  Active = 1,
+  Inactive = 0,
+}
+export enum recruiterStatus {
   Active = 1,
   Inactive = 0,
 }
@@ -11,17 +15,21 @@ export interface IRecruiter extends Document {
   firstName:string,
   LastName:string,
   email:string,
+  company:string,
+  job:string,
   password:string,
-  confirmPassword:string,
   phoneNumber:number,
   companyName:string,
   employeeSize:number,
   selectIndustry:string,
   yourDesignation:string,
+  termConditions :boolean,
+  companyLocation:string,
   isHiringManager:IsHire,
+  status:recruiterStatus,
   
   createdAt: Date;
-  createdBy: String;
+  createdBy: Number;
   createdFrom?: String;
 
   updatedAt: Date;
@@ -35,17 +43,31 @@ export interface IRecruiter extends Document {
 
 const RecruiterSchema: Schema = new Schema({
   
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company', // Referencing the User model
+  },
+  job: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'job', // Referencing the User model
+  },
+  // apply: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: 'apply', // Referencing the User model
+  // },
   firstName:{type:String},
   LastName:{type:String},
   email:{type:String},
   password:{type:String},
-  confirmPassword:{type:String},
   phoneNumber:{type:Number},
   companyName:{type:String},
   employeeSize:{type:Number},
   selectIndustry:{type:String},
   yourDesignation:{type:String},
+  termConditions :{type:Boolean},
+  companyLocation :{type:String},
   isHiringManager:{type:Number,enum:[0,1],default:0},
+  status:{type:Number,enum:[0,1],default:0},
   
 
   createdAt: { type: Date},
@@ -57,7 +79,7 @@ const RecruiterSchema: Schema = new Schema({
   updateFrom: { type: String },
 
   deletedAt: { type: Date },
-  deleteBy: { type: String},
+  deleteBy: { type: Number},
   deleteFrom: { type: String },
   
 });

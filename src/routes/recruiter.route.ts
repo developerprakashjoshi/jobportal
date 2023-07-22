@@ -6,6 +6,7 @@ import {createRecruiter,updateRecruiter,deleteRecruiter} from "@validators/recru
 const route=express.Router();
 
 route.get('/datatable',RecruiterController.datatable)
+route.get('/company-name',RecruiterController.getCompanyName)
 route.get('/count',RecruiterController.count)
 route.get('/',RecruiterController.getRecruiters)
 route.get('/:id',RecruiterController.getRecruiter)

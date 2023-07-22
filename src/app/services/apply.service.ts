@@ -2,8 +2,6 @@ import AppDataSource from '@config/mongoose';
 import Service from '@libs/service';
 import Response from '@libs/response';
 import Apply from '@models/apply.schema';
-import User from '@models/user.schema';
-// import Post from '@models/post.schema';
 import SearchEngine from '@libs/meili.search';
 import { ObjectId } from 'mongodb';
 import moment from 'moment';

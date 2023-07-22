@@ -26,6 +26,12 @@ export default class InterviewController extends Controller {
     res.json(records)
   }
 
+  static async getCompanyName(req: Request, res: Response) {
+    let interviewService = new InterviewService();
+    const record = await interviewService.listOfCandidate()
+    res.status(record.statusCode).json(record);
+  }
+
   static async createInterview(req: Request, res: Response) {
     const data = req.body
     data.ip = await Server.remoteAddr(req)

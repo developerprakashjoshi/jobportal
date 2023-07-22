@@ -3,13 +3,16 @@ import Service from "@libs/service";
 import moment from "moment";
 import Response from "@libs/response"
 import  Interview  from "@models/interview.schema";
+import  User  from "@models/interview.schema";
 import { ObjectId } from 'mongodb';
 
 export default class InterviewService extends Service {
   private interviewModel: any;
+  private userModel: any;
   constructor() {
     super()
     this.interviewModel = AppDataSource.model('Interview');
+    this.userModel = AppDataSource.model('User');
   }
   async count(): Promise<Response<any[]>> {
     try {
@@ -46,6 +49,19 @@ export default class InterviewService extends Service {
     }
   }
 
+  async listOfCandidate(): Promise<Response<any[]>> {
+    try {
+      // const record = await this.companyModel.find().limit(10).populate({path: 'company', select: 'name'})
+      const records:any = await this.userModel.find().limit(10).select('firstName lastName');
+      // const companyNames = records.map((record:any) => record.name);
+
+      
+      return new Response<any[]>(true, 200, "Read operation successful", records);
+    } catch (error: any) {
+      return new Response<any[]>(false, 400, error.message);
+    }
+  }
+
   async retrieveByinterview(name: string) {
     try {
       const records = await this.interviewModel.findOne({ where: { name: name } });
@@ -73,6 +89,8 @@ export default class InterviewService extends Service {
       return new Response<any[]>(false, 400, error.message);
     }
   }
+
+  
 
   async update(pid: string, data: any) {
     try {
@@ -141,7 +159,7 @@ export default class InterviewService extends Service {
     try {
       let { page, limit, search, sort } = data;
       let errorMessage = '';
-
+  
       if (page !== undefined && limit !== undefined) {
         if (isNaN(page) || !Number.isInteger(Number(page)) || isNaN(limit) || !Number.isInteger(Number(limit))) {
           errorMessage = "Both 'page' and 'limit' must be integers.";
@@ -155,21 +173,21 @@ export default class InterviewService extends Service {
           errorMessage = "'limit' must be an integer.";
         }
       }
-
+  
       if (errorMessage) {
         return new Response<any>(false, 400, errorMessage);
       }
-
-      let searchQuery = {};
+  
+      let matchQuery = {};
       if (search !== undefined) {
-        searchQuery = {
+        matchQuery = {
           $or: [
-            { candidateName:  { $regex: search, $options: 'i' } },
             { interviewDate: { $regex: search, $options: 'i' } },
+            { candidateName: { $regex: search, $options: 'i' } },
           ],
         };
       }
-
+  
       let sortQuery = {};
       if (sort !== undefined) {
         const sortParams = sort.split(':');
@@ -178,40 +196,56 @@ export default class InterviewService extends Service {
           sortQuery = { [column]: order === 'desc' ? -1 : 1 };
         }
       }
-
+  
       page = page === undefined ? 1 : parseInt(page);
       limit = limit === undefined ? 10 : parseInt(limit);
       const skip = (page - 1) * limit;
-      const [records, totalCount] = await Promise.all([
-        this.interviewModel.find()
-          .select({ 
-            "candidateName": 1,
-            "interviewDate":1,
-            "interviewTime":1,
-            "interviewLink":1,
-            "description":1,
-           "_id": 0
-          })
-          .where(searchQuery)
-          .sort(sortQuery)
-          .skip(skip)
-          .limit(limit),
-        this.interviewModel.countDocuments(searchQuery),
-      ]);
-      
-      if (records.length === 0) {
+  
+      const aggregationPipeline = [
+        { $match: matchQuery },
+        ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $project: {
+          "candidateName": 1,
+          "interviewDate":1,
+          "interviewTime":1,
+          "interviewLink":1,
+          "description":1,
+          }
+        },
+        {
+          $facet: {
+            records: [{ $match: {} }],
+            totalCount: [{ $count: "count" }]
+          }
+        },
+        { $unwind: { path: "$totalCount", preserveNullAndEmptyArrays: true } },
+        {
+          $project: {
+            records: 1,
+            totalCount: { $ifNull: ["$totalCount.count", 0] }
+          }
+        }
+      ];
+  
+      const [result] = await this.interviewModel.aggregate(aggregationPipeline);
+  
+      if (!result || result.records.length === 0) {
         return new Response<any>(true, 200, 'No records available', {});
       }
-
-      const totalPages = Math.ceil(totalCount / limit);
+  
+      const totalPages = Math.ceil(result.totalCount / limit);
       const currentPage = page;
       const output = {
-        records: records,
+        records: result.records,
         totalPages: totalPages !== null ? totalPages : 0,
         currentPage: currentPage !== null ? currentPage : 0,
-        filterCount: records.length,
-        totalCount: totalCount,
+        filterCount: result.records.length,
+        totalCount: result.totalCount,
       };
+  
       return new Response<any>(true, 200, 'Read operation successful', output);
     } catch (error: any) {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);

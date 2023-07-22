@@ -91,8 +91,7 @@ export default class JobService extends Service {
       jobs.createdBy = data.createdBy
       jobs.createdFrom = data.ip
       jobs.status=data.status
-      console.log("------");
-      console.log(jobs);
+
       const result:any = await jobs.save()
       console.log(result);
       return new Response<any[]>(true, 201, "Insert operation successful", result);
@@ -253,6 +252,7 @@ export default class JobService extends Service {
             { title: { $regex: search, $options: 'i' } },
             { type: { $regex: search, $options: 'i' } },
             { schedule: { $regex: search, $options: 'i' } },
+            { status: { $regex: search, $options: 'i' } },
           ],
         };
       }
@@ -276,7 +276,14 @@ export default class JobService extends Service {
       ]);
       const [records, totalCount] = await Promise.all([
         this.jobModel.aggregate([
-          { $match: searchQuery },
+          {
+            $match: {
+              $and: [
+                searchQuery,
+                { deletedAt: null } // Filter out documents where deletedAt is not null
+              ]
+            }
+          },
           ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
           { $skip: skip },
           { $limit: limit },

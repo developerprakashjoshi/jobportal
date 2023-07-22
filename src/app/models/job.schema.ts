@@ -16,8 +16,8 @@ export enum IsStartPlanned{
   No = 0,
 } 
 export enum JobStatus {
-  Active = 1,
-  Inactive = 0,
+  Active = "Active",
+  Inactive = "In-active",
 }
 
 export interface IJob extends Document {
@@ -91,7 +91,7 @@ const JobSchema: Schema = new Schema({
   aboutCompany:{type:String},
   educationLevel:{type: Number, enum: [1,2,3,4], default:4 },
   yearOfExperience:{type:Number},
-  status:{type:Number,enum:[0,1],default:0},
+  status:{type:String,enum:["Active","in-Active"],default:"Active"},
 
   createdAt: { type: Date},
   createdBy: { type: String},

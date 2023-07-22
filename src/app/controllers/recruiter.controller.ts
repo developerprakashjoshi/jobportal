@@ -19,6 +19,12 @@ export default class RecruiterController extends Controller {
     res.status(record.statusCode).json(record);
   }
 
+  static async getCompanyName(req: Request, res: Response) {
+    let recruiterService = new RecruiterService();
+    const record = await recruiterService.listCompanyName()
+    res.status(record.statusCode).json(record);
+  }
+
   static async getRecruiter(req: Request, res: Response) {
     let id = req.params.id
     let recruiterService = new RecruiterService();

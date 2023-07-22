@@ -66,6 +66,10 @@ export default class UserService extends Service {
   }
 
   async create(data: any): Promise<Response<any>> {
+    const existEmail = await this.userModel.findOne({ email: data.email });
+      if (existEmail) {
+        return new Response<any>(false, 400, 'Email already exists', undefined);
+      }
     try {
       const user = new User();
       user.firstName = data.firstName;
@@ -76,7 +80,7 @@ export default class UserService extends Service {
       user.type=data.type;
       user.onboardingStep=1;
       user.createdAt = new Date();
-      user.createdBy = data.createdBy
+      user.createdBy = "self"
       user.createdFrom = data.ip
       // await this.searchEngine.addDocuments('user', user);
       const result:any = await user.save();
@@ -147,7 +151,7 @@ export default class UserService extends Service {
   }
   async updateBasicInfo(pid: string, data: any): Promise<Response<any>> {
     try {
-      console.log("Here")
+      
       const isValidObjectId = ObjectId.isValid(pid);
       if (!isValidObjectId) {
         return new Response<any>(false, 400, 'Invalid ObjectId', undefined);

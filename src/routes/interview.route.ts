@@ -7,6 +7,7 @@ const route=express.Router();
 
 route.get('/datatable',InterviewController.datatable)
 route.get('/count',InterviewController.count)
+route.get('/get-candidateName',InterviewController.getCompanyName)
 route.get('/',InterviewController.getInterviews)
 route.get('/:id',InterviewController.getInterview)
 route.post('/',validator(createInterview),InterviewController.createInterview)
