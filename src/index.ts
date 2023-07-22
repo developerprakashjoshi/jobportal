@@ -1,57 +1,112 @@
-import "reflect-metadata"
-import express,{Application,Request,Response,NextFunction} from 'express';
-import dotenv from 'dotenv'
-import cors from 'cors'
-import bodyParser from 'body-parser';
-import jwt from 'jsonwebtoken'
+import "./module-alias";
+import "reflect-metadata";
+import express, { Application, Request, Response, NextFunction } from "express";
+import dotenv from "dotenv";
+import cors from "cors";
+import morgan from "morgan";
+import bodyParser from "body-parser";
+import jwt from "jsonwebtoken";
+
 dotenv.config();
 
-import { AppDataSource } from "./config/database";
-import userRoutes from './routes/user';
-import authRoutes from './routes/auth';
-import permissionRoutes from './routes/permission';
-import roleRoutes from './routes/role';
-import { errorHandler, notFound } from "./libs/ErrorHandler";
-import sessionMiddleware from "./app/Middlewares/SessionMiddleware";
-import passport from "./app/Middlewares/PassportMiddleware";
-import {passportJwt} from "./app/Middlewares/PassportJwtMiddleware";
+if (process.env.NODE_ENV === 'production') {
+  dotenv.config({ path: '.env.production' });
+  console.log("Connect to production environment");
+} else if (process.env.NODE_ENV === 'development') {
+  dotenv.config({ path: '.env.development' });
+  console.log("Connect to development environment");
+}else if (process.env.NODE_ENV === 'stage') {
+  dotenv.config({ path: '.env.stage' });
+  console.log("Connect to stage environment");
+}else{
+  console.log("Cannot connect to environment");
+}
 
 
-const app: Application=express()
-app.use(cors())
-app.use(bodyParser.urlencoded({ extended: true }) )
-app.use(bodyParser.json())
+import AppDataSource from "@config/mongoose";
+import roleRoutes from "@routes/role.route";
+import userRoutes from "@routes/user.route";
+import storageRoutes from "@routes/storage.route";
+import jobRoute from  '@routes/job.route';
+import companyRoute from '@routes/company.route'
+import countryRoutes from '@routes/country.route';
+import stateRoutes from '@routes/state.route';
+import cityRoutes from '@routes/city.route';
+import interviewRoute from '@routes/interview.route'
+import notificationRoute from  '@routes/notification.route';
+import messageRoute from  '@routes/message.route';
+import reviewRoute from '@routes/review.route'
+import recruiterRoute from '@routes/recruiter.route'
+import applyRoute from '@routes/apply.route'
 
-app.use(sessionMiddleware)
-app.use(passport.initialize())
-app.use(passport.session())
+import { errorHandler, notFound } from "@libs/error.handler";
 
+const app: Application = express();
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
-app.get('/api/demo',(req:Request,res:Response)=>{
-    console.log(req.isAuthenticated())
-    const jwtPayload = { id: 1};
-    const token = jwt.sign(jwtPayload, process.env.JWT_SECRET_KEY||'');
-    res.json({token:token})
+morgan.token("user-type", (req: Request, res: Response) => {
+  return req.headers["user-type"] as string;
 });
 
-app.get('/api/test',passportJwt,(req:Request,res:Response)=>{
-    res.json("test")
-})
+morgan.token("req-body", (req: Request) => {
+  return JSON.stringify(req.body);
+});
 
-app.use('/api/users',userRoutes);
-app.use('/api/auth',authRoutes);
-app.use('/api/permission',permissionRoutes);
-app.use('/api/role',roleRoutes);
+const logFormat =
+  ":method :url :status :res[content-length] - :response-time ms\n" +
+  "User Type: :user-type\n" +
+  "Request Body: :req-body\n";
+app.use(morgan(logFormat));
 
-app.get("/",(req:Request,res:Response)=>res.send("Hello from Server"))
-app.use(notFound)
-app.use(errorHandler)
+app.get("/api/demo", (req: Request, res: Response) => {
+  console.log(req.isAuthenticated());
+  const jwtPayload = { id: 1 };
+  const token = jwt.sign(jwtPayload, process.env.JWT_SECRET_KEY || "");
+  res.json({ token: token });
+});
 
-AppDataSource.initialize().
-then(()=>{
-    console.log("DB connected");
-    app.listen(process.env.APP_PORT,()=>{
-        console.log(`Server started with port ${process.env.APP_HOST}:${process.env.APP_PORT}`)
-    })  
-})
-.catch((err)=>console.log("ERROR",err));
+app.get("/api/test", (req: Request, res: Response) => {
+  res.json("test");
+});
+
+app.use("/api/v1/role", roleRoutes);
+app.use("/api/v1/storage", storageRoutes);
+app.use("/api/v1/user", userRoutes);
+app.use('/api/v1/job',jobRoute);
+app.use('/api/v1/company',companyRoute)
+app.use('/api/v1/country',countryRoutes)
+app.use('/api/v1/state',stateRoutes);
+app.use('/api/v1/city',cityRoutes);
+app.use('/api/v1/interview',interviewRoute);
+app.use('/api/v1/notification',notificationRoute);
+app.use('/api/v1/message',messageRoute);
+app.use('/api/v1/review',reviewRoute);
+app.use('/api/v1/recruiter',recruiterRoute);
+app.use('/api/v1/apply',applyRoute);
+
+app.get("/", (req: Request, res: Response) => {
+  res.status(200).json({
+    success: true,
+    statusCode: 200,
+    message: "Hello from server! server is running",
+  });
+});
+app.use(notFound);
+app.use(errorHandler);
+
+// Handle connection events
+AppDataSource.on(
+  "error",
+  console.error.bind(console, "MongoDB connection error:")
+);
+AppDataSource.once("open", () => {
+  console.log("Connected to MongoDB");
+
+  app.listen(process.env.APP_PORT, () => {
+    console.log(
+      `Server started with port ${process.env.APP_HOST}:${process.env.APP_PORT}`
+    );
+  });
+});
