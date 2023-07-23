@@ -2,7 +2,6 @@ import Joi from 'joi'
 
 export const createRecruiter=Joi.object({
     firstName:Joi.string().required(),
-    jobId:Joi.string().required(),
     LastName:Joi.string().required(),
     email:Joi.string().required(),
     password:Joi.string().required(),

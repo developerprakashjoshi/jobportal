@@ -250,8 +250,8 @@ export default class JobService extends Service {
         searchQuery = {
           $or: [
             { title: { $regex: search, $options: 'i' } },
-            { type: { $regex: search, $options: 'i' } },
-            { schedule: { $regex: search, $options: 'i' } },
+            { recruiterName: { $regex: search, $options: 'i' } },
+            { companyName: { $regex: search, $options: 'i' } },
             { status: { $regex: search, $options: 'i' } },
           ],
         };

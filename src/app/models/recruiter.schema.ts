@@ -47,14 +47,7 @@ const RecruiterSchema: Schema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Company', // Referencing the User model
   },
-  job: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'job', // Referencing the User model
-  },
-  // apply: {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: 'apply', // Referencing the User model
-  // },
+  
   firstName:{type:String},
   LastName:{type:String},
   email:{type:String},

@@ -94,7 +94,6 @@ export default class RecruiterService extends Service {
       recruiter.firstName = data.firstName
       recruiter.LastName = data.LastName
       recruiter.email = data.email
-      recruiter.job = data.jobId
       recruiter.password = data.password
       recruiter.phoneNumber = data.phoneNumber
       recruiter.companyName = data.companyName
@@ -135,9 +134,7 @@ export default class RecruiterService extends Service {
       if (data.LastName) {
         recruiter.LastName = data.LastName
       }
-      if(data.jobId){
-        recruiter.job = data.jobId
-      }
+      
       if (data.email) {
         recruiter.email = data.email
       }
@@ -285,9 +282,6 @@ export default class RecruiterService extends Service {
               companyName:{
                 $arrayElemAt: ['$company.name', 0] 
               },
-              jobPosted:{
-                $arrayElemAt: ['$job.noOfHiring', 0] 
-              },
             }
           },
           {
@@ -297,7 +291,6 @@ export default class RecruiterService extends Service {
               "LastName":1,
               "email":1,
               'companyName': 1,
-              'jobPosted':1,
               'phoneNumber':1
             },
           },

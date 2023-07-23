@@ -160,17 +160,6 @@ export default class UserService extends Service {
       if (!user) {
         return new Response<any>(true, 200, 'Record not available', user);
       }
-
-      const existEmail = await this.userModel.findOne({ email: data.email });
-      if (existEmail) {
-        return new Response<any>(false, 400, 'Email already exists', undefined);
-      }
-
-      const existPhone = await this.userModel.findOne({ phone: data.phoneNo });
-      if (existPhone) {
-        return new Response<any>(false, 400, 'Phone already exists', undefined);
-      }
-
       if (data.firstName) {
         user.firstName = data.firstName;
       }

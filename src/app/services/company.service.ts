@@ -248,8 +248,7 @@ export default class CompanyService extends Service {
         searchQuery = {
           $or: [
             { name: { $regex: search, $options: 'i' } },
-            { size: { $regex: search, $options: 'i' } },
-            { location: { $regex: search, $options: 'i' } },
+            { industry: { $regex: search, $options: 'i' } },
           ],
         };
       }
