@@ -7,8 +7,8 @@ const route=express.Router();
 
 route.get('/datatable',MessageController.datatable)
 route.get('/count',MessageController.count)
-route.get('/',MessageController.getMessages)
-route.get('/:id',MessageController.getMessage)
+route.get('/:senderid',MessageController.getMessages)
+route.get('/:senderid/:recipientid',MessageController.getMessage)
 route.post('/',validator(createMessage),MessageController.createMessage)
 route.patch('/:id',validator(updateMessages),MessageController.updateMessages)
 route.delete('/:id',validator(deleteMessage),MessageController.deleteMessage)
