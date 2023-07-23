@@ -14,15 +14,21 @@ export default class AddressController extends Controller {
   }
 
   static async getMessages(req: Request, res: Response) {
+    let senderid = req.params.senderid
     let messageService = new MessageService();
-    const record = await messageService.list()
+    const record = await messageService.list(senderid)
     res.status(record.statusCode).json(record);
   }
 
   static async getMessage(req: Request, res: Response) {
-    let id = req.params.id
+    let senderid = req.params.senderid
+    let recipientid = req.params.recipientid
+    console.log(senderid)
+    console.log("recipientid")
+    console.log(recipientid)
+
     let messageService = new MessageService();
-    const records = await messageService.retrieve(id)
+    const records = await messageService.retrieve(senderid,recipientid)
     res.status(records.statusCode).json(records);
   }
 

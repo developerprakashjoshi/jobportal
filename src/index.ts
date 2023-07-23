@@ -38,6 +38,8 @@ import messageRoute from  '@routes/message.route';
 import reviewRoute from '@routes/review.route'
 import recruiterRoute from '@routes/recruiter.route'
 import applyRoute from '@routes/apply.route'
+import chatRoute from '@routes/chat.route'
+import messagesRoute from '@routes/messages.route'
 
 import { errorHandler, notFound } from "@libs/error.handler";
 
@@ -85,6 +87,8 @@ app.use('/api/v1/message',messageRoute);
 app.use('/api/v1/review',reviewRoute);
 app.use('/api/v1/recruiter',recruiterRoute);
 app.use('/api/v1/apply',applyRoute);
+app.use('/api/v1/chat',chatRoute);
+app.use('/api/v1/messages',messagesRoute);
 
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({

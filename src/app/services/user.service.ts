@@ -27,7 +27,22 @@ export default class UserService extends Service {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
   }
-
+  // If needed for chat messages
+  async retrieveUsersByIds(userIds: string[]): Promise<Response<any>> {
+    try {
+      const result = await this.userModel.find({
+        _id: { $in: userIds }, // Use $in operator to match documents with IDs in the userIds array
+      });
+  
+      if (!result || result.length === 0) {
+        return new Response<any>(true, 200, 'Record not available', []);
+      }
+  
+      return new Response<any>(true, 200, 'Read operation successful', result);
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
   async list(): Promise<Response<any>> {
     try {
       const result = await this.userModel.find();

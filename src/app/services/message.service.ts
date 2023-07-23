@@ -28,10 +28,15 @@ export default class MessageService extends Service {
     }
   }
 
-  async list(): Promise<Response<any[]>> {
+  async list(senderId:string): Promise<Response<any[]>> {
     try {
       const records = await this.messageModel
         .aggregate([
+          {
+            $match: {
+              sender: new ObjectId(senderId),
+            },
+          },
           {
             $lookup: {
               from: "users",
@@ -94,13 +99,14 @@ export default class MessageService extends Service {
     }
   }
   
-  async retrieve(pid: string) {
+  async retrieve(senderId: string,recipientId:string) {
       try {
         const records = await this.messageModel
           .aggregate([
             {
               $match: {
-                createdBy: pid, // Assuming you are using Mongoose and senderId is a valid ObjectId
+                sender: new ObjectId(senderId),
+                recipient: new ObjectId(recipientId), // Assuming you are using Mongoose and senderId is a valid ObjectId
               },
             },
             {
@@ -135,6 +141,17 @@ export default class MessageService extends Service {
                     { $arrayElemAt: ["$senderInfo.lastName", 0] },
                   ],
                 },
+              },
+            },
+            {
+              $sort: {
+                createdAt: -1, // Sort by createdAt field in descending order
+              },
+            },
+            {
+              $group: {
+                recipientName: { $last: "$recipientName" },
+                createdAt: { $last: "$createdAt" }
               },
             },
             {
