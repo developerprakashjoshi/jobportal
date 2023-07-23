@@ -22,7 +22,7 @@ export default class ReviewService extends Service {
 
   async list(): Promise<Response<any[]>> {
     try {
-      const record = await this.reviewModel.find();
+      const record = await this.reviewModel.find({deletedAt: null});
 
       return new Response<any[]>(true, 200, "Read operation successful", record);
     } catch (error: any) {
@@ -181,6 +181,8 @@ export default class ReviewService extends Service {
           const [column, order] = sortParams;
           sortQuery = { [column]: order === 'desc' ? -1 : 1 };
         }
+      }else{
+        sortQuery = {createdAt:-1}
       }
 
       page = page === undefined ? 1 : parseInt(page);
@@ -192,7 +194,8 @@ export default class ReviewService extends Service {
             "name": 1,
             "rating": 1,
             "designation": 1,
-            "_id": 0
+            "_id": 0,
+            "createdAt":1
           })
           .where(searchQuery)
           .sort(sortQuery)

@@ -23,13 +23,17 @@ export const createJob=Joi.object({
     noOfHiring:Joi.number().required(),
     hiringSlot:Joi.string().required(),
     aboutCompany:Joi.string().required(),
-    educationLevel:Joi.number().required(),
+    educationLevel:Joi.string().required(),
     yearOfExperience:Joi.number().required(),
     createdBy:Joi.string().required(),
     status:Joi.string().required(),
 
 
 }).options({ abortEarly: false })
+export const updateApproveStatus=Joi.object({
+    id:Joi.string().required(),
+    approveAdmin:Joi.boolean().required()
+})
 
 export const updateJob=Joi.object({
     id:Joi.string().required(),
@@ -55,7 +59,7 @@ export const updateJob=Joi.object({
     noOfHiring:Joi.number().optional(),
     hiringSlot:Joi.string().optional(),
     aboutCompany:Joi.string().optional(),
-    educationLevel:Joi.number().optional(),
+    educationLevel:Joi.string().optional(),
     yearOfExperience:Joi.number().optional(),
     updatedBy:Joi.string().required(),
     status:Joi.string().optional(),

@@ -13,7 +13,7 @@ export const createRecruiter=Joi.object({
     isHiringManager:Joi.number().required(),
     termConditions:Joi.boolean().required(),
     createdBy:Joi.string().required(),
-    status:Joi.number().required(),
+    status:Joi.string().required(),
 }).options({ abortEarly: false })
 
 export const updateRecruiter=Joi.object({
@@ -31,7 +31,7 @@ export const updateRecruiter=Joi.object({
     yourDesignation:Joi.string().optional(),
     termConditions:Joi.boolean().optional(),
     isHiringManager:Joi.number().optional(),
-    status:Joi.number().optional(),
+    status:Joi.string().optional(),
 }).options({ abortEarly: false })
 
 export const deleteRecruiter=Joi.object({

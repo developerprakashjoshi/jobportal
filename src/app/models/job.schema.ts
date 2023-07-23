@@ -4,20 +4,13 @@ export enum ReportWork {
   specificAddress = 1,
   notSpecificAddress = 0,
 }
-export enum EducationLevel{
-  Ten = 1,
-  twelve =2,
-  Diploma =3,
-  Bachelor =4,
-  Master = 5,
-}
 export enum IsStartPlanned{
   Yes = 1,
   No = 0,
 } 
 export enum JobStatus {
   Active = "Active",
-  Inactive = "In-active",
+  Inactive = "In-Active",
 }
 
 export interface IJob extends Document {
@@ -45,6 +38,7 @@ export interface IJob extends Document {
   aboutCompany:String,
   educationLevel:String,
   yearOfExperience:number,
+  approveAdmin:Boolean,
   status:JobStatus,
   
   createdAt: Date;
@@ -89,9 +83,10 @@ const JobSchema: Schema = new Schema({
   noOfHiring:{type:Number},
   hiringSlot:{type:String},
   aboutCompany:{type:String},
-  educationLevel:{type: Number, enum: [1,2,3,4], default:4 },
+  approveAdmin:{type:Boolean},
+  educationLevel:{type: String },
   yearOfExperience:{type:Number},
-  status:{type:String,enum:["Active","in-Active"],default:"Active"},
+  status:{type:String,enum:["Active","In-Active"],default:"Active"},
 
   createdAt: { type: Date},
   createdBy: { type: String},

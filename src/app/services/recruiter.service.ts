@@ -4,16 +4,19 @@ import moment from "moment";
 import Response from "@libs/response"
 import Recruiter  from "@models/recruiter.schema";
 import Company  from "@models/company.schema";
+import Jobs  from "@models/job.schema";
 
 import { ObjectId } from 'mongodb';
 
 export default class RecruiterService extends Service {
   private recruiteModel: any;
   private companyModel: any;
+  private jobModel: any;
   constructor() {
     super()
     this.recruiteModel = AppDataSource.model('Recruiter');
     this.companyModel = AppDataSource.model('Company');
+    this.jobModel = AppDataSource.model('Jobs');
   }
   async count(): Promise<Response<any[]>> {
     try {
@@ -26,7 +29,7 @@ export default class RecruiterService extends Service {
 
   async list(): Promise<Response<any[]>> {
     try {
-      const record = await this.recruiteModel.find()
+      const record = await this.recruiteModel.find({deletedAt: null})
       
       return new Response<any[]>(true, 200, "Read operation successful", record);
     } catch (error: any) {
@@ -103,7 +106,7 @@ export default class RecruiterService extends Service {
       recruiter.termConditions = data.termConditions
       recruiter.companyLocation = data.companyLocation
       recruiter.isHiringManager = data.isHiringManager
-      recruiter.isHiringManager = data.status
+      recruiter.status = data.status
       recruiter.createdAt = new Date();
       recruiter.createdBy = data.createdBy
       recruiter.createdFrom = data.ip
@@ -204,6 +207,7 @@ export default class RecruiterService extends Service {
   async datatable(data: any): Promise<Response<any>> {
     try {
       let { page, limit, search, sort } = data;
+
       let errorMessage = '';
   
       if (page !== undefined && limit !== undefined) {
@@ -237,13 +241,17 @@ export default class RecruiterService extends Service {
       }
   
       let sortQuery = {};
-      if (sort !== undefined) {
+      if (sort !== undefined ) {
         const sortParams = sort.split(':');
         if (sortParams.length === 2) {
           const [column, order] = sortParams;
           sortQuery = { [column]: order === 'desc' ? -1 : 1 };
         }
+      }else{
+        sortQuery = {createdAt:-1}
       }
+      console.log("----");
+      console.log(sortQuery);
   
       page = page === undefined ? 1 : parseInt(page);
       limit = limit === undefined ? 10 : parseInt(limit);
@@ -262,36 +270,13 @@ export default class RecruiterService extends Service {
           { $skip: skip },
           { $limit: limit },
           {
-            $lookup: {
-              from: 'companies',
-              localField: 'company',
-              foreignField: '_id',
-              as: 'company',
-            },
-          },
-          {
-            $lookup: {
-              from: 'jobs',
-              localField: 'job',
-              foreignField: '_id',
-              as: 'job',
-            },
-          },
-          {
-            $addFields: {
-              companyName:{
-                $arrayElemAt: ['$company.name', 0] 
-              },
-            }
-          },
-          {
             $project: {
               _id: 1,
               "firstName": 1,
               "LastName":1,
               "email":1,
-              'companyName': 1,
-              'phoneNumber':1
+              'phoneNumber':1,
+              'createdAt':1
             },
           },
           {
@@ -310,16 +295,29 @@ export default class RecruiterService extends Service {
   
       const totalPages = Math.ceil(totalCount / limit);
       const currentPage = page;
+      const dataCount:any = records.map(async(row:any)=>{
+        console.log(row._id);
+         return await this.countJob(row._id)
+      })
       const output = {
         records: records,
         totalPages: totalPages !== null ? totalPages : 0,
         currentPage: currentPage !== null ? currentPage : 0,
         filterCount: records.length,
         totalCount: totalCount,
+        totalJobs:await dataCount
       };
       return new Response<any>(true, 200, 'Read operation successful', output);
     } catch (error: any) {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
+  async countJob(userId:ObjectId){
+    try {
+      const result = await this.jobModel.countDocuments({deleteAt:null,user:userId})
+      return result;
+    } catch (error: any) {
+      return error.message;
     }
   }
 
