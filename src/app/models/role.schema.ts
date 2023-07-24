@@ -1,8 +1,8 @@
 import { Schema, Document, model } from 'mongoose';
 
 export enum RoleStatus {
-  Active = 1,
-  Inactive = 0,
+  Active = "Active",
+  Inactive = "In-Active",
 }
 
 export interface IRole extends Document {
@@ -25,7 +25,7 @@ export interface IRole extends Document {
 const RoleSchema: Schema = new Schema({
   name: { type: String, required: true },
   description: { type: String, required: true },
-  status: { type: Number, enum: [0, 1], default: 1 },
+  status: { type: String, enum: ["Active", "In-Active"], default: "Active" },
   createdAt: { type: Date},
   createdBy: { type: String},
   createdFrom: { type: String },

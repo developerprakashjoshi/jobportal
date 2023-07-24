@@ -26,7 +26,7 @@ export default class JobService extends Service {
 
   async list(): Promise<Response<any[]>> {
     try {
-      const record = await this.jobModel.find()
+      const record = await this.jobModel.find({deletedAt: null})
       return new Response<any[]>(true, 200, "Read operation successful", record);
     } catch (error: any) {
       return new Response<any[]>(false, 400, error.message);
@@ -186,6 +186,37 @@ export default class JobService extends Service {
       if (data.companyId) {
         jobs.company = data.companyId
       }
+      if (data.status) {
+        jobs.status = data.status
+      }
+      jobs.updatedAt = new Date()
+      jobs.updatedBy = data.updatedBy
+      jobs.updatedFrom = data.ip
+      const result = await jobs.save();
+
+      return new Response<any[]>(true, 200, "Update operation successful", result);
+    } catch (error: any) {
+      return new Response<any[]>(false, 400, error.message);
+    }
+  }
+
+  async updateApproval(pid: string, data: any) {
+    try {
+      const isValidObjectId = ObjectId.isValid(pid);
+      if (!isValidObjectId) {
+        return new Response<any[]>(false, 400, "Invalid ObjectId", undefined);
+      }
+      let id = new ObjectId(pid);
+      const jobs = await this.jobModel.findById(pid);
+
+      if (!jobs) {
+        return new Response<any[]>(true, 404, "Record not found");
+      }
+
+      if (data.approveAdmin) {
+        jobs.approveAdmin = data.approveAdmin
+      }
+      
       jobs.updatedAt = new Date()
       jobs.updatedBy = data.updatedBy
       jobs.updatedFrom = data.ip
@@ -264,6 +295,8 @@ export default class JobService extends Service {
           const [column, order] = sortParams;
           sortQuery = { [column]: order === 'desc' ? -1 : 1 };
         }
+      }else{
+        sortQuery = {createdAt:-1}
       }
   
       page = page === undefined ? 1 : parseInt(page);
@@ -339,7 +372,7 @@ export default class JobService extends Service {
               recruiterName:1,
               status: 1,
               totalApplied:1,
-              deadlineDate:1
+              deadlineDate:1,
             },
           },
           {

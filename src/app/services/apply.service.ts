@@ -33,7 +33,7 @@ export default class ApplyService extends Service {
 
   async list(): Promise<Response<any>> {
     try {
-      const result = await this.applyModel.find();
+      const result = await this.applyModel.find({deletedAt: null});
       if (!result) {
         return new Response<any>(true, 200, 'Record not available', result);
       }
@@ -175,6 +175,8 @@ export default class ApplyService extends Service {
           const [column, order] = sortParams;
           sortQuery = { [column]: order === 'desc' ? -1 : 1 };
         }
+      }else{
+        sortQuery = {createdAt:-1}
       }
 
       page = page === undefined ? 1 : parseInt(page);
@@ -186,6 +188,7 @@ export default class ApplyService extends Service {
             "jobId": 1,
             "userId":1,
             "applyAt":1,
+            "createdAt":1,
            "_id": 0
           })
           .where(searchQuery)

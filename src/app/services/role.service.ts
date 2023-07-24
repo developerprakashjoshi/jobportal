@@ -35,7 +35,7 @@ export default class RoleService extends Service {
 
   async list(): Promise<Response<any>> {
     try {
-      const result = await this.roleModel.find();
+      const result = await this.roleModel.find({deletedAt: null});
       if (!result) {
         return new Response<any>(true, 200, 'Record not available', result);
       }
@@ -181,6 +181,8 @@ export default class RoleService extends Service {
           const [column, order] = sortParams;
           sortQuery = { [column]: order === 'desc' ? -1 : 1 };
         }
+      }else{
+        sortQuery = {createdAt:-1}
       }
 
       page = page === undefined ? 1 : parseInt(page);
@@ -192,6 +194,7 @@ export default class RoleService extends Service {
             "name": 1,
             "description":1,
             "status":1,
+            "createdAt":1,
            "_id": 0
           })
           .where(searchQuery)

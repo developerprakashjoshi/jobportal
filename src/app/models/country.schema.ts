@@ -1,8 +1,8 @@
 import { Schema, Document, model } from 'mongoose';
 
 export enum CountryStatus {
-  Active = 1,
-  Inactive = 0,
+  Active = "Active",
+  Inactive = "In-Active",
 }
 
 export interface ICountry extends Document {
@@ -25,7 +25,7 @@ export interface ICountry extends Document {
 const CountrySchema: Schema = new Schema({
   countryName: { type: String },
   countryCode: { type: String },
-  status: { type: Number, enum: [0, 1], default: 1 },
+  status:{type:String,enum:["Active","In-Active"],default:"Active"},
 
   createdAt: { type: Date},
   createdBy: { type: String},

@@ -5,7 +5,7 @@ export const createState=Joi.object({
     stateCode:Joi.string().required(),
     countryName:Joi.string().required(),
     countryId:Joi.string().required(),
-    status:Joi.number().valid(0,1).required(),
+    status:Joi.string().valid(0,1).required(),
     createdBy:Joi.string().required(),
 }).options({ abortEarly: false })
 
@@ -14,7 +14,7 @@ export const updateState=Joi.object({
     stateName:Joi.string().optional(),
     stateCode:Joi.string().optional(),
     countryName:Joi.string().optional(),
-    status:Joi.number().valid(0,1).optional(),
+    status:Joi.string().valid(0,1).optional(),
     updatedBy:Joi.string().required(),
 }).options({ abortEarly: false })
 

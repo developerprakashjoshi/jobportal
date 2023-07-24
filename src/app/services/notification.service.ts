@@ -22,7 +22,7 @@ export default class NotificationService extends Service {
 
   async list(): Promise<Response<any[]>> {
     try {
-      const record = await this.notificationModel.find()
+      const record = await this.notificationModel.find({deletedAt: null})
       return new Response<any[]>(true, 200, "Read operation successful", record);
     } catch (error: any) {
       return new Response<any[]>(false, 400, error.message);

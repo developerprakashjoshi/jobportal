@@ -6,8 +6,8 @@ export enum IsHire {
   Inactive = 0,
 }
 export enum recruiterStatus {
-  Active = 1,
-  Inactive = 0,
+  Active = "Active",
+  Inactive = "In-Active",
 }
 
 export interface IRecruiter extends Document {
@@ -15,7 +15,6 @@ export interface IRecruiter extends Document {
   firstName:string,
   LastName:string,
   email:string,
-  company:string,
   job:string,
   password:string,
   phoneNumber:number,
@@ -42,12 +41,7 @@ export interface IRecruiter extends Document {
 }
 
 const RecruiterSchema: Schema = new Schema({
-  
-  company: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Company', // Referencing the User model
-  },
-  
+    
   firstName:{type:String},
   LastName:{type:String},
   email:{type:String},
@@ -60,7 +54,7 @@ const RecruiterSchema: Schema = new Schema({
   termConditions :{type:Boolean},
   companyLocation :{type:String},
   isHiringManager:{type:Number,enum:[0,1],default:0},
-  status:{type:Number,enum:[0,1],default:0},
+  status:{type:String,enum:["Active","In-Active"],default:"Active"},
   
 
   createdAt: { type: Date},
