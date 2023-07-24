@@ -7,7 +7,7 @@ export default class ApplyController extends Controller {
 
 static async  count (req: Request, res: Response) {
     let applyService=new ApplyService();
-    const result = await applyService.count()
+    const result = await applyService.count("64bdd0a124bdfca23c8d9566")
     res.status(result.statusCode).json(result);
 }
 

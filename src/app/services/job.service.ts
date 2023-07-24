@@ -90,7 +90,8 @@ export default class JobService extends Service {
       jobs.createdAt = new Date();
       jobs.createdBy = data.createdBy
       jobs.createdFrom = data.ip
-      jobs.status=data.status
+      jobs.status="Active",
+      jobs.approveAdmin=false
 
       const result:any = await jobs.save()
       console.log(result);
@@ -304,8 +305,8 @@ export default class JobService extends Service {
       const skip = (page - 1) * limit;
       const totalApplied = await this.applyModel.countDocuments();
       const [activeCount, inactiveCount] = await Promise.all([
-        this.jobModel.countDocuments({ status: 1 }),
-        this.jobModel.countDocuments({ status: 0 }),
+        this.jobModel.countDocuments({ status: "Active" }),
+        this.jobModel.countDocuments({ status: "Inactive"  }),
       ]);
       const [records, totalCount] = await Promise.all([
         this.jobModel.aggregate([
@@ -313,7 +314,12 @@ export default class JobService extends Service {
             $match: {
               $and: [
                 searchQuery,
-                { deletedAt: null } // Filter out documents where deletedAt is not null
+                { deletedAt: null ,
+                  $or: [
+                    { approveAdmin: { $ne: null } }, 
+                    { approveAdmin: true }, 
+                  ],
+                } 
               ]
             }
           },
@@ -354,7 +360,8 @@ export default class JobService extends Service {
                   format: "%d-%m-%Y"
                 }
               },
-              totalApplied
+              totalApplied:500
+              
             }
           },
           {
@@ -371,6 +378,7 @@ export default class JobService extends Service {
               companyName: 1,
               recruiterName:1,
               status: 1,
+              approveAdmin:1,
               totalApplied:1,
               deadlineDate:1,
             },
@@ -394,7 +402,13 @@ export default class JobService extends Service {
       if (records.length === 0) {
         return new Response<any>(true, 200, 'No records available', {});
       }
-  
+ 
+        const jobIds = records.map((record:any) => record._id.toString());
+        const totalAppliedCounts = await Promise.all(jobIds.map((_id:string) => this.countApply(_id)));
+        records.forEach((record:any, index:number) => {
+          record.totalApplied = totalAppliedCounts[index];
+        });
+
       const totalPages = Math.ceil(totalCount / limit);
       const currentPage = page;
       const output = {
@@ -405,12 +419,19 @@ export default class JobService extends Service {
         totalCount: totalCount,
         activeStatus: activeCount,
         inactiveStatus: inactiveCount,
-        totalApplicants: totalApplied
-
+        totalApplicants: totalApplied,
       };
       return new Response<any>(true, 200, 'Read operation successful', output);
     } catch (error: any) {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
+  async countApply(jobId:string) {
+    try {
+      const result = await this.applyModel.countDocuments({ job: new ObjectId(jobId) });
+      return result
+    } catch (error: any) {
+      return error.message;
     }
   }
 }

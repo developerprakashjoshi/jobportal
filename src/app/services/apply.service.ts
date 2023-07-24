@@ -19,9 +19,9 @@ export default class ApplyService extends Service {
     // this.postModel = Post;
   }
 
-  async count(): Promise<Response<any>> {
+  async count(jobId:string): Promise<Response<any>> {
     try {
-      const result = await this.applyModel.countDocuments();
+      const result = await this.applyModel.countDocuments({ job: jobId });
       if (!result) {
         return new Response<any>(true, 200, 'Record not available', result);
       }

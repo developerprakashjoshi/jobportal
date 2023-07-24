@@ -8,10 +8,6 @@ export enum IsStartPlanned{
   Yes = 1,
   No = 0,
 } 
-export enum JobStatus {
-  Active = "Active",
-  Inactive = "In-Active",
-}
 
 export interface IJob extends Document {
   user:string,
@@ -39,7 +35,7 @@ export interface IJob extends Document {
   educationLevel:String,
   yearOfExperience:number,
   approveAdmin:Boolean,
-  status:JobStatus,
+  status:String,
   
   createdAt: Date;
   createdBy: String;
@@ -86,7 +82,7 @@ const JobSchema: Schema = new Schema({
   approveAdmin:{type:Boolean},
   educationLevel:{type: String },
   yearOfExperience:{type:Number},
-  status:{type:String,enum:["Active","In-Active"],default:"Active"},
+  status:{type:String},
 
   createdAt: { type: Date},
   createdBy: { type: String},
