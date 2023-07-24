@@ -1,17 +1,14 @@
 import mongoose,{ Schema, Document, model} from 'mongoose';
 // import Country from '@models/country.schema';
 
-export enum StateStatus {
-  Active = "Active",
-  Inactive = "In-Active",
-}
+
 
 export interface IStatus extends Document {
   stateName: string;
   stateCode: string;
   countryName:string;
   country:string;
-  status: StateStatus;
+  status: string;
   
   createdAt: Date;
   createdBy: String;
@@ -35,7 +32,7 @@ const StateSchema: Schema = new Schema({
     ref: 'Country', // Referencing the User model
   },
   
-  status:{type:String,enum:["Active","In-Active"],default:"Active"},
+  status:{type:String},
 
   createdAt: { type: Date},
   createdBy: { type: String},

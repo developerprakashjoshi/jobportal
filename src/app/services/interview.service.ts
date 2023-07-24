@@ -74,7 +74,7 @@ export default class InterviewService extends Service {
   async create(data: any): Promise<Response<any[]>> {
     try {
       let interview = new Interview()
-
+      interview.user = data.candidateId
       interview.candidateName = data.candidateName
       interview.interviewDate = data.interviewDate
       interview.interviewTime = data.interviewTime
@@ -104,7 +104,9 @@ export default class InterviewService extends Service {
       if (!interview) {
         return new Response<any[]>(true, 404, "Record not found");
       }
-
+      if (data.candidateId) {
+        interview.user = data.candidateId
+      }
       if (data.candidateName) {
         interview.candidateName = data.candidateName
       }

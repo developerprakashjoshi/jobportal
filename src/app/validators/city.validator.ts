@@ -6,7 +6,7 @@ export const createCity=Joi.object({
     stateName:Joi.string().required(),
     countryName:Joi.string().required(),
     stateId:Joi.string().required(),
-    status:Joi.string().valid(0,1).required(),
+    status:Joi.string().valid("Active","Inactive").required(),
     createdBy:Joi.string().required(),
 }).options({ abortEarly: false })
 
@@ -18,7 +18,7 @@ export const updateCity=Joi.object({
     stateId:Joi.string().optional(),
     stateName:Joi.string().required(),
     countryName:Joi.string().required(),
-    status:Joi.string().valid(0,1).optional()
+    status:Joi.string().valid("Active","Inactive").optional()
 }).options({ abortEarly: false })
 
 export const deleteCity=Joi.object({

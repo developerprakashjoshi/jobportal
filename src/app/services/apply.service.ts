@@ -139,7 +139,7 @@ export default class ApplyService extends Service {
     try {
       let { page, limit, search, sort } = data;
       let errorMessage = '';
-
+  
       if (page !== undefined && limit !== undefined) {
         if (isNaN(page) || !Number.isInteger(Number(page)) || isNaN(limit) || !Number.isInteger(Number(limit))) {
           errorMessage = "Both 'page' and 'limit' must be integers.";
@@ -153,11 +153,11 @@ export default class ApplyService extends Service {
           errorMessage = "'limit' must be an integer.";
         }
       }
-
+  
       if (errorMessage) {
         return new Response<any>(false, 400, errorMessage);
       }
-
+  
       let searchQuery = {};
       if (search !== undefined) {
         searchQuery = {
@@ -167,7 +167,7 @@ export default class ApplyService extends Service {
           ],
         };
       }
-
+  
       let sortQuery = {};
       if (sort !== undefined) {
         const sortParams = sort.split(':');
@@ -178,30 +178,49 @@ export default class ApplyService extends Service {
       }else{
         sortQuery = {createdAt:-1}
       }
-
+  
       page = page === undefined ? 1 : parseInt(page);
       limit = limit === undefined ? 10 : parseInt(limit);
       const skip = (page - 1) * limit;
-      const [records, totalCount] = await Promise.all([
-        this.applyModel.find()
-          .select({ 
-            "jobId": 1,
-            "userId":1,
-            "applyAt":1,
-            "createdAt":1,
-           "_id": 0
-          })
-          .where(searchQuery)
-          .sort(sortQuery)
-          .skip(skip)
-          .limit(limit),
-        this.applyModel.countDocuments(searchQuery),
-      ]);
-      console.log(records, totalCount)
+  
+      const aggregationPipeline = [
+        { $match: searchQuery },
+        ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $project: {
+            jobId: 1,
+            userId: 1,
+            applyAt: 1,
+            createdAt:1,
+            _id: 0,
+          },
+        },
+        {
+          $facet: {
+            records: [{ $match: {} }], // Empty match to return the documents
+            totalCount: [{ $count: "count" }],
+          },
+        },
+        {
+          $project: {
+            records: 1,
+            totalCount: { $arrayElemAt: ["$totalCount.count", 0] },
+          },
+        },
+      ];
+  
+      const [aggregationResult] = await this.applyModel.aggregate(aggregationPipeline);
+  
+      const { records, totalCount } = aggregationResult;
+  
+      console.log(records, totalCount);
+  
       if (records.length === 0) {
         return new Response<any>(true, 200, 'No records available', {});
       }
-
+  
       const totalPages = Math.ceil(totalCount / limit);
       const currentPage = page;
       const output = {

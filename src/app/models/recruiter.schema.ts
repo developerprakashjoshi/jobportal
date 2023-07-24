@@ -5,10 +5,6 @@ export enum IsHire {
   Active = 1,
   Inactive = 0,
 }
-export enum recruiterStatus {
-  Active = "Active",
-  Inactive = "In-Active",
-}
 
 export interface IRecruiter extends Document {
   
@@ -25,7 +21,7 @@ export interface IRecruiter extends Document {
   termConditions :boolean,
   companyLocation:string,
   isHiringManager:IsHire,
-  status:recruiterStatus,
+  status:string,
   
   createdAt: Date;
   createdBy: Number;
@@ -54,7 +50,7 @@ const RecruiterSchema: Schema = new Schema({
   termConditions :{type:Boolean},
   companyLocation :{type:String},
   isHiringManager:{type:Number,enum:[0,1],default:0},
-  status:{type:String,enum:["Active","In-Active"],default:"Active"},
+  status:{type:String},
   
 
   createdAt: { type: Date},

@@ -1,9 +1,5 @@
 import mongoose,{ Schema, Document, model } from 'mongoose';
 
-export enum CityStatus {
-  Active = "Active",
-  Inactive = "In-Active",
-}
 
 export interface ICity extends Document {
   cityName: string;
@@ -11,7 +7,7 @@ export interface ICity extends Document {
   stateName: string;
   countryName: string;
   state:string;
-  status: CityStatus;
+  status: string;
   createdAt: Date;
   createdBy: String;
   createdFrom?: String;
@@ -34,7 +30,7 @@ const CitySchema: Schema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'State', // Referencing the User model
   },
-  status:{type:String,enum:["Active","In-Active"],default:"Active"},
+  status:{type:String},
   createdAt: { type: Date },
   createdBy: { type: String },
   createdFrom: { type: String },

@@ -456,6 +456,7 @@ export default class JobService extends Service {
             { title: { $regex: search, $options: 'i' } },
             { recruiterName: { $regex: search, $options: 'i' } },
             { companyName: { $regex: search, $options: 'i' } },
+            { reportAddress: { $regex: search, $options: 'i' } },
             { status: { $regex: search, $options: 'i' } },
           ],
         };
@@ -546,6 +547,7 @@ export default class JobService extends Service {
               createdAt: 1,
               companyName: 1,
               recruiterName:1,
+              reportAddress:1,
               status: 1,
               approveAdmin:1,
               totalApplied:1,

@@ -1,9 +1,6 @@
 import mongoose,{ Schema, Document, model } from 'mongoose';
 
-export enum ApplyStatus {
-  Active = 1,
-  Inactive = 0,
-}
+
 
 export interface IApply extends Document {
   

@@ -1,8 +1,9 @@
-import { Schema, Document, model } from 'mongoose';
+import mongoose,{ Schema, Document, model } from 'mongoose';
 
 
 export interface IInterview extends Document {
 
+  user:string;
   candidateName: string;
   interviewDate : Date;
   interviewTime: Date;
@@ -22,6 +23,10 @@ export interface IInterview extends Document {
 }
 
 const InterviewSchema: Schema = new Schema({
+  user:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'user',
+  },
   user_id: {type:Number},
   candidateName: {type:String},
   interviewDate : {type:Date},

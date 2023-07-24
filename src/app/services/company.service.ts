@@ -220,11 +220,94 @@ export default class CompanyService extends Service {
     }
   }
 
-  async datatable(data: any): Promise<Response<any>> {
+  // async datatable(data: any): Promise<Response<any>> {
+  //   try {
+  //     let { page, limit, search, sort } = data;
+  //     let errorMessage = '';
+
+  //     if (page !== undefined && limit !== undefined) {
+  //       if (isNaN(page) || !Number.isInteger(Number(page)) || isNaN(limit) || !Number.isInteger(Number(limit))) {
+  //         errorMessage = "Both 'page' and 'limit' must be integers.";
+  //       }
+  //     } else if (page !== undefined) {
+  //       if (isNaN(page) || !Number.isInteger(Number(page))) {
+  //         errorMessage = "'page' must be an integer.";
+  //       }
+  //     } else if (limit !== undefined) {
+  //       if (isNaN(limit) || !Number.isInteger(Number(limit))) {
+  //         errorMessage = "'limit' must be an integer.";
+  //       }
+  //     }
+
+  //     if (errorMessage) {
+  //       return new Response<any>(false, 400, errorMessage);
+  //     }
+
+  //     let searchQuery = {};
+  //     if (search !== undefined) {
+  //       searchQuery = {
+  //         $or: [
+  //           { name: { $regex: search, $options: 'i' } },
+  //           { industry: { $regex: search, $options: 'i' } },
+  //         ],
+  //       };
+  //     }
+
+  //     let sortQuery = {};
+  //     if (sort !== undefined) {
+  //       const sortParams = sort.split(':');
+  //       if (sortParams.length === 2) {
+  //         const [column, order] = sortParams;
+  //         sortQuery = { [column]: order === 'desc' ? -1 : 1 };
+  //       }
+  //     }else{
+  //       sortQuery = {createdAt:-1}
+  //     }
+
+  //     page = page === undefined ? 1 : parseInt(page);
+  //     limit = limit === undefined ? 10 : parseInt(limit);
+  //     const skip = (page - 1) * limit;
+  //     const [records, totalCount] = await Promise.all([
+  //       this.companyModel.find()
+  //         .select({ 
+  //           "logo":1,
+  //           "name": 1,
+  //           "size":1,
+  //           "industry":1,
+  //           "location":1,
+  //           "createdAt":1,
+  //          "_id": 1
+  //         })
+  //         .where(searchQuery)
+  //         .sort(sortQuery)
+  //         .skip(skip)
+  //         .limit(limit),
+  //       this.companyModel.countDocuments(searchQuery),
+  //     ]);
+
+  //     if (records.length === 0) {
+  //       return new Response<any>(true, 200, 'No records available', {});
+  //     }
+
+  //     const totalPages = Math.ceil(totalCount / limit);
+  //     const currentPage = page;
+  //     const output = {
+  //       records: records,
+  //       totalPages: totalPages !== null ? totalPages : 0,
+  //       currentPage: currentPage !== null ? currentPage : 0,
+  //       filterCount: records.length,
+  //       totalCount: totalCount,
+  //     };
+  //     return new Response<any>(true, 200, 'Read operation successful', output);
+  //   } catch (error: any) {
+  //     return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+  //   }
+  // }
+  async  datatable(data: any): Promise<Response<any>> {
     try {
       let { page, limit, search, sort } = data;
       let errorMessage = '';
-
+  
       if (page !== undefined && limit !== undefined) {
         if (isNaN(page) || !Number.isInteger(Number(page)) || isNaN(limit) || !Number.isInteger(Number(limit))) {
           errorMessage = "Both 'page' and 'limit' must be integers.";
@@ -238,21 +321,22 @@ export default class CompanyService extends Service {
           errorMessage = "'limit' must be an integer.";
         }
       }
-
+  
       if (errorMessage) {
-        return new Response<any>(false, 400, errorMessage);
+        return new Response(false, 400, errorMessage);
       }
-
+  
       let searchQuery = {};
       if (search !== undefined) {
         searchQuery = {
           $or: [
             { name: { $regex: search, $options: 'i' } },
-            { industry: { $regex: search, $options: 'i' } },
+            { size: { $regex: search, $options: 'i' } },
+            { location: { $regex: search, $options: 'i' } },
           ],
         };
       }
-
+  
       let sortQuery = {};
       if (sort !== undefined) {
         const sortParams = sort.split(':');
@@ -263,32 +347,45 @@ export default class CompanyService extends Service {
       }else{
         sortQuery = {createdAt:-1}
       }
-
+  
       page = page === undefined ? 1 : parseInt(page);
       limit = limit === undefined ? 10 : parseInt(limit);
       const skip = (page - 1) * limit;
+  
+      const aggregationPipeline = [
+        {
+          $match: {
+            $and: [
+              searchQuery,
+              { deletedAt: null } // Filter out documents where deletedAt is not null
+            ]
+          }
+        },
+        ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $project: {
+            logo: 1,
+            name: 1,
+            size: 1,
+            industry: 1,
+            location: 1,
+            createdAt:1,
+            _id: 1,
+          },
+        },
+      ];
+  
       const [records, totalCount] = await Promise.all([
-        this.companyModel.find()
-          .select({ 
-            "logo":1,
-            "name": 1,
-            "size":1,
-            "industry":1,
-            "location":1,
-            "createdAt":1,
-           "_id": 1
-          })
-          .where(searchQuery)
-          .sort(sortQuery)
-          .skip(skip)
-          .limit(limit),
-        this.companyModel.countDocuments(searchQuery),
+        Company.aggregate(aggregationPipeline),
+        Company.countDocuments(searchQuery),
       ]);
-
+  
       if (records.length === 0) {
-        return new Response<any>(true, 200, 'No records available', {});
+        return new Response(true, 200, 'No records available', {});
       }
-
+  
       const totalPages = Math.ceil(totalCount / limit);
       const currentPage = page;
       const output = {
@@ -298,8 +395,8 @@ export default class CompanyService extends Service {
         filterCount: records.length,
         totalCount: totalCount,
       };
-      return new Response<any>(true, 200, 'Read operation successful', output);
-    } catch (error: any) {
+      return new Response(true, 200, 'Read operation successful', output);
+    } catch (error:any  ) {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
   }

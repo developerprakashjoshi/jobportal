@@ -3,6 +3,7 @@ import Service from "@libs/service";
 import moment from "moment";
 import Response from "@libs/response"
 import Recruiter  from "@models/recruiter.schema";
+import Apply from '@models/apply.schema';
 import Company  from "@models/company.schema";
 import Jobs  from "@models/job.schema";
 
@@ -12,11 +13,13 @@ export default class RecruiterService extends Service {
   private recruiteModel: any;
   private companyModel: any;
   private jobModel: any;
+  private applyModel: any;
   constructor() {
     super()
     this.recruiteModel = AppDataSource.model('Recruiter');
     this.companyModel = AppDataSource.model('Company');
     this.jobModel = AppDataSource.model('Jobs');
+    this.applyModel = AppDataSource.model('Apply');
   }
   async count(): Promise<Response<any[]>> {
     try {
@@ -232,9 +235,9 @@ export default class RecruiterService extends Service {
       if (search !== undefined) {
         searchQuery = {
           $or: [
-            { deletedAt: null },
             { firstName: { $regex: search, $options: 'i' } },
-            { email: { $regex: search, $options: 'i' } },
+            { companyName: { $regex: search, $options: 'i' } },
+            { yourDesignation: { $regex: search, $options: 'i' } },
             { status: { $regex: search, $options: 'i' } },
           ],
         };
@@ -256,6 +259,8 @@ export default class RecruiterService extends Service {
       page = page === undefined ? 1 : parseInt(page);
       limit = limit === undefined ? 10 : parseInt(limit);
       const skip = (page - 1) * limit;
+      const totalApplied = await this.applyModel.countDocuments();
+      const totalJobPost = await  this.jobModel.countDocuments();
       const [records, totalCount] = await Promise.all([
         this.recruiteModel.aggregate([
           {
@@ -275,7 +280,11 @@ export default class RecruiterService extends Service {
               "firstName": 1,
               "LastName":1,
               "email":1,
+              "companyName":1,
+              "yourDesignation":1,
               'phoneNumber':1,
+              'totalJobPosted':1,
+              'totalApplied':1,
               'createdAt':1
             },
           },
@@ -299,23 +308,46 @@ export default class RecruiterService extends Service {
         console.log(row._id);
          return await this.countJob(row._id)
       })
+      const userIds = records.map((record:any) => record._id.toString());
+        const totalJobPosted = await Promise.all(userIds.map((_id:string) => this.countJob(_id)));
+        records.forEach((record:any, index:number) => {
+          record.totalJobPost = totalJobPosted[index];
+        });
+
+      const jobIds = records.map((record:any) => record._id.toString());
+      const totalAppliedCounts = await Promise.all(jobIds.map((_id:string) => this.countApply(_id)));
+      records.forEach((record:any, index:number) => {
+      record.totalApplied = totalAppliedCounts[index];
+      }); 
+
       const output = {
         records: records,
         totalPages: totalPages !== null ? totalPages : 0,
         currentPage: currentPage !== null ? currentPage : 0,
         filterCount: records.length,
         totalCount: totalCount,
-        totalJobs:await dataCount
+        totalJobs: totalJobPost,
+        totalApplicants: totalApplied,
+
       };
       return new Response<any>(true, 200, 'Read operation successful', output);
     } catch (error: any) {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
   }
-  async countJob(userId:ObjectId){
+  async countJob(userId:string){
     try {
-      const result = await this.jobModel.countDocuments({deleteAt:null,user:userId})
+      const result = await this.jobModel.countDocuments({deleteAt:null,user: new ObjectId(userId)})
       return result;
+    } catch (error: any) {
+      return error.message;
+    }
+  }
+
+  async countApply(jobId:string) {
+    try {
+      const result = await this.applyModel.countDocuments({ job: new ObjectId(jobId) });
+      return result
     } catch (error: any) {
       return error.message;
     }
