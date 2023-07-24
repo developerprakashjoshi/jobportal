@@ -354,8 +354,8 @@ export default class UserService extends Service {
       if (data.toMonth) {
         experience.toMonth = data.toMonth;
       }
-      if (data.fromMonth) {
-        experience.fromMonth = data.fromMonth;
+      if (data.toYear) {
+        experience.toYear = data.toYear;
       }
       if (data.description) {
         experience.description = data.description;
@@ -520,6 +520,8 @@ export default class UserService extends Service {
         if (sortParams.length === 2) {
           const [column, order] = sortParams;
           sortQuery = { [column]: order === 'desc' ? -1 : 1 };
+        }else{
+          sortQuery = { createdAt:-1 };
         }
       }
 
@@ -556,6 +558,12 @@ export default class UserService extends Service {
                   ""
                 ]
               },
+              // city: {
+              //   $ifNull: [
+              //     { $arrayElemAt: ["$addresses.city", { $subtract: [{ $size: "$addresses" }, 1] }] },
+              //     ""
+              //   ]
+              // },
               experience: {
                 $subtract: [
                   {
@@ -595,6 +603,7 @@ export default class UserService extends Service {
               appliedFor:1,
               interviewSchedule:1,
               jobStatus: 1,
+              createdAt:1
             }
           }
         ])
