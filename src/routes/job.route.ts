@@ -6,6 +6,7 @@ import {createJob,updateJob,deleteJob,updateApproveStatus} from "@validators/job
 const route=express.Router();
 
 route.get('/datatable',JobController.datatable)
+route.get('/admin-datatable',JobController.datatableAdmin)
 route.get('/count',JobController.count)
 route.get('/',JobController.getJobs)
 route.get('/:id',JobController.getJob)
