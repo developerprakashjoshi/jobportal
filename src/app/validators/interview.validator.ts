@@ -1,7 +1,7 @@
 import Joi from 'joi'
 
 export const createInterview=Joi.object({
-    
+    candidateId:Joi.string().required(),
     candidateName:Joi.string().required(),
     interviewDate:Joi.string().required(),
     interviewTime:Joi.string().required(),
@@ -13,6 +13,7 @@ export const createInterview=Joi.object({
 
 export const updateInterview=Joi.object({
     id:Joi.string().required(),
+    candidateId:Joi.string().optional(),
     candidateName:Joi.string().required(),
     interviewDate:Joi.string().optional(),
     interviewTime:Joi.string().optional(),
