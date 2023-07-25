@@ -155,14 +155,21 @@ export default class CountryService extends Service {
         return new Response<any>(false, 400, errorMessage);
       }
 
-      let searchQuery = {};
+      let searchQuery:any = {};
       if (search !== undefined) {
-        searchQuery = {
-          $or: [
-            { name: { $regex: search, $options: 'i' } },
-            { code: { $regex: search, $options: 'i' } },
-          ],
-        };
+     
+          searchQuery = {
+            $or: [
+              { name: { $regex: search, $options: 'i' } },
+              { code: { $regex: search, $options: 'i' } },
+            ],
+          };
+          // Check if the search value is a valid number
+          const parsedSize = parseFloat(search);
+          if (!isNaN(parsedSize)) {
+            // Add condition to filter by the size field if the search value is a number
+            searchQuery['size'] = parsedSize;
+          }
       }
 
       let sortQuery = {};

@@ -3,6 +3,8 @@ import Service from '@libs/service';
 import Response from '@libs/response';
 
 import User,{Certificate, Address, Education,Experience } from '@models/user.schema';
+import Apply from '@models/apply.schema';
+import Jobs from '@models/job.schema';
 import SearchEngine from '@libs/meili.search';
 import { ObjectId } from 'mongodb';
 import moment from 'moment';
@@ -10,10 +12,12 @@ import moment from 'moment';
 export default class UserService extends Service {
   private userModel: any;
   private searchEngine: any;
+  private applyModel: any;
   constructor() {
     super();
     this.searchEngine = new SearchEngine()
     this.userModel = User;
+    this.applyModel = Apply;
   }
 
   async count(): Promise<Response<any>> {
@@ -548,13 +552,13 @@ export default class UserService extends Service {
           {
             $addFields: {
               fullName: { $concat: ["$firstName", " ", "$lastName"] },
-              designation: "",
-              appliedFor: "",
+              designation: { $arrayElemAt: ["$experiences.jobTitle", -1] }, 
+            
               interviewSchedule:true,
               jobStatus:"Accepted",
               city: {
                 $ifNull: [
-                  { $arrayElemAt: ["$addresses.city", { $subtract: [{ $size: "$addresses" }, 1] }] },
+                  { $arrayElemAt: ["$addresses.city", { $subtract: [{ $size: "$addresses" }, 0] }] },
                   ""
                 ]
               },
@@ -600,7 +604,6 @@ export default class UserService extends Service {
               designation:1,
               city: 1,
               experience: 1,
-              appliedFor:1,
               interviewSchedule:1,
               jobStatus: 1,
               createdAt:1
@@ -616,6 +619,17 @@ export default class UserService extends Service {
         return new Response<any>(true, 200, 'No records available', {});
       }
 
+      const userIds = records.map((record:any) => record._id.toString());
+      const totalAppliedCounts = await Promise.all(userIds.map((_id:string) => this.getTotalAppliedJobsByUser(_id)));
+      records.forEach((record:any, index:number) => {
+        record.totalApplied = totalAppliedCounts[index];
+      });
+
+      const appliedJobsByUser = await Promise.all(userIds.map((_id:string) => this.getAppliedJobsByUser(_id)));
+      records.forEach((record:any, index:number) => {
+        record.appliedFor = appliedJobsByUser[index];
+      });
+
       const totalPages = Math.ceil(totalCount / limit);
       const currentPage = page;
       const output = {
@@ -628,6 +642,31 @@ export default class UserService extends Service {
       return new Response<any>(true, 200, 'Read operation successful', output);
     } catch (error: any) {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
+  async countApply(userId:string) {
+    try {
+      const result = await this.applyModel.countDocuments({ userId: new ObjectId(userId) });
+      return result
+    } catch (error: any) {
+      return error.message;
+    }
+  }
+  async  getAppliedJobsByUser(userId: string) {
+    try {
+      const appliedJobs = await Apply.find({ user: userId }).populate('job').exec();
+      return appliedJobs;
+    } catch (error: any) {
+     return "Error"
+    }
+  }
+  
+  async  getTotalAppliedJobsByUser(userId: string) {
+    try {
+      const totalAppliedJobs = await Apply.countDocuments({ user: userId });
+      return totalAppliedJobs;
+    } catch (error: any) {
+      return "Error"
     }
   }
   async searchUsers(query: any): Promise<Response<any>> {

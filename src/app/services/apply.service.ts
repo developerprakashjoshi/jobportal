@@ -33,7 +33,7 @@ export default class ApplyService extends Service {
 
   async list(): Promise<Response<any>> {
     try {
-      const result = await this.applyModel.find({deletedAt: null});
+      const result = await this.applyModel.find({deletedAt: null}).populate('job').exec();
       if (!result) {
         return new Response<any>(true, 200, 'Record not available', result);
       }
