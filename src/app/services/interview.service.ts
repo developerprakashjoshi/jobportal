@@ -160,6 +160,7 @@ export default class InterviewService extends Service {
   async datatable(data: any): Promise<Response<any>> {
     try {
       let { page, limit, search, sort } = data;
+
       let errorMessage = '';
   
       if (page !== undefined && limit !== undefined) {
@@ -180,18 +181,39 @@ export default class InterviewService extends Service {
         return new Response<any>(false, 400, errorMessage);
       }
   
-      let matchQuery = {};
+      let searchQuery = {};
+      // if (search !== undefined) {
+      //   searchQuery = {
+      //     $or: [
+      //       { candidateName: { $regex: search, $options: 'i' } },
+      //       { interviewDate: { $regex: search, $options: 'i' } },
+      //     ],
+      //   };
+      // }
       if (search !== undefined) {
-        matchQuery = {
-          $or: [
-            { interviewDate: { $regex: search, $options: 'i' } },
-            { candidateName: { $regex: search, $options: 'i' } },
-          ],
-        };
+        // Check if the search query is a valid date format
+        const searchDate = new Date(search);
+        if (!isNaN(searchDate.getTime())) {
+          // Valid date format, construct a date range for search
+          const nextDay = new Date(searchDate);
+          nextDay.setDate(nextDay.getDate() + 1);
+  
+          searchQuery = {
+            $and: [
+              { interviewDate: { $gte: searchDate } }, // Greater than or equal to search date
+              { interviewDate: { $lt: nextDay } },      // Less than the next day
+            ],
+          };
+        } else {
+          // Not a date format, search only candidateName using $regex
+          searchQuery = {
+            candidateName: { $regex: search, $options: 'i' },
+          };
+        }
       }
   
       let sortQuery = {};
-      if (sort !== undefined) {
+      if (sort !== undefined ) {
         const sortParams = sort.split(':');
         if (sortParams.length === 2) {
           const [column, order] = sortParams;
@@ -204,53 +226,56 @@ export default class InterviewService extends Service {
       page = page === undefined ? 1 : parseInt(page);
       limit = limit === undefined ? 10 : parseInt(limit);
       const skip = (page - 1) * limit;
+      const [records, totalCount] = await Promise.all([
+        this.interviewModel.aggregate([
+          {
+            $match: {
+              $and: [
+                searchQuery,
+                { deletedAt: null } // Filter out documents where deletedAt is not null
+              ]
+            }
+          },
+          ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
+          { $skip: skip },
+          { $limit: limit },
+          {
+            $project: {
+              "candidateName": 1,
+              "interviewDate":1,
+              "interviewTime":1,
+              "interviewLink":1,
+              "description":1,
+              "createdAt":1,
+            },
+          },
+          {
+            $unwind: {
+              path: '$company',
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+        ]).exec(),
+        this.interviewModel.countDocuments(searchQuery),
+      ]);
   
-      const aggregationPipeline = [
-        { $match: matchQuery },
-        ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
-        { $skip: skip },
-        { $limit: limit },
-        {
-          $project: {
-          "candidateName": 1,
-          "interviewDate":1,
-          "interviewTime":1,
-          "interviewLink":1,
-          "description":1,
-          "createdAt":1,
-          }
-        },
-        {
-          $facet: {
-            records: [{ $match: {} }],
-            totalCount: [{ $count: "count" }]
-          }
-        },
-        { $unwind: { path: "$totalCount", preserveNullAndEmptyArrays: true } },
-        {
-          $project: {
-            records: 1,
-            totalCount: { $ifNull: ["$totalCount.count", 0] }
-          }
-        }
-      ];
-  
-      const [result] = await this.interviewModel.aggregate(aggregationPipeline);
-  
-      if (!result || result.records.length === 0) {
+      if (records.length === 0) {
         return new Response<any>(true, 200, 'No records available', {});
       }
   
-      const totalPages = Math.ceil(result.totalCount / limit);
+      const totalPages = Math.ceil(totalCount / limit);
       const currentPage = page;
+      
+      
+
       const output = {
-        records: result.records,
+        records: records,
         totalPages: totalPages !== null ? totalPages : 0,
         currentPage: currentPage !== null ? currentPage : 0,
-        filterCount: result.records.length,
-        totalCount: result.totalCount,
+        filterCount: records.length,
+        totalCount: totalCount,
+
       };
-  
       return new Response<any>(true, 200, 'Read operation successful', output);
     } catch (error: any) {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);

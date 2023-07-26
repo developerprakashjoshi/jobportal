@@ -327,14 +327,28 @@ export default class CompanyService extends Service {
       }
   
       let searchQuery = {};
+      // if (search !== undefined) {
+        
+      //   searchQuery = {
+      //     $or: [
+      //       { name: { $regex: search, $options: 'i' } },
+      //       { size: { $regex: search, $options: 'i' } },
+      //       { location: { $regex: search, $options: 'i' } },
+      //     ],
+      //   };
+      // }
       if (search !== undefined) {
-        searchQuery = {
-          $or: [
-            { name: { $regex: search, $options: 'i' } },
-            { size: { $regex: search, $options: 'i' } },
-            { location: { $regex: search, $options: 'i' } },
-          ],
-        };
+        const searchNumber = parseFloat(search);
+        if (!isNaN(searchNumber)) {
+          searchQuery = { size: { $eq: searchNumber } };
+        } else {
+          searchQuery = {
+            $or: [
+              { name: { $regex: search, $options: 'i' } },
+              { location: { $regex: search, $options: 'i' } },
+            ],
+          };
+        }
       }
   
       let sortQuery = {};

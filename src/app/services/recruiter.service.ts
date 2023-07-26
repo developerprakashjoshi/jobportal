@@ -99,6 +99,7 @@ export default class RecruiterService extends Service {
       let recruiter = new Recruiter()
       recruiter.firstName = data.firstName
       recruiter.LastName = data.LastName
+      recruiter.location = data.location
       recruiter.email = data.email
       recruiter.password = data.password
       recruiter.phoneNumber = data.phoneNumber
@@ -140,7 +141,9 @@ export default class RecruiterService extends Service {
       if (data.LastName) {
         recruiter.LastName = data.LastName
       }
-      
+      if (data.location){
+        recruiter.location = data.location
+      }
       if (data.email) {
         recruiter.email = data.email
       }

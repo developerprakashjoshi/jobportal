@@ -12,7 +12,7 @@ export const createCompany=Joi.object({
     website:Joi.string().required(),
     description:Joi.string().required(),
     location:Joi.string().required(),
-    photos: Joi.array().items(Joi.string()).required(),
+    // photos: Joi.array().items(Joi.string()).required(),
     createdBy:Joi.string().required(),
     // created_by:Joi.number().required(),
 

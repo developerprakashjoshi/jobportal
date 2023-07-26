@@ -16,7 +16,7 @@ export default class JobService extends Service {
   }
   async count(): Promise<Response<any[]>> {
     try {
-      const result = await this.jobModel.countDocuments()
+      const result = await this.jobModel.countDocuments({deletedAt: null})
       return new Response<any[]>(true, 200, "Count operation successful", result);
     } catch (error: any) {
       return new Response<any[]>(false, 400, error.message);
