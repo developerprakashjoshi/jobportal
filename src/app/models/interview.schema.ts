@@ -6,7 +6,7 @@ export interface IInterview extends Document {
   user:string;
   candidateName: string;
   interviewDate : Date;
-  interviewTime: Date;
+  interviewTime: String;
   interviewLink :Date;
   description :string;
   createdAt: Date;
@@ -30,7 +30,7 @@ const InterviewSchema: Schema = new Schema({
   user_id: {type:Number},
   candidateName: {type:String},
   interviewDate : {type:Date},
-  interviewTime: {type:Date},
+  interviewTime: {type:String},
   interviewLink :{type:String},
   description :{type:String},
 

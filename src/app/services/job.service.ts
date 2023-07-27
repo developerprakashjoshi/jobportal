@@ -480,8 +480,8 @@ export default class JobService extends Service {
       const skip = (page - 1) * limit;
       const totalApplied = await this.applyModel.countDocuments();
       const [activeCount, inactiveCount] = await Promise.all([
-        this.jobModel.countDocuments({ status: "Active" }),
-        this.jobModel.countDocuments({ status: "Inactive"  }),
+        this.jobModel.countDocuments({ status: "Active" ,deletedAt: null}),
+        this.jobModel.countDocuments({ status: "Inactive",deletedAt: null  }),
       ]);
       const [records, totalCount] = await Promise.all([
         this.jobModel.aggregate([
