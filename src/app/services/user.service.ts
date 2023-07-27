@@ -218,38 +218,23 @@ export default class UserService extends Service {
       if (!user.address) {
         user.address = [];
       }
-      const address: Address = {
-        street: "",
-        country: "",
-        state: "",
-        city: "",
-        postalCode: 0,
-        type: "",
-        
-      };
-      if (data.street) {
-        address.street = data.street;
-      }
-      if (data.country) {
-        address.country = data.country;
-      }
-      if (data.state) {
-        address.state = data.state;
-      }
-      if (data.city) {
-        address.city = data.city;
-      }
-      if (data.postalCode) {
-        address.postalCode = data.postalCode;
-      }
-      if (data.type) {
-        address.type = data.type;
-      }
-      user.updatedAt = new Date()
-      user.updatedBy = data.updatedBy
-      user.updatedFrom = data.ip
-      user.onboardingStep=3;
-      user.addresses.push(address);
+      const updateAddress: Address[] = data.map((addressData:any) => {
+        const address: Address = {
+          street: addressData.street || "",
+          country: addressData.country || "",
+          state: addressData.state || "",
+          city: addressData.city || "",
+          postalCode: addressData.postalCode || 0,
+          type: addressData.type || "",
+        };
+        return address;
+      });
+      
+      user.updatedAt = new Date();
+      user.updatedBy = data[0].updatedBy || ""; // Assuming the first address's updatedBy applies to all
+      user.updatedFrom = data[0].ip || ""; // Assuming the first address's ip applies to all
+      user.onboardingStep = 3;
+      user.addresses=updateAddress;
       // await this.searchEngine.updateIndex('user', user);
       const result = await user.save();
       
@@ -260,123 +245,88 @@ export default class UserService extends Service {
   }
 
 
-  async updateEducation(pid: string, data: any): Promise<Response<any>> {
-    try {
-      const isValidObjectId = ObjectId.isValid(pid);
-      if (!isValidObjectId) {
-        return new Response<any>(false, 400, 'Invalid ObjectId', undefined);
-      }
-      const user = await this.userModel.findById(pid);
-      if (!user) {
-        return new Response<any>(true, 200, 'Record not available', user);
-      }
-      if (!user.education) {
-        user.education = [];
-      }
+  async updateEducation(pid: string, data: any[]): Promise<Response<any>> {
+  try {
+    const isValidObjectId = ObjectId.isValid(pid);
+    if (!isValidObjectId) {
+      return new Response<any>(false, 400, 'Invalid ObjectId', undefined);
+    }
+    const user = await this.userModel.findById(pid);
+    if (!user) {
+      return new Response<any>(true, 200, 'Record not available', user);
+    }
+    if (!user.education) {
+      user.education = [];
+    }
+
+    const updatedEducations: Education[] = data.map((educationData) => {
       const education: Education = {
-        level: "",
-        fieldStudy: "",
-        schoolName: "",
-        board: "",
-        passingYear: 0,
-        state: "",
-        city: "",
+        level: educationData.level || "",
+        fieldStudy: educationData.fieldStudy || "",
+        schoolName: educationData.schoolName || "",
+        board: educationData.board || "",
+        passingYear: educationData.passingYear || 0,
+        state: educationData.state || "",
+        city: educationData.city || "",
       };
-      if (data.level) {
-        education.level = data.level;
-      }
-      if (data.country) {
-        education.fieldStudy = data.fieldStudy;
-      }
-      if (data.schoolName) {
-        education.schoolName = data.schoolName;
-      }
-      if (data.board) {
-        education.board = data.board;
-      }
-      if (data.passingYear) {
-        education.passingYear = data.passingYear;
-      }
-      if (data.state) {
-        education.state = data.state;
-      }
-      if (data.state) {
-        education.state = data.state;
-      }
-      user.updatedAt = new Date()
-      user.updatedBy = data.updatedBy
-      user.updatedFrom = data.ip
-      user.onboardingStep=4;
-      user.education.push(education);
-      // await this.searchEngine.updateIndex('user', user);
-      const result = await user.save();
-      
-      return new Response<any>(true, 200, 'Update operation successful', result);
-    } catch (error: any) {
-      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
-    }
-  }
+      return education;
+    });
 
-  async updateWorkExperience(pid: string, data: any): Promise<Response<any>> {
-    try { 
-      const isValidObjectId = ObjectId.isValid(pid);
-      if (!isValidObjectId) {
-        return new Response<any>(false, 400, 'Invalid ObjectId', undefined);
-      }
-      const user = await this.userModel.findById(pid);
-      if (!user) {
-        return new Response<any>(true, 200, 'Record not available', user);
-      }
-      if (!user.experience) {
-        user.experience = [];
-      }
-      const experience: Experience = {
-        jobTitle: "",
-        companyName: "",
-        currentlyWorking: false,
-        fromMonth: "",
-        fromYear: "",
-        toMonth: "",
-        toYear: "",
-        description: ""
-      };
-      if (data.jobTitle) {
-        experience.jobTitle = data.jobTitle;
-      }
-      if (data.companyName) {
-        experience.companyName = data.companyName;
-      }
-      if (data.currentlyWorking) {
-        experience.currentlyWorking = data.currentlyWorking;
-      }
-      if (data.fromMonth) {
-        experience.fromMonth = data.fromMonth;
-      }
-      if (data.fromYear) {
-        experience.fromYear = data.fromYear;
-      }
-      if (data.toMonth) {
-        experience.toMonth = data.toMonth;
-      }
-      if (data.toYear) {
-        experience.toYear = data.toYear;
-      }
-      if (data.description) {
-        experience.description = data.description;
-      }
-      user.updatedAt = new Date()
-      user.updatedBy = data.updatedBy
-      user.updatedFrom = data.ip
-      user.experiences.push(experience);
-      user.onboardingStep=5;
-      // await this.searchEngine.updateIndex('user', user);
-      const result = await user.save();
-      
-      return new Response<any>(true, 200, 'Update operation successful', result);
-    } catch (error: any) {
-      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
-    }
+    user.updatedAt = new Date();
+    user.updatedBy = data[0].updatedBy;
+    user.updatedFrom = data[0].ip;
+    user.onboardingStep = 4;
+    user.education = updatedEducations;
+
+    // await this.searchEngine.updateIndex('user', user);
+    const result = await user.save();
+
+    return new Response<any>(true, 200, 'Update operation successful', result);
+  } catch (error: any) {
+    return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
   }
+}
+
+
+async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
+  try { 
+    const isValidObjectId = ObjectId.isValid(pid);
+    if (!isValidObjectId) {
+      return new Response<any>(false, 400, 'Invalid ObjectId', undefined);
+    }
+    const user = await this.userModel.findById(pid);
+    if (!user) {
+      return new Response<any>(true, 200, 'Record not available', user);
+    }
+    
+    const newExperiences: Experience[] = data.map(experienceData => ({
+      jobTitle: experienceData.jobTitle || "",
+      companyName: experienceData.companyName || "",
+      currentlyWorking: experienceData.currentlyWorking || false,
+      fromMonth: experienceData.fromMonth || "",
+      fromYear: experienceData.fromYear || "",
+      toMonth: experienceData.toMonth || "",
+      toYear: experienceData.toYear || "",
+      description: experienceData.description || ""
+    }));
+
+    if (!user.experiences) {
+      user.experiences = [];
+    }
+    
+    user.experiences=newExperiences;
+    user.updatedAt = new Date();
+    user.updatedBy = data[0].updatedBy; // Assuming the first experience's updatedBy applies to all
+    user.updatedFrom = data[0].ip; // Assuming the first experience's ip applies to all
+    user.onboardingStep = 5;
+    // await this.searchEngine.updateIndex('user', user);
+    const result = await user.save();
+
+    return new Response<any>(true, 200, 'Update operation successful', result);
+  } catch (error: any) {
+    return new Response<any>(false, 500, 'Internal Server Error', undefined, error.message);
+  }
+}
 
   async updateSkillSets(pid: string, data: any): Promise<Response<any>> {
     try {

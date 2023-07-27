@@ -4,7 +4,12 @@ import Joi, { ObjectSchema,ArraySchema } from 'joi';
 const validator = (schema: ObjectSchema<any> | ArraySchema<any>) => {
   return async function (req: Request, res: Response, next: NextFunction) {
     try {
-      const validated = await schema.validateAsync({ ...req.body, ...req.params });
+      let validated;
+      if (Array.isArray(schema.describe().items)) {
+         validated = await schema.validateAsync(req.body);
+      } else {
+         validated = await schema.validateAsync({ ...req.body, ...req.params });
+      }
       req.body = validated;
       next();
     } catch (error: any) {

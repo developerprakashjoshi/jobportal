@@ -124,7 +124,7 @@ export const updateBasicInfo = Joi.object<User>({
   updatedBy: Joi.string().required(),
 }).options({ abortEarly: false });
 
-export const updateAddress = Joi.object<Address>({
+export const updateAddress = Joi.array().items(Joi.object<Address>({
   id: Joi.string().required(),
   street: Joi.string().required(),
   country: Joi.string().required(),
@@ -133,20 +133,23 @@ export const updateAddress = Joi.object<Address>({
   postalCode: Joi.number().required(),
   updatedBy: Joi.string().required(),
   type: Joi.string().valid("home", "office").required(),
-}).options({ abortEarly: false });
+})).options({ abortEarly: false });
 
-export const updateEducation = Joi.object<Education>({
-  id: Joi.string().required(),
-  level: Joi.string().required(),
-  fieldStudy: Joi.string().required(),
-  schoolName: Joi.string().required(),
-  board: Joi.string().required(),
-  passingYear: Joi.number().required(),
-  state: Joi.string().required(),
-  city: Joi.string().required(),
-}).options({ abortEarly: false });
+export const updateEducation = Joi.array().items(
+  Joi.object({
+    id: Joi.string().required(),
+    level: Joi.string().required(),
+    fieldStudy: Joi.string().required(),
+    schoolName: Joi.string().required(),
+    board: Joi.string().required(),
+    passingYear: Joi.number().required(),
+    state: Joi.string().required(),
+    city: Joi.string().required(),
+  })
+).options({ abortEarly: false });
 
-export const updateExperience = Joi.object<Experience>({
+export const updateExperience = Joi.array().items(
+  Joi.object<Experience>({
   id: Joi.string().required(),
   jobTitle: Joi.string().required(),
   companyName: Joi.string().required(),
@@ -157,7 +160,8 @@ export const updateExperience = Joi.object<Experience>({
   toYear: Joi.number().required(),
   description: Joi.string().required(),
   updatedBy: Joi.string().required(),
-}).options({ abortEarly: false });
+})
+).options({ abortEarly: false });
 
 export const updateSkillSets = Joi.object<User>({
   id: Joi.string().required(),
