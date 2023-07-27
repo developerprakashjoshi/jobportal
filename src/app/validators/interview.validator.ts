@@ -24,5 +24,5 @@ export const updateInterview=Joi.object({
 
 export const deleteInterview=Joi.object({
     id:Joi.string().required(),
-    deleteBy:Joi.string().required()
+    deletedBy:Joi.string().required()
 })

@@ -16,7 +16,7 @@ export default class JobService extends Service {
   }
   async count(): Promise<Response<any[]>> {
     try {
-      const result = await this.jobModel.countDocuments({deletedAt: null})
+      const result = await this.jobModel.countDocuments({ deletedAt: null })
       return new Response<any[]>(true, 200, "Count operation successful", result);
     } catch (error: any) {
       return new Response<any[]>(false, 400, error.message);
@@ -283,6 +283,7 @@ export default class JobService extends Service {
             { title: { $regex: search, $options: 'i' } },
             { recruiterName: { $regex: search, $options: 'i' } },
             { companyName: { $regex: search, $options: 'i' } },
+            { reportAddress: { $regex: search, $options: 'i' } },
             { status: { $regex: search, $options: 'i' } },
           ],
         };
@@ -313,7 +314,7 @@ export default class JobService extends Service {
             $match: {
               $and: [
                 searchQuery,
-                { deletedAt: null ,
+                {deletedAt: { $exists: false } ,
                   $or: [
                     { approveAdmin: { $ne: null } }, 
                     { approveAdmin: true }, 
@@ -371,6 +372,7 @@ export default class JobService extends Service {
               title: 1,
               noOfHiring: 1,
               schedule: 1,
+              reportAddress:1,
               startDate: 1,
               isDeadlineApplicable: 1,
               createdAt: 1,
@@ -395,7 +397,7 @@ export default class JobService extends Service {
             },
           },
         ]).exec(),
-        this.jobModel.countDocuments(searchQuery),
+        this.jobModel.countDocuments({ deletedAt: { $exists: false } }),
       ]);
   
       if (records.length === 0) {
@@ -567,7 +569,7 @@ export default class JobService extends Service {
             },
           },
         ]).exec(),
-        this.jobModel.countDocuments(searchQuery),
+        this.jobModel.countDocuments({ deletedAt: { $exists: false } }),
       ]);
   
       if (records.length === 0) {

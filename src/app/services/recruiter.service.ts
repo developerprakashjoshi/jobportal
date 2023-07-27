@@ -298,7 +298,7 @@ export default class RecruiterService extends Service {
             },
           },
         ]).exec(),
-        this.recruiteModel.countDocuments(searchQuery),
+        this.recruiteModel.countDocuments({ deletedAt: { $exists: false } }),
       ]);
   
       if (records.length === 0) {

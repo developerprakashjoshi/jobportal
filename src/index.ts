@@ -40,6 +40,7 @@ import recruiterRoute from '@routes/recruiter.route'
 import applyRoute from '@routes/apply.route'
 import chatRoute from '@routes/chat.route'
 import messagesRoute from '@routes/messages.route'
+import courseRoute from '@routes/course.route'
 
 import { errorHandler, notFound } from "@libs/error.handler";
 
@@ -89,6 +90,8 @@ app.use('/api/v1/recruiter',recruiterRoute);
 app.use('/api/v1/apply',applyRoute);
 app.use('/api/v1/chat',chatRoute);
 app.use('/api/v1/messages',messagesRoute);
+app.use('/api/v1/course',courseRoute);
+
 
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({

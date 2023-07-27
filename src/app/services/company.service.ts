@@ -78,8 +78,8 @@ export default class CompanyService extends Service {
       company.logo=data.logo
       company.size = data.size
       company.industry = data.industry
-      company.yearOfEstd = data.company_size
-      company.revenue = data.profile
+      company.yearOfEstd = data.yearOfEstd
+      company.revenue = data.revenue  
       company.ceo = data.ceo
       company.ceoAvatar=data.ceoAvatar
       company.website = data.website
@@ -88,7 +88,7 @@ export default class CompanyService extends Service {
       company.photos = data.photos;
 
       company.createdAt = new Date();
-      company.createdBy = data.created_by
+      company.createdBy = data.createdBy
       company.createdFrom = data.ip
       const result:any = await company.save()
       return new Response<any[]>(true, 201, "Insert operation successful", result);
@@ -123,14 +123,21 @@ export default class CompanyService extends Service {
       if (data.yearOfEstd) {
         company.yearOfEstd = data.yearOfEstd
       }
-      if (data.revenue) {
-        company.revenue = data.profile
-      }
+      
       if (data.revenue) {
         company.revenue = data.revenue
       }
       if (data.opportunity) {
         company.opportunity = data.opportunity
+      }
+      if (data.location) {
+        company.location = data.location
+      }
+      if (data.description) {
+        company.description = data.description
+      }
+      if (data.industry) {
+        company.industry = data.industry
       }
       
       company.updatedAt = new Date()
@@ -393,7 +400,7 @@ export default class CompanyService extends Service {
   
       const [records, totalCount] = await Promise.all([
         Company.aggregate(aggregationPipeline),
-        Company.countDocuments(searchQuery),
+        Company.countDocuments({ deletedAt: { $exists: false } }),
       ]);
   
       if (records.length === 0) {
