@@ -285,10 +285,11 @@ export default class JobService extends Service {
             { companyName: { $regex: search, $options: 'i' } },
             { reportAddress: { $regex: search, $options: 'i' } },
             { status: { $regex: search, $options: 'i' } },
+            
           ],
         };
       }
-  
+
       let sortQuery = {};
       if (sort !== undefined) {
         const sortParams = sort.split(':');
@@ -316,6 +317,7 @@ export default class JobService extends Service {
                 searchQuery,
                 {deletedAt: { $exists: false } ,
                   $or: [
+                   
                     { approveAdmin: { $ne: null } }, 
                     { approveAdmin: true }, 
                   ],

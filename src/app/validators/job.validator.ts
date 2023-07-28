@@ -5,11 +5,19 @@ export const createJob=Joi.object({
     companyId:Joi.string().required(),
     title:Joi.string().required(),
     reportToWork:Joi.number().required(),
-    reportAddress:Joi.string().required(),
+    reportAddress: Joi.string().when('reportToWork', {
+        is: 1,
+        then: Joi.string().required(),
+        otherwise: Joi.string().optional().allow(null) // or .strip() to remove the field
+    }),
     jobType:Joi.string().required(),
     schedule:Joi.string().required(),
     isStartPlanned:Joi.number().required(),
-    startDate:Joi.date().required(),
+    startDate: Joi.date().when('isStartPlanned', {
+        is: 1,
+        then: Joi.date().required(),
+        otherwise: Joi.date().optional().allow(null)
+    }),
     payRange:Joi.string().required(),
     min:Joi.string().required(),
     max:Joi.string().required(),
@@ -19,7 +27,11 @@ export const createJob=Joi.object({
     description:Joi.string().required(),
     isCVRequired:Joi.boolean().required(),
     isDeadlineApplicable:Joi.boolean().required(),
-    deadlineDate:Joi.date().required(),
+    deadlineDate: Joi.date().when('isDeadlineApplicable', {
+        is: true,
+        then: Joi.date().required(),
+        otherwise: Joi.date().optional().allow(null)
+    }),
     noOfHiring:Joi.number().required(),
     hiringSlot:Joi.string().required(),
     aboutCompany:Joi.string().required(),
