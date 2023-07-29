@@ -146,17 +146,17 @@ export const updateAddress = Joi.array().items(Joi.object<Address>({
 export const updateEducation = Joi.array().items(
   Joi.object({
     id: Joi.string().required(),
-    level: Joi.string().required(),
-    fieldStudy: Joi.string().optional(),
+    level: Joi.string().optional().allow('',null),
+    fieldStudy: Joi.string().optional().allow('',null),
     instituteName: Joi.string().required(),
-    board: Joi.string().optional(),
+    board: Joi.string().optional().allow('',null),
     passingYear: Joi.number().required(),
-    state: Joi.string().optional(),
-    city: Joi.string().optional(),
-    course:Joi.string().optional(),
-    courseType:Joi.string().optional(),
-    courseSpecialization:Joi.string().optional(),
-    certificate:Joi.string().optional(),
+    state: Joi.string().optional().allow('',null),
+    city: Joi.string().optional().allow('',null),
+    course:Joi.string().optional().allow('',null),
+    courseType:Joi.string().optional().allow('',null),
+    courseSpecialization:Joi.string().optional().allow('',null),
+    certificate:Joi.string().optional().allow('',null),
   })
 ).options({ abortEarly: false });
 
@@ -168,8 +168,16 @@ export const updateExperience = Joi.array().items(
   currentlyWorking: Joi.boolean().required(),
   fromMonth: Joi.string().required(),
   fromYear: Joi.number().required(),
-  toMonth: Joi.string().required(),
-  toYear: Joi.number().required(),
+  toMonth: Joi.when('currentlyWorking', {
+    is: false,
+    then: Joi.string().required(),
+    otherwise: Joi.string().optional(),
+  }),
+  toYear: Joi.when('currentlyWorking', {
+    is: false,
+    then: Joi.number().required(),
+    otherwise: Joi.number().optional(),
+  }),
   description: Joi.string().required(),
   updatedBy: Joi.string().required(),
 })

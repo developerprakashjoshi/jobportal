@@ -252,7 +252,145 @@ export default class JobService extends Service {
       return new Response<any[]>(false, 400, error.message);
     }
   }
+  async search(data: any): Promise<Response<any>> {
+    try {
+      let { search, sort } = data;
+      
+      let searchQuery = {};
+      if (search !== undefined) {
+        searchQuery = {
+          $or: [
+            { title: { $regex: search, $options: 'i' } },
+            { recruiterName: { $regex: search, $options: 'i' } },
+            { companyName: { $regex: search, $options: 'i' } },
+            { reportAddress: { $regex: search, $options: 'i' } },
+            { status: { $regex: search, $options: 'i' } },
+            
+          ],
+        };
+      }
 
+      let sortQuery = {};
+      if (sort !== undefined) {
+        const sortParams = sort.split(':');
+        if (sortParams.length === 2) {
+          const [column, order] = sortParams;
+          sortQuery = { [column]: order === 'desc' ? -1 : 1 };
+        }
+      }else{
+        sortQuery = {createdAt:-1}
+      }
+      const [records, totalCount] = await Promise.all([
+        this.jobModel.aggregate([
+          {
+            $match: {
+              $and: [
+                searchQuery,
+                {deletedAt: { $exists: false } ,
+                  $or: [
+                   
+                    { approveAdmin: { $ne: null } }, 
+                    { approveAdmin: true }, 
+                  ],
+                } 
+              ]
+            }
+          },
+          ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
+          {
+            $lookup: {
+              from: 'users',
+              localField: 'user',
+              foreignField: '_id',
+              as: 'user',
+            },
+          },
+          {
+            $lookup: {
+              from: 'companies',
+              localField: 'company',
+              foreignField: '_id',
+              as: 'company',
+            },
+          },
+          {
+            $addFields: {
+              recruiterName:{
+                $concat: [
+                  { $arrayElemAt: ['$user.firstName', 0] },
+                  ' ',
+                  { $arrayElemAt: ['$user.lastName', 0] }
+                ]
+              },
+              companyName:{
+                $arrayElemAt: ['$company.name', 0] 
+              },
+              createdOn:{
+                $dateToString: {
+                  date: "$createdAt",
+                  format: "%d-%m-%Y"
+                }
+              },
+              totalApplied:500
+              
+            }
+          },
+          {
+            $project: {
+              _id: 1,
+              report_address: 1,
+              type: 1,
+              title: 1,
+              noOfHiring: 1,
+              schedule: 1,
+              reportAddress:1,
+              startDate: 1,
+              isDeadlineApplicable: 1,
+              createdAt: 1,
+              companyName: 1,
+              recruiterName:1,
+              status: 1,
+              approveAdmin:1,
+              totalApplied:1,
+              deadlineDate:1,
+            },
+          },
+          {
+            $unwind: {
+              path: '$user',
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          {
+            $unwind: {
+              path: '$company',
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+        ]).exec(),
+        this.jobModel.countDocuments({ deletedAt: { $exists: false } }),
+      ]);
+  
+      if (records.length === 0) {
+        return new Response<any>(true, 200, 'No records available', {});
+      }
+ 
+        const jobIds = records.map((record:any) => record._id.toString());
+        const totalAppliedCounts = await Promise.all(jobIds.map((_id:string) => this.countApply(_id)));
+        records.forEach((record:any, index:number) => {
+          record.totalApplied = totalAppliedCounts[index];
+        });
+      const output = {
+        records: records,
+        filterCount: records.length,
+        totalCount: totalCount,
+      };
+      return new Response<any>(true, 200, 'Read operation successful', output);
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
+  
   async datatable(data: any): Promise<Response<any>> {
     try {
       let { page, limit, search, sort } = data;
