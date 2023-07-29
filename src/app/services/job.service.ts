@@ -447,8 +447,15 @@ export default class JobService extends Service {
         searchQuery = {
           $or: [
             { title: { $regex: search, $options: 'i' } },
+<<<<<<< HEAD
              {recruiter: { $in: matchingUserIds } },
              { company: { $in: companyIds } },
+=======
+            { recruiterName: { $regex: search, $options: 'i' } },
+            { 'user.firstName': { $regex: search, $options: 'i' } },
+            { 'user.lastName': { $regex: search, $options: 'i' } },
+            { 'company.name': { $regex: search, $options: 'i' } },
+>>>>>>> 01f6b25a76858e246cbce9ca988be22649c0c252
             { reportAddress: { $regex: search, $options: 'i' } },
             { status: { $regex: search, $options: 'i' } },
             
