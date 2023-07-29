@@ -3,16 +3,25 @@ import Service from "@libs/service";
 import moment from "moment";
 import Response from "@libs/response"
 import Jobs from "@models/job.schema";
+import User from "@models/user.schema";
 import Apply from '@models/apply.schema';
+import Recruiter from '@models/recruiter.schema';
+import Company from "@models/company.schema";
 import { ObjectId } from 'mongodb';
 
 export default class JobService extends Service {
   private jobModel: any;
   private applyModel: any;
+  private userModel: any;
+  private recruiterModel: any;
+  private companyModel: any;
   constructor() {
     super()
     this.jobModel = Jobs;
     this.applyModel = Apply;
+    this.userModel = User;
+    this.recruiterModel = Recruiter;
+    this.companyModel = Company;
   }
   async count(): Promise<Response<any[]>> {
     try {
@@ -62,7 +71,7 @@ export default class JobService extends Service {
   async create(data: any) {
     try {
       let jobs = new Jobs()
-      jobs.user = data.userId
+      jobs.recruiter = data.userId
       jobs.title = data.title
       jobs.company = data.companyId
       jobs.reportToWork = data.reportToWork
@@ -181,7 +190,7 @@ export default class JobService extends Service {
         jobs.yearOfExperience = data.yearOfExperience
       }
       if (data.userId) {
-        jobs.user = data.userId
+        jobs.recruiter = data.userId
       }
       if (data.companyId) {
         jobs.company = data.companyId
@@ -265,7 +274,6 @@ export default class JobService extends Service {
             { companyName: { $regex: search, $options: 'i' } },
             { reportAddress: { $regex: search, $options: 'i' } },
             { status: { $regex: search, $options: 'i' } },
-            
           ],
         };
       }
@@ -390,7 +398,7 @@ export default class JobService extends Service {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
   }
-  
+
   async datatable(data: any): Promise<Response<any>> {
     try {
       let { page, limit, search, sort } = data;
@@ -413,14 +421,34 @@ export default class JobService extends Service {
       if (errorMessage) {
         return new Response<any>(false, 400, errorMessage);
       }
+
   
       let searchQuery = {};
       if (search !== undefined) {
+        //For getting recruiterName from user 
+        const matchingUsers = await this.recruiterModel.find({
+          $or: [
+            { firstName: { $regex: search, $options: 'i' } },
+            { LastName: { $regex: search, $options: 'i' } },
+          ],
+        }).select('_id');
+        const matchingUserIds = matchingUsers.map((recruiter:any) => recruiter._id);
+        //end
+
+        //For getting companyName from company
+        const matchingCompany = await this.companyModel.find({
+          $or:[
+            {name :{$regex:search,$options:'i'}},
+          ],
+        }).select('_id');
+        const companyIds = matchingCompany.map((company:any)=>company._id);
+        //end
+
         searchQuery = {
           $or: [
             { title: { $regex: search, $options: 'i' } },
-            { recruiterName: { $regex: search, $options: 'i' } },
-            { companyName: { $regex: search, $options: 'i' } },
+             {recruiter: { $in: matchingUserIds } },
+             { company: { $in: companyIds } },
             { reportAddress: { $regex: search, $options: 'i' } },
             { status: { $regex: search, $options: 'i' } },
             
@@ -468,10 +496,10 @@ export default class JobService extends Service {
           { $limit: limit },
           {
             $lookup: {
-              from: 'users',
-              localField: 'user',
+              from: 'recruiters',
+              localField: 'recruiter',
               foreignField: '_id',
-              as: 'user',
+              as: 'recruiter',
             },
           },
           {
@@ -486,9 +514,9 @@ export default class JobService extends Service {
             $addFields: {
               recruiterName:{
                 $concat: [
-                  { $arrayElemAt: ['$user.firstName', 0] },
+                  { $arrayElemAt: ['$recruiter.firstName', 0] },
                   ' ',
-                  { $arrayElemAt: ['$user.lastName', 0] }
+                  { $arrayElemAt: ['$recruiter.LastName', 0] }
                 ]
               },
               companyName:{
@@ -507,26 +535,42 @@ export default class JobService extends Service {
           {
             $project: {
               _id: 1,
-              report_address: 1,
-              type: 1,
+              reportToWork: 1,
+              isStartPlanned: 1,
+              user: 1,
               title: 1,
-              noOfHiring: 1,
+              reportAddress: 1 ,
+              jobType: 1,
               schedule: 1,
-              reportAddress:1,
               startDate: 1,
+              payRange: 1,
+              min: 1,
+              max: 1,
+              perMonth: 1,
+              supplementalPay: 1,
+              benefitsOffer: 1,
+              description: 1,
+              isCVRequired: 1,
               isDeadlineApplicable: 1,
+              deadlineDate: 1,
+              noOfHiring: 1,
+              hiringSlot: 1,
+              aboutCompany: 1,
+              educationLevel: 1,
+              yearOfExperience: 1,
               createdAt: 1,
+              createdBy: 1,
+              createdFrom: 1,
+              status: 1,
+              approveAdmin: 1,
+              updatedAt:1,
               companyName: 1,
               recruiterName:1,
-              status: 1,
-              approveAdmin:1,
-              totalApplied:1,
-              deadlineDate:1,
             },
           },
           {
             $unwind: {
-              path: '$user',
+              path: '$recruiter',
               preserveNullAndEmptyArrays: true,
             },
           },

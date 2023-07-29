@@ -10,7 +10,7 @@ export enum IsStartPlanned{
 } 
 
 export interface IJob extends Document {
-  user:string,
+  recruiter:string,
   company:string,
   title:string,
   reportToWork:ReportWork,
@@ -51,7 +51,7 @@ export interface IJob extends Document {
 }
 
 const JobSchema: Schema = new Schema({
-  user : {
+  recruiter : {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Recruiter', // Referencing the User model
   },
