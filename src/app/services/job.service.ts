@@ -265,7 +265,6 @@ export default class JobService extends Service {
             { companyName: { $regex: search, $options: 'i' } },
             { reportAddress: { $regex: search, $options: 'i' } },
             { status: { $regex: search, $options: 'i' } },
-            
           ],
         };
       }
@@ -390,7 +389,7 @@ export default class JobService extends Service {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
   }
-  
+
   async datatable(data: any): Promise<Response<any>> {
     try {
       let { page, limit, search, sort } = data;
@@ -420,7 +419,9 @@ export default class JobService extends Service {
           $or: [
             { title: { $regex: search, $options: 'i' } },
             { recruiterName: { $regex: search, $options: 'i' } },
-            { companyName: { $regex: search, $options: 'i' } },
+            { 'user.firstName': { $regex: search, $options: 'i' } },
+            { 'user.lastName': { $regex: search, $options: 'i' } },
+            { 'company.name': { $regex: search, $options: 'i' } },
             { reportAddress: { $regex: search, $options: 'i' } },
             { status: { $regex: search, $options: 'i' } },
             
