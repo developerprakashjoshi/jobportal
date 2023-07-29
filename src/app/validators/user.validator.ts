@@ -15,11 +15,15 @@ interface Education {
   id: string;
   level: string;
   fieldStudy: string;
-  schoolName: string;
+  instituteName: string;
   board: string;
   passingYear: number;
   state: string;
   city: string;
+  course:string;
+  courseType:string;
+  courseSpecialization:string;
+  certificate:string;
   updatedBy: string;
 }
 
@@ -51,12 +55,16 @@ export const createAddress = Joi.object<Address>({
 
 export const createEducation = Joi.object<Education>({
   level: Joi.string().required(),
-  fieldStudy: Joi.string().required(),
-  schoolName: Joi.string().required(),
-  board: Joi.string().required(),
+  fieldStudy: Joi.string().optional(),
+  instituteName: Joi.string().required(),
+  board: Joi.string().optional(),
   passingYear: Joi.number().required(),
-  state: Joi.string().required(),
-  city: Joi.string().required(),
+  state: Joi.string().optional(),
+  city: Joi.string().optional(),
+  course:Joi.string().optional(),
+  courseType:Joi.string().optional(),
+  courseSpecialization:Joi.string().optional(),
+  certificate:Joi.string().optional(),
 }).options({ abortEarly: false });
 
 export const createExperience = Joi.object<Experience>({
@@ -139,12 +147,16 @@ export const updateEducation = Joi.array().items(
   Joi.object({
     id: Joi.string().required(),
     level: Joi.string().required(),
-    fieldStudy: Joi.string().required(),
-    schoolName: Joi.string().required(),
-    board: Joi.string().required(),
+    fieldStudy: Joi.string().optional(),
+    instituteName: Joi.string().required(),
+    board: Joi.string().optional(),
     passingYear: Joi.number().required(),
-    state: Joi.string().required(),
-    city: Joi.string().required(),
+    state: Joi.string().optional(),
+    city: Joi.string().optional(),
+    course:Joi.string().optional(),
+    courseType:Joi.string().optional(),
+    courseSpecialization:Joi.string().optional(),
+    certificate:Joi.string().optional(),
   })
 ).options({ abortEarly: false });
 

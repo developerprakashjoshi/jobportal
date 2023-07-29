@@ -12,11 +12,15 @@ export interface Address {
 export interface Education {
   level: string;
   fieldStudy: string;
-  schoolName: string;
+  instituteName: string;
   board: string;
   passingYear: number;
   state: string;
   city: string;
+  course:string;
+  courseType:string;
+  courseSpecialization:string;
+  certificate:string;
 }
 
 export interface Experience {
@@ -76,11 +80,15 @@ const addressSchema = new Schema<Address>({
 const educationSchema = new Schema<Education>({
   level: String,
   fieldStudy: String,
-  schoolName: String,
+  instituteName: String,
   board: String,
   passingYear: Number,
   state: String,
   city: String,
+  course:String,
+  courseType:String,
+  courseSpecialization:String,
+  certificate:String,
 });
 
 const experienceSchema = new Schema<Experience>({

@@ -263,11 +263,15 @@ export default class UserService extends Service {
       const education: Education = {
         level: educationData.level || "",
         fieldStudy: educationData.fieldStudy || "",
-        schoolName: educationData.schoolName || "",
+        instituteName: educationData.instituteName || "",
         board: educationData.board || "",
         passingYear: educationData.passingYear || 0,
         state: educationData.state || "",
         city: educationData.city || "",
+        course:educationData.course || "",
+        courseType:educationData.courseType || "",
+        courseSpecialization:educationData.courseSpecialization || "",
+        certificate:educationData.certificate || "",
       };
       return education;
     });
