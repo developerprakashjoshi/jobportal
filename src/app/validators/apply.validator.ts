@@ -14,6 +14,11 @@ export const updateApply = Joi.object({
   userId: Joi.string().optional(),
 }).options({ abortEarly: false });
 
+export const updateCandidateStatus = Joi.object({
+  id: Joi.string().required(),
+  status:Joi.boolean().required()
+})
+
 export const deleteApply = Joi.object({
   id: Joi.string().required(),
   deleteBy:Joi.string().required()

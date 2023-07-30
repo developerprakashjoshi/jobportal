@@ -42,6 +42,7 @@ import chatRoute from '@routes/chat.route'
 import messagesRoute from '@routes/messages.route'
 import courseRoute from '@routes/course.route'
 import payRange from '@routes/payrange.route';
+import favouriteRoute from '@routes/favourite.route';
 
 import { errorHandler, notFound } from "@libs/error.handler";
 
@@ -93,6 +94,7 @@ app.use('/api/v1/chat',chatRoute);
 app.use('/api/v1/messages',messagesRoute);
 app.use('/api/v1/course',courseRoute);
 app.use('/api/v1/payRange',payRange);
+app.use('/api/v1/favourite',favouriteRoute);
 
 
 app.get("/", (req: Request, res: Response) => {

@@ -21,7 +21,14 @@ static async getApplys(req: Request, res: Response)  {
   const record = await applyService.list();
   res.status(record.statusCode).json(record);
 }
-
+static async updateCandidateStatus(req: Request, res: Response) {
+  const id = req.params.id
+  const data = req.body
+  data.ip = await Server.remoteAddr(req)
+  let jobService = new ApplyService();
+  const result = await jobService.updateCandidateStatus(id, data)
+  res.status(result.statusCode).json(result);
+}
 static async getApply(req: Request, res: Response) {
   let id = req.params.id
   let applyService=new ApplyService();
