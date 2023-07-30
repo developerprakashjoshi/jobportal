@@ -242,6 +242,7 @@ export default class RecruiterService extends Service {
             { companyName: { $regex: search, $options: 'i' } },
             { yourDesignation: { $regex: search, $options: 'i' } },
             { status: { $regex: search, $options: 'i' } },
+            { location: { $regex: search, $options: 'i' } },
           ],
         };
       }
@@ -288,6 +289,7 @@ export default class RecruiterService extends Service {
               'phoneNumber':1,
               'totalJobPosted':1,
               'totalApplied':1,
+              'location':1,
               'createdAt':1
             },
           },
