@@ -1,6 +1,8 @@
 import AppDataSource from '@config/mongoose';
 import Service from '@libs/service';
 import Response from '@libs/response';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken' 
 
 import User,{Certificate, Address, Education,Experience } from '@models/user.schema';
 import Apply from '@models/apply.schema';
@@ -84,6 +86,32 @@ export default class UserService extends Service {
     }
   }
 
+  async comparePassword(password: string, dbpassword:string): Promise<boolean>{
+    return bcrypt.compare(password, dbpassword);
+  }
+  
+  async hashPassword(password:string):Promise<string>{
+  const salt=await bcrypt.genSalt(10)
+  const hashPassword=await bcrypt.hash(password,salt)
+  return hashPassword;
+  }
+  async retrieveUserByEmailandPassword(email: string,password:string): Promise<Response<any>> {
+    try {
+      const record = await this.userModel.findBy({email: email});
+      if (!record) {
+        return new Response<any>(true, 401, 'Incorrect credentials', undefined);
+      }
+      const isValidPassword = await this.comparePassword(password,record.password);
+      if (!isValidPassword) {
+        return new Response<any>(true, 401, 'Incorrect credentials', undefined);
+      }
+
+
+      return new Response<any>(true, 200, 'Read operation successful', record);
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
   async create(data: any): Promise<Response<any>> {
     const existEmail = await this.userModel.findOne({ email: data.email });
       if (existEmail) {
@@ -94,7 +122,7 @@ export default class UserService extends Service {
       user.firstName = data.firstName;
       user.lastName =data.lastName;
       user.email= data.email;
-      user.password=data.password;
+      user.password=await this.hashPassword(data.password);
       user.termsConditions=data.termsConditions;
       user.type=data.type;
       user.onboardingStep=1;
@@ -669,4 +697,5 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
       return new Response<any>(false, 500, 'Search engine server error', undefined, undefined, error.message);
     }
   }
+
 }

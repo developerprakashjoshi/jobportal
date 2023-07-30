@@ -7,7 +7,6 @@ export enum IsHire {
 }
 
 export interface IRecruiter extends Document {
-  
   firstName:string,
   LastName:string,
   email:string,

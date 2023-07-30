@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+
 export interface Address {
   street: string;
   country: string;
@@ -138,6 +139,7 @@ const userSchema = new Schema<User>({
   deleteFrom: { type: String },
 });
 
+ 
 const UserModel = mongoose.model<User>('User', userSchema);
 
 export default UserModel;
