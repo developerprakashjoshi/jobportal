@@ -10,7 +10,12 @@ static async  count (req: Request, res: Response) {
     const result = await applyService.count("64bdd0a124bdfca23c8d9566")
     res.status(result.statusCode).json(result);
 }
-
+static async  countByUserId (req: Request, res: Response) {
+  let id = req.params.id
+  let applyService=new ApplyService();
+  const result = await applyService.countByUserId(id)
+  res.status(result.statusCode).json(result);
+}
 static async getApplys(req: Request, res: Response)  {
   let applyService=new ApplyService();
   const record = await applyService.list();

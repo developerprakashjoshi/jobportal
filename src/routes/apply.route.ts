@@ -7,6 +7,7 @@ const route=express.Router();
 
 route.get('/search', ApplyController.search);
 route.get('/datatable',ApplyController.datatable)
+route.get('/count/:id',ApplyController.countByUserId)
 route.get('/count',ApplyController.count)
 route.get('/',ApplyController.getApplys)
 route.get('/:id',ApplyController.getApply)

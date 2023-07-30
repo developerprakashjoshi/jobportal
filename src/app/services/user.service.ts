@@ -130,6 +130,30 @@ export default class UserService extends Service {
       }
       
   }
+  async deleteCurriculumVitae(pid: string): Promise<Response<any[]>> {
+    try {
+        const isValidObjectId = ObjectId.isValid(pid);
+        if (!isValidObjectId) {
+            return new Response<any[]>(false, 400, "Invalid ObjectId", undefined);
+        }
+
+        const user = await this.userModel.findById(pid);
+        if (!user) {
+            return new Response<any[]>(false, 404, "User not found", undefined);
+        }
+
+        user.curriculumVitae = null; // Or you can use an empty string: user.curriculumVitae = "";
+        user.deletedAt=new Date();
+        user.deleteBy="Self";
+
+        const result = await user.save();
+
+        return new Response<any[]>(true, 200, "Delete operation successful", result);
+    } catch (error: any) {
+        return new Response<any[]>(false, 500, error.message);
+    }
+}
+
   async updateCertificate(pid: string,path:string):Promise<Response<any[]>> {
     try{
     const isValidObjectId = ObjectId.isValid(pid);

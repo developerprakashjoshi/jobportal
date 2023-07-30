@@ -26,6 +26,7 @@ route.patch('/experience/:id',validator(updateExperience),UserController.updateW
 route.patch('/skill-sets/:id',validator(updateSkillSets),UserController.updateSkillSets)
 route.patch('/confirm-status/:id',validator(updateConfirmStatus),UserController.updateConfirmStatus)
 route.patch('/:id',validator(registerUser),UserController.updateUser)
+route.delete('/curriculum-vitae/:id',UserController.deleteCurriculumVitae)
 route.delete('/:id',UserController.deleteUser)
 
 export default route;

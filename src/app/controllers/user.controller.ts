@@ -44,6 +44,12 @@ static async uploadCurriculumVitae(req: Request, res: Response) {
   const user = await userService.updateCurriculumVitae(id,path);
   res.status(user.statusCode).json(user);
 }
+static async deleteCurriculumVitae(req: Request, res: Response) {
+  const id = req.params.id;
+  let userService = new UserService();
+  const user = await userService.deleteCurriculumVitae(id);
+  res.status(user.statusCode).json(user);
+}
 static async uploadCertificate(req: Request, res: Response) {
   const file=req.file
   let storageService=new StorageService();
