@@ -113,8 +113,11 @@ export default class ApplyService extends Service {
       if (data.userId) {
         apply.user = data.userId;
       }
+      if (data.status) {
+        apply.status = data.status;
+      }
      
-        apply.applyAt = new Date();
+      apply.applyAt = new Date();
       
       // await this.searchEngine.updateIndex('apply', apply);
       const result = await apply.save();

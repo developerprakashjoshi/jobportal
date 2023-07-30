@@ -528,12 +528,22 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
             $limit: limit
           },
           {
+            $lookup: {
+              from: 'applies',
+              localField: '_id',
+              foreignField: 'user',
+              as: 'apply',
+            },
+          },
+          {
             $addFields: {
               fullName: { $concat: ["$firstName", " ", "$lastName"] },
               designation: { $arrayElemAt: ["$experiences.jobTitle", -1] }, 
             
               interviewSchedule:true,
-              jobStatus:"Accepted",
+              jobStatus: {
+                $arrayElemAt:['$apply.status',0],
+              },
               city: {
                 $ifNull: [
                   { $arrayElemAt: ["$addresses.city", { $subtract: [{ $size: "$addresses" }, 0] }] },
