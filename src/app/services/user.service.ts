@@ -679,7 +679,7 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
         ])
         .exec()
         ,
-        this.userModel.countDocuments(searchQuery),
+        this.userModel.countDocuments({ deletedAt: { $exists: false } }),
       ]);
       console.log(records, totalCount)
       if (records.length === 0) {

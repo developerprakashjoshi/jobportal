@@ -14,7 +14,12 @@ static async  count (req: Request, res: Response) {
     const result = await favouriteService.count(userId)
     res.status(result.statusCode).json(result);
 }
-
+static async getUsersData(req: Request, res: Response) {
+  let id = req.params.id
+  let favouriteService=new FavouriteService();
+  const result = await favouriteService.getUserFav(id)
+  res.status(result.statusCode).json(result);
+}
 static async getFavourites(req: Request, res: Response)  {
   let favouriteService=new FavouriteService();
   const record = await favouriteService.list();

@@ -58,7 +58,22 @@ export default class FavouriteService extends Service {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
   }
-
+  async getUserFav(pid:string):Promise<Response<any[]>> {
+    try {
+      const isValidObjectId = ObjectId.isValid(pid);
+      if (!isValidObjectId) {
+        return new Response<any[]>(false, 400, "Invalid ObjectId", undefined);
+      }
+      let id=new ObjectId(pid);
+      // const id = mongoose.Types.ObjectId(pid);
+      const records:any = await this.favouriteModel.findById(id).populate('user').populate('job');
+      console.log(records);
+      return new Response<any[]>(true, 200, "Retrive successfully", records);
+    } catch (error:any) {
+      console.error('Error fetching :', error);
+      return new Response<any[]>(false, 400, error.message);
+    }
+  };
   async retrieveByFavourite(name: string): Promise<any> {
     try {
       const records = await this.favouriteModel.findOne({ name: name });
