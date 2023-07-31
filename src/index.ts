@@ -43,7 +43,11 @@ import chatRoute from '@routes/chat.route'
 import messagesRoute from '@routes/messages.route'
 import courseRoute from '@routes/course.route'
 import payRange from '@routes/payrange.route';
+<<<<<<< HEAD
 import tweetRoute from '@routes/tweet.route';
+=======
+import favouriteRoute from '@routes/favourite.route';
+>>>>>>> d6e0c9289a8855dfc0938a5eae93cec700a92adb
 
 import { errorHandler, notFound } from "@libs/error.handler";
 
@@ -95,7 +99,11 @@ app.use('/api/v1/chat',chatRoute);
 app.use('/api/v1/messages',messagesRoute);
 app.use('/api/v1/course',courseRoute);
 app.use('/api/v1/payRange',payRange);
+<<<<<<< HEAD
 app.use('/api/v1/tweet',tweetRoute);
+=======
+app.use('/api/v1/favourite',favouriteRoute);
+>>>>>>> d6e0c9289a8855dfc0938a5eae93cec700a92adb
 
 
 app.get("/", (req: Request, res: Response) => {

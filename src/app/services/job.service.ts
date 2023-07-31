@@ -222,7 +222,7 @@ export default class JobService extends Service {
         return new Response<any[]>(true, 404, "Record not found");
       }
 
-      if (data.approveAdmin) {
+      if (typeof data.approveAdmin === "boolean") {
         jobs.approveAdmin = data.approveAdmin
       }
 

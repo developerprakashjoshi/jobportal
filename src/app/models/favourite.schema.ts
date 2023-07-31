@@ -1,13 +1,8 @@
 import mongoose,{ Schema, Document, model } from 'mongoose';
 
-
-
-export interface IApply extends Document {
-  
-  job:string;
-  user:string;
-  applyAt: Date;
-  status:boolean;
+export interface IFavourite extends Document {
+  user:string,
+  job:string,
   createdAt: Date;
   createdBy: String;
   createdFrom?: String;
@@ -21,19 +16,17 @@ export interface IApply extends Document {
   deleteFrom?: String;
 }
 
-const ApplySchema: Schema = new Schema({
-  
-  job: {
+const FavouriteSchema: Schema = new Schema({
+
+  user : {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Jobs', // Referencing the User model
+    ref: 'User', // Referencing the User model
   },
-  user:{
+  job : {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Jobs', // Referencing the Jobs model
   },
-  applyAt: { type: Date },
-  status: { type: Boolean },
-  created_at: { type: String},
+
   createdAt: { type: Date},
   createdBy: { type: String},
   createdFrom: { type: String },
@@ -47,6 +40,6 @@ const ApplySchema: Schema = new Schema({
   deleteFrom: { type: String },
 });
 
-const Apply = model<IApply>('Apply', ApplySchema);
+const Favourite = model<IFavourite>('Favourite', FavouriteSchema);
 
-export default Apply;
+export default Favourite;

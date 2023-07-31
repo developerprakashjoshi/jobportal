@@ -4,6 +4,7 @@ export const createApply = Joi.object({
   jobId: Joi.string().required(),
   userId: Joi.string().required(),
   createdBy:Joi.string().required(),
+  status:Joi.boolean().required(),
   
 }).options({ abortEarly: false });
 
@@ -12,7 +13,13 @@ export const updateApply = Joi.object({
   updatedBy:Joi.string().required(),
   jobId: Joi.string().optional(),
   userId: Joi.string().optional(),
+  status:Joi.boolean().optional(),
 }).options({ abortEarly: false });
+
+export const updateCandidateStatus = Joi.object({
+  id: Joi.string().required(),
+  status:Joi.boolean().required()
+})
 
 export const deleteApply = Joi.object({
   id: Joi.string().required(),
