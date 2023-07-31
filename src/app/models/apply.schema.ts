@@ -25,14 +25,14 @@ const ApplySchema: Schema = new Schema({
   
   job: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Job', // Referencing the User model
+    ref: 'Jobs', // Referencing the User model
   },
   user:{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
   applyAt: { type: Date },
-  status: { type: Boolean, required: true },
+  status: { type: Boolean },
   created_at: { type: String},
   createdAt: { type: Date},
   createdBy: { type: String},

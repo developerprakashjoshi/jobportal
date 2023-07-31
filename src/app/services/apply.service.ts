@@ -85,9 +85,10 @@ export default class ApplyService extends Service {
       const apply = new Apply();
       apply.job = data.jobId;
       apply.user =data.userId;
-      apply.applyAt= new Date();
+      apply.status =data.status;
+      apply.applyAt= data.applyAt;
       apply.createdAt = new Date();
-      apply.createdBy = data.created_by
+      apply.createdBy = data.createdBy
       apply.createdFrom = data.ip
       
       const result = await apply.save();
@@ -114,6 +115,9 @@ export default class ApplyService extends Service {
       if (data.userId) {
         apply.user = data.userId;
       }
+      if (data.applyAt) {
+        apply.applyAt = data.applyAt;
+      }
       if (data.status) {
         apply.status = data.status;
       }
@@ -135,7 +139,7 @@ export default class ApplyService extends Service {
       if (!isValidObjectId) {
         return new Response<any>(false, 400, 'Invalid ObjectId', undefined);
       }
-      const apply = await this.userModel.findById(pid);
+      const apply = await this.applyModel.findById(pid);
       if (!apply) {
         return new Response<any>(true, 200, 'Record not available', apply);
       }
