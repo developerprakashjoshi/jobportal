@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken'
 
 import User,{Certificate, Address, Education,Experience } from '@models/user.schema';
 import Apply from '@models/apply.schema';
+import Account from '@models/account.schema';
 import Jobs from '@models/job.schema';
 import SearchEngine from '@libs/meili.search';
 import { ObjectId } from 'mongodb';
@@ -89,25 +90,69 @@ export default class UserService extends Service {
   async comparePassword(password: string, dbpassword:string): Promise<boolean>{
     return bcrypt.compare(password, dbpassword);
   }
-  
+
   async hashPassword(password:string):Promise<string>{
   const salt=await bcrypt.genSalt(10)
   const hashPassword=await bcrypt.hash(password,salt)
   return hashPassword;
   }
+
   async retrieveUserByEmailandPassword(email: string,password:string): Promise<Response<any>> {
     try {
-      const record = await this.userModel.findBy({email: email});
+      const record = await this.userModel.findOne({email: email});
       if (!record) {
-        return new Response<any>(true, 401, 'Incorrect credentials', undefined);
+        const response={
+          token:"",
+          authentication:false
+        };
+        return new Response<any>(false, 401, 'Incorrect credentials', response);
       }
       const isValidPassword = await this.comparePassword(password,record.password);
       if (!isValidPassword) {
-        return new Response<any>(true, 401, 'Incorrect credentials', undefined);
+        const response={
+          token:"",
+          authentication:false
+        };
+        return new Response<any>(false, 401, 'Incorrect credentials', response);
+      }
+      const jwtPayload = JSON.stringify(record._id);
+      const token = jwt.sign(jwtPayload, process.env.JWT_SECRET_KEY || '');
+      const response=record.toObject()
+      delete response.password
+      delete response.addresses
+      delete response.education
+      delete response.experiences
+      delete response.certificates
+      delete response.createdAt
+      delete response.createdBy
+      delete response.createdFrom
+      delete response.__v
+      response.token=token
+      response.authentication=true
+      return new Response<any>(true, 200, 'Authentication successful', response);
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
+
+  async updatePassword(newPassword:string,userId:string): Promise<Response<any>> {
+    try {
+      const isValidObjectId = ObjectId.isValid(userId);
+      if (!isValidObjectId) {
+        return new Response<any>(false, 400, 'Invalid ObjectId', undefined);
+      }
+      const user = await this.userModel.findById(userId);
+      if (!user) {
+          return new Response<any[]>(false, 404, "User not found", undefined);
       }
 
+      user.password = this.hashPassword(newPassword); // Or you can use an empty string: user.curriculumVitae = "";
+      user.updatedAt=new Date();
+      user.updatedBy="Self";
 
-      return new Response<any>(true, 200, 'Read operation successful', record);
+      const result = await user.save();
+      
+      return new Response<any>(true, 200, 'Successfully password updated', result);
     } catch (error: any) {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
@@ -118,6 +163,12 @@ export default class UserService extends Service {
         return new Response<any>(false, 400, 'Email already exists', undefined);
       }
     try {
+      const account = new Account()
+      account.email = data.email
+      account.username=data.firstName+' '+data.lastName
+      account.type = 'student'
+      await account.save();
+      
       const user = new User();
       user.firstName = data.firstName;
       user.lastName =data.lastName;

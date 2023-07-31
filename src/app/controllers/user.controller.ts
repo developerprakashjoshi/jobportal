@@ -32,6 +32,18 @@ static async createUser(req: Request, res: Response) {
     const result = await userService.create(data)
     res.status(result.statusCode).json(result);
 }
+static async login(req: Request, res: Response) {
+  const {email,password}=req.body
+  let userService=new UserService();
+  const result = await userService.retrieveUserByEmailandPassword(email,password)
+  res.status(result.statusCode).json(result);
+}
+static async updatePassword(req: Request, res: Response) {
+  const {id,password}=req.body
+  let userService=new UserService();
+  const result = await userService.updatePassword(password,id)
+  res.status(result.statusCode).json(result);
+}
 
 static async uploadCurriculumVitae(req: Request, res: Response) {
   const file=req.file

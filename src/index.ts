@@ -6,6 +6,7 @@ import cors from "cors";
 import morgan from "morgan";
 import bodyParser from "body-parser";
 import jwt from "jsonwebtoken";
+import {passportJwt} from "@middlewares/passport-jwt.middleware";
 
 dotenv.config();
 
@@ -42,6 +43,7 @@ import chatRoute from '@routes/chat.route'
 import messagesRoute from '@routes/messages.route'
 import courseRoute from '@routes/course.route'
 import payRange from '@routes/payrange.route';
+import tweetRoute from '@routes/tweet.route';
 
 import { errorHandler, notFound } from "@libs/error.handler";
 
@@ -93,6 +95,7 @@ app.use('/api/v1/chat',chatRoute);
 app.use('/api/v1/messages',messagesRoute);
 app.use('/api/v1/course',courseRoute);
 app.use('/api/v1/payRange',payRange);
+app.use('/api/v1/tweet',tweetRoute);
 
 
 app.get("/", (req: Request, res: Response) => {

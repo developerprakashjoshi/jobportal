@@ -2,10 +2,13 @@ import AppDataSource from "@config/mongoose";
 import Service from "@libs/service";
 import moment from "moment";
 import Response from "@libs/response"
+import Account from '@models/account.schema';
 import Recruiter  from "@models/recruiter.schema";
 import Apply from '@models/apply.schema';
 import Company  from "@models/company.schema";
 import Jobs  from "@models/job.schema";
+import jwt from 'jsonwebtoken' 
+import bcrypt from 'bcrypt';
 
 import { ObjectId } from 'mongodb';
 
@@ -57,7 +60,70 @@ export default class RecruiterService extends Service {
       return new Response<any[]>(false, 400, error.message);
     }
   }
+  async comparePassword(password: string, dbpassword:string): Promise<boolean>{
+    return bcrypt.compare(password, dbpassword);
+  }
   
+  async hashPassword(password:string):Promise<string>{
+  const salt=await bcrypt.genSalt(10)
+  const hashPassword=await bcrypt.hash(password,salt)
+  return hashPassword;
+  }
+  async updatePassword(newPassword:string,recruiterId:string): Promise<Response<any>> {
+    try {
+      const isValidObjectId = ObjectId.isValid(recruiterId);
+      if (!isValidObjectId) {
+        return new Response<any>(false, 400, 'Invalid ObjectId', undefined);
+      }
+      const recruiter = await this.recruiteModel.findById(recruiterId);
+      if (!recruiter) {
+          return new Response<any[]>(false, 404, "User not found", undefined);
+      }
+
+      recruiter.password = this.hashPassword(newPassword); // Or you can use an empty string: user.curriculumVitae = "";
+      recruiter.updatedAt=new Date();
+      recruiter.updatedBy="Self";
+
+      const result = await recruiter.save();
+      
+      return new Response<any>(true, 200, 'Successfully password updated', result);
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
+  async retrieveRecruiterByEmailandPassword(email: string,password:string): Promise<Response<any>> {
+    try {
+      const record = await this.recruiteModel.findOne({email: email});
+      if (!record) {
+        const response={
+          token:"",
+          authentication:false
+        };
+        return new Response<any>(false, 401, 'Incorrect credentials', response);
+      }
+      const isValidPassword = await this.comparePassword(password,record.password);
+      if (!isValidPassword) {
+        const response={
+          token:"",
+          authentication:false
+        };
+        return new Response<any>(false, 401, 'Incorrect credentials', response);
+      }
+      const jwtPayload = JSON.stringify(record._id);
+      const token = jwt.sign(jwtPayload, process.env.JWT_SECRET_KEY || '');
+      const response=record.toObject()
+      delete response.password
+      delete response.createdAt
+      delete response.createdBy
+      delete response.createdFrom
+      delete response.__v
+      response.token=token
+      response.authentication=true
+      return new Response<any>(true, 200, 'Authentication successful', response);
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
   async listCompanyName(): Promise<Response<any[]>> {
     try {
       // const record = await this.companyModel.find().limit(10).populate({path: 'company', select: 'name'})
@@ -96,12 +162,18 @@ export default class RecruiterService extends Service {
       return new Response<any[]>(false, 409, "Phone number name already exists");
       }
 
+      const account = new Account()
+      account.email = data.email
+      account.username=data.firstName+' '+data.lastName
+      account.type = 'recruiter'
+      await account.save();
+
       let recruiter = new Recruiter()
       recruiter.firstName = data.firstName
       recruiter.LastName = data.LastName
       recruiter.location = data.location
       recruiter.email = data.email
-      recruiter.password = data.password
+      recruiter.password = await this.hashPassword(data.password)
       recruiter.phoneNumber = data.phoneNumber
       recruiter.companyName = data.companyName
       recruiter.employeeSize = data.employeeSize

@@ -123,6 +123,16 @@ export const registerUser = Joi.object<User>({
   type: Joi.string().valid("student").required(),
 }).options({ abortEarly: false });
 
+export const loginUser = Joi.object<User>({
+  email: Joi.string().email().required(),
+  password: Joi.string().required(),
+}).options({ abortEarly: false });
+
+export const updatePassword = Joi.object<User>({
+  id: Joi.string().email().required(),
+  password: Joi.string().required(),
+}).options({ abortEarly: false });
+
 export const updateBasicInfo = Joi.object<User>({
   id: Joi.string().required(),
   firstName: Joi.string().required(),

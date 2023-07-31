@@ -16,6 +16,15 @@ export const createRecruiter=Joi.object({
     createdBy:Joi.string().required(),
     status:Joi.string().valid("Active","Inactive").required(),
 }).options({ abortEarly: false })
+export const loginRecruiter=Joi.object({
+    email:Joi.string().required(),
+    password:Joi.string().required(),
+}).options({ abortEarly: false })
+
+export const updatePassword=Joi.object({
+    id:Joi.string().required(),
+    password:Joi.string().required(),
+}).options({ abortEarly: false })
 
 export const updateRecruiter=Joi.object({
     id:Joi.string().required(),
