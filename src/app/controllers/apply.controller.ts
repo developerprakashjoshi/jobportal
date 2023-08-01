@@ -30,7 +30,7 @@ static async updateCandidateStatus(req: Request, res: Response) {
   res.status(result.statusCode).json(result);
 }
 static async getUsersData(req: Request, res: Response) {
-  let id = req.params.id
+  let id = req.params.userId
   let applyService =new ApplyService();
   const result = await applyService.getApplyData(id)
   res.status(result.statusCode).json(result);

@@ -7,7 +7,7 @@ const route=express.Router();
 
 route.get('/search', FavouriteController.search);
 route.get('/datatable',FavouriteController.datatable)
-route.get('/users-data/:id',  FavouriteController.getUsersData);
+route.get('/users-data/:userId',  FavouriteController.getUsersData);
 route.get('/count/:userId',FavouriteController.count)
 route.get('/',FavouriteController.getFavourites)
 route.get('/:id',FavouriteController.getFavourite)

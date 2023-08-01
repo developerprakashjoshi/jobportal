@@ -15,9 +15,9 @@ static async  count (req: Request, res: Response) {
     res.status(result.statusCode).json(result);
 }
 static async getUsersData(req: Request, res: Response) {
-  let id = req.params.id
+  let userId = req.params.userId
   let favouriteService=new FavouriteService();
-  const result = await favouriteService.getUserFav(id)
+  const result = await favouriteService.getUserFav(userId)
   res.status(result.statusCode).json(result);
 }
 static async getFavourites(req: Request, res: Response)  {
