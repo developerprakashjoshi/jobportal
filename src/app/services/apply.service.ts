@@ -3,6 +3,7 @@ import Service from '@libs/service';
 import Response from '@libs/response';
 import Apply from '@models/apply.schema';
 import User from "@models/user.schema";
+import Account from "@models/account.schema";
 import SearchEngine from '@libs/meili.search';
 import { ObjectId } from 'mongodb';
 import moment from 'moment';
@@ -11,12 +12,14 @@ export default class ApplyService extends Service {
   private applyModel: any;
   private userModel: any;
   private postModel: any;
+  private accountModel: any;
   private searchEngine: any;
   constructor() {
     super();
     this.searchEngine = new SearchEngine()
     this.applyModel = Apply;
     this.userModel = User;
+    this.accountModel = Account;
     // this.postModel = Post;
   }
 
@@ -45,7 +48,7 @@ export default class ApplyService extends Service {
 
   async list(): Promise<Response<any>> {
     try {
-      const result = await this.applyModel.find({deletedAt: null}).populate('job').exec();
+      const result = await this.applyModel.find({deletedAt: null}).populate('job').populate('user');
       if (!result) {
         return new Response<any>(true, 200, 'Record not available', result);
       }

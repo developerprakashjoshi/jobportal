@@ -20,28 +20,26 @@ export default class TweetService extends Service {
     try {
         const account = await Account.find({ type });
         if (account) {
-        return new Response<any[]>(false, 409, "Account not exisits", undefined);
+            return new Response<any[]>(false, 409, "Account not exisits", undefined);
         }
       return new Response<any[]>(true, 200, "Room created successfully", account);
-      
     } catch (error:any) {
       console.error('Error creating room:', error);
       return new Response<any[]>(false, 400, error.message);
     }
   };
   async createRoom(data:any):Promise<Response<any[]>> {
-    const { roomName, participants,createdBy } = data;
+    const { roomName, participants,participantsName,createdBy } = data;
     try {
         const existingRoom = await Room.findOne({ name: roomName });
         if (existingRoom) {
         return new Response<any[]>(false, 409, "Room name already exists", undefined);
         }
-
-        const uniqueRoomName = `${uuidv4()}-${roomName}`;
-
+        // const uniqueRoomName = `${uuidv4()}-${roomName}`;
         const room = new Room({
-            name: uniqueRoomName,
+            name: roomName,
             participants,
+            participantsName,
             createdBy,
         });
       const result:any = await room.save()
@@ -94,6 +92,17 @@ export default class TweetService extends Service {
       }
       let id=new ObjectId(pid);
       const rooms:any = await Room.findById(id).populate('messages');
+      return new Response<any[]>(true, 200, "Messages read successfully", rooms);
+    } catch (error:any) {
+      console.error('Error fetching user rooms:', error);
+      return new Response<any[]>(false, 400, error.message);
+    }
+  };
+
+  async getRoomsByName(name:string):Promise<Response<any[]>> {
+    try {
+      const regex = new RegExp(name, 'i');
+      const rooms:any = await Room.find({ name: regex }).populate('messages');
       return new Response<any[]>(true, 200, "Messages read successfully", rooms);
     } catch (error:any) {
       console.error('Error fetching user rooms:', error);

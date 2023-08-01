@@ -10,6 +10,7 @@ route.post('/create-room', TweetController.createRoom);
 route.post('/send-message',  TweetController.sendMessage);
 route.get('/rooms-user/:userId',  TweetController.getUserRooms);
 route.get('/rooms-message/:userId',  TweetController.getRooms);
+route.get('/rooms-search/:roomName',  TweetController.getRoomsByName);
 
 export default route;
 

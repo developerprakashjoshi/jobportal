@@ -148,12 +148,12 @@ export default class MessageService extends Service {
                 createdAt: -1, // Sort by createdAt field in descending order
               },
             },
-            {
-              $group: {
-                recipientName: { $last: "$recipientName" },
-                createdAt: { $last: "$createdAt" }
-              },
-            },
+            // {
+            //   $group: {
+            //     recipientName: { $last: "$recipientName" },
+            //     createdAt: { $last: "$createdAt" }
+            //   },
+            // },
             {
               $project: {
                 _id: 1,
