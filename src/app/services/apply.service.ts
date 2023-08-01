@@ -83,6 +83,24 @@ export default class ApplyService extends Service {
     }
   }
 
+  async getApplyData(pid:string):Promise<Response<any[]>> {
+    try {
+      const isValidObjectId = ObjectId.isValid(pid);
+      if (!isValidObjectId) {
+        return new Response<any[]>(false, 400, "Invalid ObjectId", undefined);
+      }
+      let id=new ObjectId(pid);
+      // const id = mongoose.Types.ObjectId(pid);
+      const records:any = await this.applyModel.findById(id).populate('user').populate('job');
+      console.log(records);
+      return new Response<any[]>(true, 200, "Retrive successfully", records);
+    } catch (error:any) {
+      console.error('Error fetching :', error);
+      return new Response<any[]>(false, 400, error.message);
+    }
+  };
+
+
   async create(data: any): Promise<Response<any>> {
     try {
       const apply = new Apply();
