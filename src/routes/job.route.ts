@@ -7,6 +7,7 @@ const route=express.Router();
 
 route.get('/datatable',JobController.datatable)
 route.get('/search',JobController.searchJob)
+route.get('/resume-datatable',JobController.datatableResume)
 route.get('/admin-datatable',JobController.datatableAdmin)
 route.get('/count',JobController.count)
 route.get('/',JobController.getJobs)

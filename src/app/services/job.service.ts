@@ -889,6 +889,180 @@ export default class JobService extends Service {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
   }
+
+  async datatableResume(data: any): Promise<Response<any>> {
+    try {
+      let { page, limit, search, sort } = data;
+      let errorMessage = '';
+
+      if (page !== undefined && limit !== undefined) {
+        if (isNaN(page) || !Number.isInteger(Number(page)) || isNaN(limit) || !Number.isInteger(Number(limit))) {
+          errorMessage = "Both 'page' and 'limit' must be integers.";
+        }
+      } else if (page !== undefined) {
+        if (isNaN(page) || !Number.isInteger(Number(page))) {
+          errorMessage = "'page' must be an integer.";
+        }
+      } else if (limit !== undefined) {
+        if (isNaN(limit) || !Number.isInteger(Number(limit))) {
+          errorMessage = "'limit' must be an integer.";
+        }
+      }
+
+      if (errorMessage) {
+        return new Response<any>(false, 400, errorMessage);
+      }
+
+      let searchQuery = {};
+      if (search !== undefined) {
+        searchQuery = {
+          $or: [
+            { title: { $regex: search, $options: 'i' } },
+            { recruiterName: { $regex: search, $options: 'i' } },
+            { companyName: { $regex: search, $options: 'i' } },
+            { reportAddress: { $regex: search, $options: 'i' } },
+            { status: { $regex: search, $options: 'i' } },
+          ],
+        };
+      }
+
+      let sortQuery = {};
+      if (sort !== undefined) {
+        const sortParams = sort.split(':');
+        if (sortParams.length === 2) {
+          const [column, order] = sortParams;
+          sortQuery = { [column]: order === 'desc' ? -1 : 1 };
+        }
+      } else {
+        sortQuery = { createdAt: -1 }
+      }
+
+      page = page === undefined ? 1 : parseInt(page);
+      limit = limit === undefined ? 10 : parseInt(limit);
+      const skip = (page - 1) * limit;
+      const totalApplied = await this.applyModel.countDocuments();
+      const [activeCount, inactiveCount] = await Promise.all([
+        this.jobModel.countDocuments({ status: "Active", deletedAt: null }),
+        this.jobModel.countDocuments({ status: "Inactive", deletedAt: null }),
+      ]);
+      const [records, totalCount] = await Promise.all([
+        this.jobModel.aggregate([
+          {
+            $match: {
+              $and: [
+                searchQuery,
+                {
+                  deletedAt: null
+                }
+              ]
+            }
+          },
+          ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
+          { $skip: skip },
+          { $limit: limit },
+          {
+            $lookup: {
+              from: 'users',
+              localField: 'user',
+              foreignField: '_id',
+              as: 'user',
+            },
+          },
+          {
+            $lookup: {
+              from: 'companies',
+              localField: 'company',
+              foreignField: '_id',
+              as: 'company',
+            },
+          },
+          {
+            $addFields: {
+              recruiterName: {
+                $concat: [
+                  { $arrayElemAt: ['$user.firstName', 0] },
+                  ' ',
+                  { $arrayElemAt: ['$user.lastName', 0] }
+                ]
+              },
+              companyName: {
+                $arrayElemAt: ['$company.name', 0]
+              },
+              createdOn: {
+                $dateToString: {
+                  date: "$createdAt",
+                  format: "%d-%m-%Y"
+                }
+              },
+              totalApplied: 500,
+              resume: "https://codegify.s3.ap-south-1.amazonaws.com/document/award_shubhamQ1_23-24.jpg"
+
+            }
+          },
+          {
+            $project: {
+              _id: 1,
+              report_address: 1,
+              type: 1,
+              title: 1,
+              noOfHiring: 1,
+              schedule: 1,
+              startDate: 1,
+              isDeadlineApplicable: 1,
+              createdAt: 1,
+              companyName: 1,
+              recruiterName: 1,
+              reportAddress: 1,
+              status: 1,
+              approveAdmin: 1,
+              totalApplied: 1,
+              deadlineDate: 1,
+              resume:1
+            },
+          },
+          {
+            $unwind: {
+              path: '$user',
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          {
+            $unwind: {
+              path: '$company',
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+        ]).exec(),
+        this.jobModel.countDocuments({ deletedAt: { $exists: false } }),
+      ]);
+
+      if (records.length === 0) {
+        return new Response<any>(true, 200, 'No records available', {});
+      }
+
+      const jobIds = records.map((record: any) => record._id.toString());
+      const totalAppliedCounts = await Promise.all(jobIds.map((_id: string) => this.countApply(_id)));
+      records.forEach((record: any, index: number) => {
+        record.totalApplied = totalAppliedCounts[index];
+      });
+
+      const totalPages = Math.ceil(totalCount / limit);
+      const currentPage = page;
+      const output = {
+        records: records,
+        totalPages: totalPages !== null ? totalPages : 0,
+        currentPage: currentPage !== null ? currentPage : 0,
+        filterCount: records.length,
+        totalCount: totalCount,
+        activeStatus: activeCount,
+        inactiveStatus: inactiveCount,
+        totalApplicants: totalApplied,
+      };
+      return new Response<any>(true, 200, 'Read operation successful', output);
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
   async countApply(jobId: string) {
     try {
       const result = await this.applyModel.countDocuments({ job: new ObjectId(jobId) });

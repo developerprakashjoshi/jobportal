@@ -79,4 +79,10 @@ export default class JobController extends Controller {
     const records = await jobService.datatableAdmin(data)
     res.status(records.statusCode).json(records);
   }
+  static async datatableResume(req: Request, res: Response) {
+    const data = req.query
+    let jobService = new JobService();
+    const records = await jobService.datatableResume(data)
+    res.status(records.statusCode).json(records);
+  }
 }
