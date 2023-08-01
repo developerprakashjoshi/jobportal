@@ -25,7 +25,7 @@ export default class UserService extends Service {
 
   async count(): Promise<Response<any>> {
     try {
-      const result = await this.userModel.countDocuments();
+      const result = await this.userModel.countDocuments({ deletedAt: { $exists: false } });
       if (!result) {
         return new Response<any>(true, 200, 'Record not available', result);
       }

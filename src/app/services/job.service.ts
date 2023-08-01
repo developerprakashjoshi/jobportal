@@ -628,6 +628,9 @@ export default class JobService extends Service {
               companyName: {
                 $arrayElemAt: ['$company.name', 0]
               },
+              companyLogo: {
+                $arrayElemAt: ['$company.logo', 0]
+              },
               createdOn: {
                 $dateToString: {
                   date: "$createdAt",
@@ -672,6 +675,7 @@ export default class JobService extends Service {
               updatedAt: 1,
               companyName: 1,
               recruiterName: 1,
+              companyLogo:1,
             },
           },
           {
