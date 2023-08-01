@@ -614,27 +614,23 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
               as: 'apply',
             },
           },
+          { $unwind: '$apply' },
           {
             $addFields: {
               fullName: { $concat: ["$firstName", " ", "$lastName"] },
               designation: { $arrayElemAt: ["$experiences.jobTitle", -1] }, 
             
-              interviewSchedule:true,
+              interviewSchedule:false,
               jobStatus: {
                 $arrayElemAt:['$apply.status',0],
               },
               city: {
                 $ifNull: [
-                  { $arrayElemAt: ["$addresses.city", { $subtract: [{ $size: "$addresses" }, 0] }] },
+                  { $arrayElemAt: ["$addresses.city", 0] }, // Corrected: Access the first element of the addresses array
                   ""
                 ]
               },
-              // city: {
-              //   $ifNull: [
-              //     { $arrayElemAt: ["$addresses.city", { $subtract: [{ $size: "$addresses" }, 1] }] },
-              //     ""
-              //   ]
-              // },
+             
               experience: {
                 $subtract: [
                   {
