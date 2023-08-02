@@ -290,6 +290,9 @@ export default class JobService extends Service {
 
       let searchQuery:any = {};
       if (search !== undefined) {
+        if (jobType === 'Part-Time' || jobType === 'Full-Time' || jobType === 'Internees') {
+          searchQuery['jobType'] = jobType;
+        }
         if (datePosted === 'Today') {
           const today = new Date();
           const startOfToday = new Date(today);
