@@ -265,8 +265,6 @@ export default class JobService extends Service {
   async search(data: any): Promise<Response<any>> {
     try {
       let { page, limit, search, sort ,jobType,datePosted, salaryEstimates } = data;
-      console.log("----------")
-      console.log(jobType)
       let errorMessage = '';
 
       if (page !== undefined && limit !== undefined) {
@@ -289,36 +287,43 @@ export default class JobService extends Service {
 
 
       let searchQuery:any = {};
+      
       if (search !== undefined) {
-        if (jobType === 'Part-Time' || jobType === 'Full-Time' || jobType === 'Internees') {
+        console.log("-----jobType1----");
+        console.log(jobType)
+        if (jobType === 'Part Time' || jobType === 'Full Time' || jobType === 'Internees') {
           searchQuery['jobType'] = jobType;
+          console.log("-----jobType----");
+          console.log(jobType)
         }
-        if (datePosted === 'Today') {
-          const today = new Date();
-          const startOfToday = new Date(today);
-          startOfToday.setHours(0, 0, 0, 0);
-          searchQuery['createdAt'] = {
-            $gte: startOfToday,
-            $lt: today,
-          };
-        } else if (datePosted === 'This Week') {
-          const today = new Date();
-          const startOfThisWeek = new Date(today);
-          startOfThisWeek.setDate(today.getDate() - today.getDay()); // Go back to the first day of the week (Sunday).
-          startOfThisWeek.setHours(0, 0, 0, 0);
-          const endOfThisWeek = new Date(startOfThisWeek);
-          endOfThisWeek.setDate(startOfThisWeek.getDate() + 7); // Go forward to the last day of the week (Saturday).
-          searchQuery['createdAt'] = {
-            $gte: startOfThisWeek,
-            $lt: endOfThisWeek,
-          };
-        } else if (datePosted === 'This Month') {
-          // ... (similar logic as above, for "This Month" and other cases)
-        } else if (datePosted === 'This Year') {
-          // ... (similar logic as above, for "This Year" and other cases)
-        } else if (datePosted === 'Past Years') {
-          // ... (similar logic as above, for "Past Years" and other cases)
-        }
+        // if (datePosted === 'Today') {
+        //   console.log('Today')
+        //   // const today = new Date();
+        //   // console.log('Today')
+        //   // const startOfToday = new Date(today);
+        //   // startOfToday.setHours(0, 0, 0, 0);
+        //   // searchQuery['createdAt'] = {
+        //   //   $gte: startOfToday,
+        //   //   $lt: today,
+        // }
+        // } else if (datePosted === 'This Week') {
+        //   const today = new Date();
+        //   const startOfThisWeek = new Date(today);
+        //   startOfThisWeek.setDate(today.getDate() - today.getDay()); // Go back to the first day of the week (Sunday).
+        //   startOfThisWeek.setHours(0, 0, 0, 0);
+        //   const endOfThisWeek = new Date(startOfThisWeek);
+        //   endOfThisWeek.setDate(startOfThisWeek.getDate() + 7); // Go forward to the last day of the week (Saturday).
+        //   searchQuery['createdAt'] = {
+        //     $gte: startOfThisWeek,
+        //     $lt: endOfThisWeek,
+        //   };
+        // } else if (datePosted === 'This Month') {
+        //   // ... (similar logic as above, for "This Month" and other cases)
+        // } else if (datePosted === 'This Year') {
+        //   // ... (similar logic as above, for "This Year" and other cases)
+        // } else if (datePosted === 'Past Years') {
+        //   // ... (similar logic as above, for "Past Years" and other cases)
+        // }
 
         //For getting recruiterName from user 
         const matchingUsers = await this.recruiterModel.find({
@@ -340,6 +345,7 @@ export default class JobService extends Service {
         //end
 
         searchQuery = {
+
           $or: [
             { recruiter: { $in: matchingUserIds } },
             { company: { $in: companyIds } },
@@ -377,9 +383,6 @@ export default class JobService extends Service {
 
           ],
         };
-        if (jobType === 'Part-Time' || jobType === 'Full-Time' || jobType === 'Internees') {
-          searchQuery['jobType'] = jobType;
-        }
 
       }
 
@@ -408,6 +411,7 @@ export default class JobService extends Service {
             $match: {
               $and: [
                 searchQuery,
+                // jobType !== undefined ? { jobType: { $regex: jobType, $options: 'i' } } : {}, 
                 {
                   deletedAt: { $exists: false },
                   $or: [
