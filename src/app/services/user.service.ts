@@ -1,6 +1,8 @@
 import AppDataSource from '@config/mongoose';
 import Service from '@libs/service';
 import Response from '@libs/response';
+import {Transporter} from "@config/mail";
+
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken' 
 
@@ -135,7 +137,7 @@ export default class UserService extends Service {
     }
   }
 
-  async updatePassword(newPassword:string,userId:string): Promise<Response<any>> {
+  async updatePassword(userId:string,newPassword:string): Promise<Response<any>> {
     try {
       const isValidObjectId = ObjectId.isValid(userId);
       if (!isValidObjectId) {
@@ -146,13 +148,33 @@ export default class UserService extends Service {
           return new Response<any[]>(false, 404, "User not found", undefined);
       }
 
-      user.password = this.hashPassword(newPassword); // Or you can use an empty string: user.curriculumVitae = "";
+      user.password =await  this.hashPassword(newPassword); // Or you can use an empty string: user.curriculumVitae = "";
       user.updatedAt=new Date();
       user.updatedBy="Self";
 
       const result = await user.save();
       
       return new Response<any>(true, 200, 'Successfully password updated', result);
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
+  async forgotPassword(email:string,redirectUrl:string): Promise<Response<any>> {
+    try {
+      const user = await this.userModel.findOne({email:email});
+      if (!user) {
+          return new Response<any[]>(false, 404, "User not found", undefined);
+      }
+
+      let from=process.env.EMAIL_FROM
+      let to=email
+      let subject="Forgot Password"
+      let text=redirectUrl+"?token="+user._id
+    
+      const message = {from,to,subject,text};
+
+      const result = await Transporter.sendMail(message);
+      return new Response<any>(true, 200, 'Successfully email send', {email:email,redirectUrl:text});
     } catch (error: any) {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
@@ -614,7 +636,7 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
               as: 'apply',
             },
           },
-          { $unwind: '$apply' },
+          // { $unwind: '$apply' },
           {
             $addFields: {
               fullName: { $concat: ["$firstName", " ", "$lastName"] },
