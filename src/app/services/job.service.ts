@@ -34,7 +34,7 @@ export default class JobService extends Service {
 
   async list(): Promise<Response<any[]>> {
     try {
-      const record = await this.jobModel.find({ deletedAt: null })
+      const record = await this.jobModel.find({ deletedAt: null }).populate('company','logo name')
       return new Response<any[]>(true, 200, "Read operation successful", record);
     } catch (error: any) {
       return new Response<any[]>(false, 400, error.message);
@@ -264,7 +264,9 @@ export default class JobService extends Service {
 
   async search(data: any): Promise<Response<any>> {
     try {
-      let { page, limit, search, sort } = data;
+      let { page, limit, search, sort ,jobType,datePosted, salaryEstimates } = data;
+      console.log("----------")
+      console.log(jobType)
       let errorMessage = '';
 
       if (page !== undefined && limit !== undefined) {
@@ -286,8 +288,35 @@ export default class JobService extends Service {
       }
 
 
-      let searchQuery = {};
+      let searchQuery:any = {};
       if (search !== undefined) {
+        if (datePosted === 'Today') {
+          const today = new Date();
+          const startOfToday = new Date(today);
+          startOfToday.setHours(0, 0, 0, 0);
+          searchQuery['createdAt'] = {
+            $gte: startOfToday,
+            $lt: today,
+          };
+        } else if (datePosted === 'This Week') {
+          const today = new Date();
+          const startOfThisWeek = new Date(today);
+          startOfThisWeek.setDate(today.getDate() - today.getDay()); // Go back to the first day of the week (Sunday).
+          startOfThisWeek.setHours(0, 0, 0, 0);
+          const endOfThisWeek = new Date(startOfThisWeek);
+          endOfThisWeek.setDate(startOfThisWeek.getDate() + 7); // Go forward to the last day of the week (Saturday).
+          searchQuery['createdAt'] = {
+            $gte: startOfThisWeek,
+            $lt: endOfThisWeek,
+          };
+        } else if (datePosted === 'This Month') {
+          // ... (similar logic as above, for "This Month" and other cases)
+        } else if (datePosted === 'This Year') {
+          // ... (similar logic as above, for "This Year" and other cases)
+        } else if (datePosted === 'Past Years') {
+          // ... (similar logic as above, for "Past Years" and other cases)
+        }
+
         //For getting recruiterName from user 
         const matchingUsers = await this.recruiterModel.find({
           $or: [
@@ -345,6 +374,10 @@ export default class JobService extends Service {
 
           ],
         };
+        if (jobType === 'Part-Time' || jobType === 'Full-Time' || jobType === 'Internees') {
+          searchQuery['jobType'] = jobType;
+        }
+
       }
 
       let sortQuery = {};
@@ -414,6 +447,9 @@ export default class JobService extends Service {
               companyName: {
                 $arrayElemAt: ['$company.name', 0]
               },
+              companyLogo: {
+                $arrayElemAt: ['$company.logo', 0]
+              },
               createdOn: {
                 $dateToString: {
                   date: "$createdAt",
@@ -458,6 +494,7 @@ export default class JobService extends Service {
               updatedAt: 1,
               companyName: 1,
               recruiterName: 1,
+              companyLogo:1,
             },
           },
           {
