@@ -104,6 +104,7 @@ interface User {
   createdAt: Date;
   createdBy: string;
   createdFrom?: String;
+  redirectUrl?:string;
 
   updatedAt: Date;
   updatedBy: string;
@@ -129,8 +130,13 @@ export const loginUser = Joi.object<User>({
 }).options({ abortEarly: false });
 
 export const updatePassword = Joi.object<User>({
-  id: Joi.string().email().required(),
+  id: Joi.string().required(),
   password: Joi.string().required(),
+}).options({ abortEarly: false });
+
+export const forgotPassword = Joi.object<User>({
+  email: Joi.string().email().required(),
+  redirectUrl: Joi.string().required(),
 }).options({ abortEarly: false });
 
 export const updateBasicInfo = Joi.object<User>({

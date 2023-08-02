@@ -41,7 +41,13 @@ static async login(req: Request, res: Response) {
 static async updatePassword(req: Request, res: Response) {
   const {id,password}=req.body
   let userService=new UserService();
-  const result = await userService.updatePassword(password,id)
+  const result = await userService.updatePassword(id,password)
+  res.status(result.statusCode).json(result);
+}
+static async forgotPassword(req: Request, res: Response) {
+  const {email,redirectUrl}=req.body
+  let userService=new UserService();
+  const result = await userService.forgotPassword(email,redirectUrl)
   res.status(result.statusCode).json(result);
 }
 
