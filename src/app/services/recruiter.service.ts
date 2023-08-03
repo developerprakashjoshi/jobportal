@@ -4,6 +4,7 @@ import moment from "moment";
 import Response from "@libs/response"
 import Account from '@models/account.schema';
 import Recruiter  from "@models/recruiter.schema";
+import {Transporter} from "@config/mail";
 import Apply from '@models/apply.schema';
 import Company  from "@models/company.schema";
 import Jobs  from "@models/job.schema";
@@ -87,6 +88,26 @@ export default class RecruiterService extends Service {
       const result = await recruiter.save();
       
       return new Response<any>(true, 200, 'Successfully password updated', result);
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
+  async forgotPassword(email:string,redirectUrl:string): Promise<Response<any>> {
+    try {
+      const user = await this.recruiteModel.findOne({email:email});
+      if (!user) {
+          return new Response<any[]>(false, 404, "User not found", undefined);
+      }
+
+      let from=process.env.EMAIL_FROM
+      let to=email
+      let subject="Forgot Password"
+      let text=redirectUrl+"?token="+user._id
+    
+      const message = {from,to,subject,text};
+
+      const result = await Transporter.sendMail(message);
+      return new Response<any>(true, 200, 'Successfully email send', {email:email,redirectUrl:text});
     } catch (error: any) {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
