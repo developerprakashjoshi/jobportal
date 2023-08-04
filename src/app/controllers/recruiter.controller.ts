@@ -12,6 +12,12 @@ export default class RecruiterController extends Controller {
     const result = await recruiterService.count()
     res.status(result.statusCode).json(result);
   }
+  static async forgotPassword(req: Request, res: Response) {
+    const {email,redirectUrl}=req.body
+    let recruiterService=new RecruiterService();
+    const result = await recruiterService.forgotPassword(email,redirectUrl)
+    res.status(result.statusCode).json(result);
+  }
 
   static async getRecruiters(req: Request, res: Response) {
     let recruiterService = new RecruiterService();
