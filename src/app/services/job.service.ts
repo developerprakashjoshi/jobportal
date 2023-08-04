@@ -264,7 +264,7 @@ export default class JobService extends Service {
 
   async search(data: any): Promise<Response<any>> {
     try {
-      let { page, limit, search, sort ,jobType,datePosted, salaryEstimates } = data;
+      let { page, limit, search, sort ,jobType,datePosted, payRange,salaryEstimates } = data;
       let errorMessage = '';
 
       if (page !== undefined && limit !== undefined) {
@@ -367,6 +367,7 @@ export default class JobService extends Service {
               }
             });
           }
+          
           if (datePosted === 'This Month') {
             console.log("This Month");
             const today = new Date();
@@ -396,6 +397,10 @@ export default class JobService extends Service {
               }
             });
           }
+          if (payRange !== undefined ) {
+            console.log("Pay Range");
+            searchQuery.$and=[{ payRange: { $regex: payRange, $options: 'i' } }];
+          }
          
         }else{
           searchQuery = {
@@ -406,7 +411,6 @@ export default class JobService extends Service {
               { reportAddress: { $regex: search, $options: 'i' } },
               { schedule: { $regex: search, $options: 'i' } },
               { startDate: { $regex: search, $options: 'i' } },
-              { payRange: { $regex: search, $options: 'i' } },
               { min: { $regex: search, $options: 'i' } },
               { max: { $regex: search, $options: 'i' } },
               { perMonth: { $regex: search, $options: 'i' } },
@@ -488,10 +492,14 @@ export default class JobService extends Service {
               }
             }];
           }
-
+          if (payRange !== undefined ) {
+            console.log("Pay Range");
+            searchQuery.$and=[{ payRange: { $regex: payRange, $options: 'i' } }];
+          }
 
 
         }
+        
       }
 
       let sortQuery = {};
