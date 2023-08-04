@@ -287,7 +287,44 @@ export default class JobService extends Service {
 
 
       let searchQuery:any = {};
+      if (jobType !==undefined) {
+        console.log('JOB TYPE');
+        searchQuery.$and = [{ jobType: { $regex: new RegExp(`^${jobType}$`, 'i') } }];
+      }
       if (search !== undefined) {
+        console.log("search")
+        // if (jobType === 'Part Time' || jobType === 'Full Time' || jobType === 'Internees') {
+        //   console.log("jobType")
+        //   console.log(jobType)
+        //   searchQuery['jobType'] = jobType;
+        // }
+        // if (datePosted === 'Today') {
+        //   const today = new Date();
+        //   const startOfToday = new Date(today);
+        //   startOfToday.setHours(0, 0, 0, 0);
+        //   searchQuery['createdAt'] = {
+        //     $gte: startOfToday,
+        //     $lt: today,
+        //   };
+        // } else if (datePosted === 'This Week') {
+        //   const today = new Date();
+        //   const startOfThisWeek = new Date(today);
+        //   startOfThisWeek.setDate(today.getDate() - today.getDay()); // Go back to the first day of the week (Sunday).
+        //   startOfThisWeek.setHours(0, 0, 0, 0);
+        //   const endOfThisWeek = new Date(startOfThisWeek);
+        //   endOfThisWeek.setDate(startOfThisWeek.getDate() + 7); // Go forward to the last day of the week (Saturday).
+        //   searchQuery['createdAt'] = {
+        //     $gte: startOfThisWeek,
+        //     $lt: endOfThisWeek,
+        //   };
+        // } else if (datePosted === 'This Month') {
+        //   // ... (similar logic as above, for "This Month" and other cases)
+        // } else if (datePosted === 'This Year') {
+        //   // ... (similar logic as above, for "This Year" and other cases)
+        // } else if (datePosted === 'Past Years') {
+        //   // ... (similar logic as above, for "Past Years" and other cases)
+        // }
+
         //For getting recruiterName from user 
         const matchingUsers = await this.recruiterModel.find({
           $or: [
@@ -296,202 +333,49 @@ export default class JobService extends Service {
           ],
         }).select('_id');
         const matchingUserIds = matchingUsers.map((recruiter: any) => recruiter._id);
+        //end
+
         //For getting companyName from company
         const matchingCompany = await this.companyModel.find({
           $or: [
             { name: { $regex: search, $options: 'i' } },
           ],
         }).select('_id');
-        const companyIds:any = matchingCompany.map((company: any) => company._id);
+        const companyIds = matchingCompany.map((company: any) => company._id);
         //end
-        if (jobType !== undefined) {
-          searchQuery.$and= [
-            { jobType: { $regex: jobType, $options: 'i' } },
-            {
-              $or: [
-                { recruiter: { $in: matchingUserIds } },
-                { company: { $in: companyIds } },
-                { title: { $regex: search, $options: 'i' } },
-                { reportAddress: { $regex: search, $options: 'i' } },
-                { schedule: { $regex: search, $options: 'i' } },
-                { startDate: { $regex: search, $options: 'i' } },
-                { payRange: { $regex: search, $options: 'i' } },
-                { min: { $regex: search, $options: 'i' } },
-                { max: { $regex: search, $options: 'i' } },
-                { perMonth: { $regex: search, $options: 'i' } },
-                { supplementalPay: { $regex: search, $options: 'i' } },
-                { benefitsOffer: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } },
-                { isCVRequired: { $regex: search, $options: 'i' } },
-                { isDeadlineApplicable: { $regex: search, $options: 'i' } },
-                { deadlineDate: { $regex: search, $options: 'i' } },
-                { noOfHiring: { $regex: search, $options: 'i' } },
-                { hiringSlot: { $regex: search, $options: 'i' } },
-                { aboutCompany: { $regex: search, $options: 'i' } },
-                { educationLevel: { $regex: search, $options: 'i' } },
-                { yearOfExperience: { $regex: search, $options: 'i' } },
-                { createdAt: { $regex: search, $options: 'i' } },
-                { createdBy: { $regex: search, $options: 'i' } },
-                { createdFrom: { $regex: search, $options: 'i' } },
-                { status: { $regex: search, $options: 'i' } },
-                { approveAdmin: { $regex: search, $options: 'i' } },
-                { updatedAt: { $regex: search, $options: 'i' } },
-              ],
-            }
-          ]
-          if (datePosted === 'Today') {
-            console.log("date")
-            const today = new Date();
-            const startOfToday = new Date(today);
-            startOfToday.setHours(0, 0, 0, 0);
-            searchQuery.$and.push({
-              createdAt: {
-                $gte: startOfToday,
-                $lt: today,
-              }
-            });
-          }
-          //this week
-          if (datePosted === 'This Week') {
-            console.log("This Week");
-            const today = new Date();
-            const startOfThisWeek = new Date(today);
-            startOfThisWeek.setDate(today.getDate() - today.getDay()); // Go back to the first day of the week (Sunday).
-            startOfThisWeek.setHours(0, 0, 0, 0);
-            const endOfThisWeek = new Date(startOfThisWeek);
-            endOfThisWeek.setDate(startOfThisWeek.getDate() + 7); // Go forward to the last day of the week (Saturday).
-            searchQuery.$and.push({
-              createdAt: {
-                $gte: startOfThisWeek,
-                $lt: today,
-              }
-            });
-          }
-          if (datePosted === 'This Month') {
-            console.log("This Month");
-            const today = new Date();
-            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-            const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-            endOfMonth.setHours(23, 59, 59, 999);
-
-            searchQuery.$and.push({
-              createdAt: {
-                $gte: startOfMonth,
-                $lt: endOfMonth,
-              }
-            });
-          }
-
-          if (datePosted === 'This Year') {
-            console.log("This Year");
-            const today = new Date();
-            const startOfYear = new Date(today.getFullYear(), 0, 1);
-            const endOfYear = new Date(today.getFullYear(), 11, 31);
-            endOfYear.setHours(23, 59, 59, 999);
-
-            searchQuery.$and.push({
-              createdAt: {
-                $gte: startOfYear,
-                $lt: endOfYear,
-              }
-            });
-          }
-         
-        }else{
-          searchQuery = {
-            $or: [
-              { recruiter: { $in: matchingUserIds } },
-              { company: { $in: companyIds } },
-              { title: { $regex: search, $options: 'i' } },
-              { reportAddress: { $regex: search, $options: 'i' } },
-              { schedule: { $regex: search, $options: 'i' } },
-              { startDate: { $regex: search, $options: 'i' } },
-              { payRange: { $regex: search, $options: 'i' } },
-              { min: { $regex: search, $options: 'i' } },
-              { max: { $regex: search, $options: 'i' } },
-              { perMonth: { $regex: search, $options: 'i' } },
-              { supplementalPay: { $regex: search, $options: 'i' } },
-              { benefitsOffer: { $regex: search, $options: 'i' } },
-              { description: { $regex: search, $options: 'i' } },
-              { isCVRequired: { $regex: search, $options: 'i' } },
-              { isDeadlineApplicable: { $regex: search, $options: 'i' } },
-              { deadlineDate: { $regex: search, $options: 'i' } },
-              { noOfHiring: { $regex: search, $options: 'i' } },
-              { hiringSlot: { $regex: search, $options: 'i' } },
-              { aboutCompany: { $regex: search, $options: 'i' } },
-              { educationLevel: { $regex: search, $options: 'i' } },
-              { yearOfExperience: { $regex: search, $options: 'i' } },
-              { createdAt: { $regex: search, $options: 'i' } },
-              { createdBy: { $regex: search, $options: 'i' } },
-              { createdFrom: { $regex: search, $options: 'i' } },
-              { status: { $regex: search, $options: 'i' } },
-              { approveAdmin: { $regex: search, $options: 'i' } },
-              { updatedAt: { $regex: search, $options: 'i' } },
-            ],
-          };
-          if (datePosted === 'Today') {
-            console.log("date")
-            const today = new Date();
-            const startOfToday = new Date(today);
-            startOfToday.setHours(0, 0, 0, 0);
-            searchQuery.$and=[{
-              createdAt: {
-                $gte: startOfToday,
-                $lt: today,
-              }
-            }];
-          }
-          //This week
-          if (datePosted === 'This Week') {
-            console.log("This Week");
-            const today = new Date();
-            const startOfThisWeek = new Date(today);
-            startOfThisWeek.setDate(today.getDate() - today.getDay()); // Go back to the first day of the week (Sunday).
-            startOfThisWeek.setHours(0, 0, 0, 0);
-            const endOfThisWeek = new Date(startOfThisWeek);
-            endOfThisWeek.setDate(startOfThisWeek.getDate() + 7); // Go forward to the last day of the week (Saturday).
-
-            searchQuery.$and=[{
-              createdAt: {
-                $gte: startOfThisWeek,
-                $lt: today,
-              }
-            }];
-          }
-
-          if (datePosted === 'This Month') {
-            console.log("This Month");
-            const today = new Date();
-            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-            const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-            endOfMonth.setHours(23, 59, 59, 999);
-
-            searchQuery.$and=[{
-              createdAt: {
-                $gte: startOfMonth,
-                $lt: today,
-              }
-            }];
-          }
-
-          if (datePosted === 'This Year') {
-            console.log("This Year");
-            const today = new Date();
-            const startOfYear = new Date(today.getFullYear(), 0, 1);
-            const endOfYear = new Date(today.getFullYear(), 11, 31);
-            endOfYear.setHours(23, 59, 59, 999);
-            
-            searchQuery.$and=[{
-              createdAt: {
-                $gte: startOfYear,
-                $lt: today,
-              }
-            }];
-          }
-
-
-
-        }
+        searchQuery = {
+          $or: [
+            { recruiter: { $in: matchingUserIds } },
+            { company: { $in: companyIds } },
+            { title: { $regex: search, $options: 'i' } },
+            // { reportAddress: { $regex: search, $options: 'i' } },
+            // // { jobType: { $regex: search, $options: 'i' } },
+            // { schedule: { $regex: search, $options: 'i' } },
+            // { startDate: { $regex: search, $options: 'i' } },
+            // { payRange: { $regex: search, $options: 'i' } },
+            // { min: { $regex: search, $options: 'i' } },
+            // { max: { $regex: search, $options: 'i' } },
+            // { perMonth: { $regex: search, $options: 'i' } },
+            // { supplementalPay: { $regex: search, $options: 'i' } },
+            // { benefitsOffer: { $regex: search, $options: 'i' } },
+            // { description: { $regex: search, $options: 'i' } },
+            // { isCVRequired: { $regex: search, $options: 'i' } },
+            // { isDeadlineApplicable: { $regex: search, $options: 'i' } },
+            // { deadlineDate: { $regex: search, $options: 'i' } },
+            // { noOfHiring: { $regex: search, $options: 'i' } },
+            // { hiringSlot: { $regex: search, $options: 'i' } },
+            // { aboutCompany: { $regex: search, $options: 'i' } },
+            // { educationLevel: { $regex: search, $options: 'i' } },
+            // { yearOfExperience: { $regex: search, $options: 'i' } },
+            // { createdAt: { $regex: search, $options: 'i' } },
+            // { createdBy: { $regex: search, $options: 'i' } },
+            // { createdFrom: { $regex: search, $options: 'i' } },
+            // { status: { $regex: search, $options: 'i' } },
+            // { approveAdmin: { $regex: search, $options: 'i' } },
+            // { updatedAt: { $regex: search, $options: 'i' } },
+          ],
+        };
+        console.log('JOB TYPE11');
       }
 
       let sortQuery = {};

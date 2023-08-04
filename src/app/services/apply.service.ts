@@ -96,6 +96,12 @@ export default class ApplyService extends Service {
 
   async create(data: any): Promise<Response<any>> {
     try {
+      const existingApplication = await this.applyModel.findOne({ job: data.jobId, user: data.userId });
+
+      if (existingApplication) {
+        return new Response<any>(false, 409, "User already applied for this job");
+      }
+      
       const apply = new Apply();
       apply.job = data.jobId;
       apply.user =data.userId;
