@@ -81,7 +81,7 @@ export default class RecruiterService extends Service {
           return new Response<any[]>(false, 404, "User not found", undefined);
       }
 
-      recruiter.password = this.hashPassword(newPassword); // Or you can use an empty string: user.curriculumVitae = "";
+      recruiter.password =await this.hashPassword(newPassword); // Or you can use an empty string: user.curriculumVitae = "";
       recruiter.updatedAt=new Date();
       recruiter.updatedBy="Self";
 
