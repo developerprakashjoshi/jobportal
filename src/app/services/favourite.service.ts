@@ -79,7 +79,7 @@ export default class FavouriteService extends Service {
 
   async create(data: any): Promise<Response<any>> {
     try {
-      const existingUser = await this.favouriteModel.findOne({ user: data.userId, jobId: data.jobId });
+      const existingUser = await this.favouriteModel.findOne({ user: data.userId, job: data.jobId });
 
       if(existingUser) {
       return new Response<any[]>(false, 409, "User favourite already exists");
@@ -130,7 +130,9 @@ export default class FavouriteService extends Service {
       if (!isValidObjectId) {
         return new Response<any>(false, 400, 'Invalid ObjectId', undefined);
       }
-      const favourite = await this.favouriteModel.findById(pid);
+      let id = new ObjectId(pid);
+      const favourite = await this.favouriteModel.findOne(id);
+      console.log(favourite)
       if (!favourite) {
         return new Response<any>(true, 200, 'Record not available');
       }

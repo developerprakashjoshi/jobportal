@@ -56,7 +56,7 @@ static async deleteFavourite(req: Request, res: Response)  {
     const data = req.body;
     data.ip = await Server.remoteAddr(req)
     let favouriteService=new FavouriteService();
-    const result = await favouriteService.delete(id,true)
+    const result = await favouriteService.delete(id,data)
     res.status(result.statusCode).json(result);
 }
 

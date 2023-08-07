@@ -32,32 +32,73 @@ export default class JobService extends Service {
     }
   }
 
-  async list(): Promise<Response<any[]>> {
+  async list(): Promise<Response<any>> {
     try {
-      const record = await this.jobModel.find({ deletedAt: null }).populate('company','logo name')
-      return new Response<any[]>(true, 200, "Read operation successful", record);
+      const records = await this.jobModel.find({ deletedAt: null }).populate('company', 'logo name');
+      
+      const totalApplied = await this.applyModel.countDocuments();
+      
+      const output = {
+        totalApplicants: totalApplied,
+        records: records, 
+      };
+      
+      const response = new Response<any>(true, 200, 'Read operation successful', output);
+      return response;
     } catch (error: any) {
-      return new Response<any[]>(false, 400, error.message);
+      return new Response<any>(false, 400, error.message);
     }
   }
+  
 
-  async retrieve(pid: string): Promise<Response<any[]>> {
-    try {
-      const isValidObjectId = ObjectId.isValid(pid);
-      if (!isValidObjectId) {
-        return new Response<any[]>(false, 400, "Invalid ObjectId", undefined);
-      }
-      let id = new ObjectId(pid);
+    async retrieve(pid: string): Promise<Response<any[]>> {
+      try {
+        const isValidObjectId = ObjectId.isValid(pid);
+        if (!isValidObjectId) {
+          return new Response<any[]>(false, 400, "Invalid ObjectId", undefined);
+        }
+        let id = new ObjectId(pid);
 
-      const record = await this.jobModel.findById(pid);
-      if (!record) {
-        return new Response<any[]>(false, 404, "Record not found");
+        const record = await this.jobModel.findById(pid);
+        if (!record) {
+          return new Response<any[]>(false, 404, "Record not found");
+        }
+        return new Response<any[]>(true, 200, "Read operation successful", record);
+      } catch (error: any) {
+        return new Response<any[]>(false, 400, error.message);
       }
-      return new Response<any[]>(true, 200, "Read operation successful", record);
-    } catch (error: any) {
-      return new Response<any[]>(false, 400, error.message);
     }
-  }
+
+
+    // async retrieve(pid: string): Promise<Response<any[]>> {
+    //   try {
+    //     const isValidObjectId = ObjectId.isValid(pid);
+    //     if (!isValidObjectId) {
+    //       return new Response<any[]>(false, 400, "Invalid ObjectId");
+    //     }
+    
+    //     const record = await this.jobModel.findById(pid);
+    //     if (!record) {
+    //       return new Response<any[]>(false, 404, "Record not found");
+    //     }
+    
+    //     const totalApplied = await this.applyModel.countDocuments();
+    //     const totalAppliedCount = await this.countApply(record._id.toString());
+    
+    //     record.totalApplied = totalAppliedCount;
+    
+    //     const output: = {
+    //       totalApplicants: totalApplied,
+    //       records: [record], // Wrap the single record in an array
+    //     };
+    
+    //     return new Response<any[]>(true, 200, "Read operation successful", output);
+    //   } catch (error: any) {
+    //     return new Response<any[]>(false, 400, error.message);
+    //   }
+    // }
+    
+    
 
   async retrieveByJob(name: string) {
     try {
@@ -696,7 +737,9 @@ export default class JobService extends Service {
             { LastName: { $regex: search, $options: 'i' } },
           ],
         }).select('_id');
+        console.log(matchingUsers)
         const matchingUserIds = matchingUsers.map((recruiter: any) => recruiter._id);
+        
         //end
 
         //For getting companyName from company
