@@ -5,6 +5,7 @@ import validator from "@middlewares/validator.middleware";
 import {createApply,updateApply,updateCandidateStatus,deleteApply} from "@validators/apply.validator"
 const route=express.Router();
 
+route.get('/list/:recruiterId', ApplyController.list);
 route.get('/search', ApplyController.search);
 route.get('/datatable',ApplyController.datatable)
 route.get('/count/:id',ApplyController.countByUserId)

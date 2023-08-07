@@ -665,7 +665,7 @@ export default class JobService extends Service {
 
   async datatable(data: any): Promise<Response<any>> {
     try {
-      let { page, limit, search, sort } = data;
+      let { page, limit, search, sort,token } = data;
       let errorMessage = '';
 
       if (page !== undefined && limit !== undefined) {
@@ -715,8 +715,10 @@ export default class JobService extends Service {
             { company: { $in: companyIds } },
             { reportAddress: { $regex: search, $options: 'i' } },
             { status: { $regex: search, $options: 'i' } },
-
           ],
+          deletedAt: { $exists: false },
+          approveAdmin: { $exists: true, $eq: true },
+          createdBy: token,
         };
       }
 
@@ -736,8 +738,8 @@ export default class JobService extends Service {
       const skip = (page - 1) * limit;
       const totalApplied = await this.applyModel.countDocuments();
       const [activeCount, inactiveCount] = await Promise.all([
-        this.jobModel.countDocuments({ status: "Active" }),
-        this.jobModel.countDocuments({ status: "Inactive" }),
+        this.jobModel.countDocuments({ status: "Active", deletedAt: null, createdBy:token }),
+        this.jobModel.countDocuments({ status: "Inactive", deletedAt: null, createdBy:token }),
       ]);
       const [records, totalCount] = await Promise.all([
         this.jobModel.aggregate([
@@ -745,14 +747,6 @@ export default class JobService extends Service {
             $match: {
               $and: [
                 searchQuery,
-                {
-                  deletedAt: { $exists: false },
-                  $or: [
-
-                    { approveAdmin: { $ne: null } },
-                    { approveAdmin: true },
-                  ],
-                }
               ]
             }
           },

@@ -46,6 +46,18 @@ export default class ApplyService extends Service {
     }
   }
 
+  async getApplyList(recruiterId: string): Promise<Response<any>> {
+    try {
+      const result = await this.applyModel.find({ "job.recruiter": recruiterId }).populate("job").populate("user");
+      if (!result) {
+        return new Response<any>(true, 200, 'Record not available', result);
+      }
+      return new Response<any>(true, 200, 'Count operation successful', result);
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
+
   async list(): Promise<Response<any>> {
     try {
       const result = await this.applyModel.find({deletedAt: null}).populate('job').populate('user');

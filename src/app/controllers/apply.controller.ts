@@ -35,6 +35,12 @@ static async getUsersData(req: Request, res: Response) {
   const result = await applyService.getApplyData(id)
   res.status(result.statusCode).json(result);
 }
+static async list(req: Request, res: Response) {
+  let id = req.params.recruiterId
+  let applyService =new ApplyService();
+  const result = await applyService.getApplyList(id)
+  res.status(result.statusCode).json(result);
+}
 
 static async getApply(req: Request, res: Response) {
   let id = req.params.id

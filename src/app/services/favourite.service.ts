@@ -79,15 +79,10 @@ export default class FavouriteService extends Service {
 
   async create(data: any): Promise<Response<any>> {
     try {
-      const existingUser = await this.favouriteModel.findOne({ user: data.userId });
+      const existingUser = await this.favouriteModel.findOne({ user: data.userId, jobId: data.jobId });
 
       if(existingUser) {
       return new Response<any[]>(false, 409, "User favourite already exists");
-      }
-      const existingJob = await this.favouriteModel.findOne({ job: data.jobId });
-
-      if(existingJob) {
-      return new Response<any[]>(false, 409, "Job favourite already exists");
       }
       const favourite = new Favourite();
       favourite.user = data.userId;
