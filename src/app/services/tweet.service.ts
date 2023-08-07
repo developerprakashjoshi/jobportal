@@ -31,9 +31,9 @@ export default class TweetService extends Service {
   async createRoom(data:any):Promise<Response<any[]>> {
     const { roomName, participants,participantsName,createdBy } = data;
     try {
-        const existingRoom = await Room.findOne({ name: roomName });
+        const existingRoom:any = await Room.findOne({ name: roomName }).populate('messages');
         if (existingRoom) {
-        return new Response<any[]>(false, 409, "Room name already exists", undefined);
+        return new Response<any[]>(true, 200, "Room name already exists", existingRoom);
         }
         // const uniqueRoomName = `${uuidv4()}-${roomName}`;
         const room = new Room({
