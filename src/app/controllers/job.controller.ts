@@ -60,6 +60,7 @@ export default class JobController extends Controller {
     const result = await jobService.delete(id, data)
     res.status(result.statusCode).json(result);
   }
+  
   static async searchJob(req: Request, res: Response) {
     const data = req.query
     let jobService = new JobService();

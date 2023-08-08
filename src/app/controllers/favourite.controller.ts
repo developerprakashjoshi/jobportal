@@ -60,6 +60,15 @@ static async deleteFavourite(req: Request, res: Response)  {
     res.status(result.statusCode).json(result);
 }
 
+static async deleteByUserId(req: Request, res: Response) {
+  let id = req.params.userId
+  const data = req.body;
+  data.ip = await Server.remoteAddr(req)
+  let favouriteService = new FavouriteService();
+  const result = await favouriteService.findJobsByUserId(id, data)
+  res.status(result.statusCode).json(result);
+}
+
 static  async datatable(req: Request, res: Response) {
     const data = req.query;
     let favouriteService=new FavouriteService();

@@ -147,6 +147,30 @@ export default class FavouriteService extends Service {
     }
   }
 
+  async findJobsByUserId(userId: string,data:any) {
+    try {
+      const isValidObjectId = ObjectId.isValid(userId);
+      if (!isValidObjectId) {
+        return new Response<any[]>(false, 400, "Invalid ObjectId", undefined);
+      }
+  
+      const jobs = await this.favouriteModel.find({ userId: userId });
+  
+      if (!jobs) {
+        return new Response<any[]>(true, 404, "No user found", []);
+      }
+      jobs.deletedAt = moment().toDate(); // Set the deleted_at field to the current timestamp
+      jobs.deleteBy = data.deleteBy;
+      jobs.deleteFrom = data.ip;
+
+      const result = await jobs.save(jobs);
+      return new Response<any[]>(true, 200, "Found jobs for the specified user", result);
+    } catch (error: any) {
+      return new Response<any[]>(false, 500, error.message);
+    }
+  }
+
+
   async datatable(data: any): Promise<Response<any>> {
     try {
       let { page, limit, search, sort } = data;
