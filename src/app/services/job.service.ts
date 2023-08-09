@@ -717,7 +717,7 @@ export default class JobService extends Service {
             { status: { $regex: search, $options: 'i' } },
           ],
           deletedAt: { $exists: false },
-          approveAdmin: { $exists: true, $eq: true },
+          // approveAdmin: { $exists: true, $eq: true },
           createdBy: token,
         };
       }
