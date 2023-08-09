@@ -79,7 +79,7 @@ export default class FavouriteService extends Service {
 
   async create(data: any): Promise<Response<any>> {
     try {
-      const existingUser = await this.favouriteModel.findOne({ user: data.userId, jobId: data.jobId });
+      const existingUser = await this.favouriteModel.findOne({ user: data.userId, job: data.jobId });
 
       if(existingUser) {
       return new Response<any[]>(false, 409, "User favourite already exists");
@@ -130,7 +130,9 @@ export default class FavouriteService extends Service {
       if (!isValidObjectId) {
         return new Response<any>(false, 400, 'Invalid ObjectId', undefined);
       }
-      const favourite = await this.favouriteModel.findById(pid);
+      let id = new ObjectId(pid);
+      const favourite = await this.favouriteModel.findOne(id);
+      console.log(favourite)
       if (!favourite) {
         return new Response<any>(true, 200, 'Record not available');
       }
@@ -144,6 +146,30 @@ export default class FavouriteService extends Service {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
   }
+
+  async findJobsByUserId(userId: string,data:any) {
+    try {
+      const isValidObjectId = ObjectId.isValid(userId);
+      if (!isValidObjectId) {
+        return new Response<any[]>(false, 400, "Invalid ObjectId", undefined);
+      }
+  
+      const jobs = await this.favouriteModel.find({ userId: userId });
+  
+      if (!jobs) {
+        return new Response<any[]>(true, 404, "No user found", []);
+      }
+      jobs.deletedAt = moment().toDate(); // Set the deleted_at field to the current timestamp
+      jobs.deleteBy = data.deleteBy;
+      jobs.deleteFrom = data.ip;
+
+      const result = await jobs.save(jobs);
+      return new Response<any[]>(true, 200, "Found jobs for the specified user", result);
+    } catch (error: any) {
+      return new Response<any[]>(false, 500, error.message);
+    }
+  }
+
 
   async datatable(data: any): Promise<Response<any>> {
     try {

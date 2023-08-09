@@ -14,6 +14,7 @@ route.get('/:id',FavouriteController.getFavourite)
 route.post('/',validator(createFavourite),FavouriteController.createFavourite)
 route.patch('/:id',validator(updateFavourite),FavouriteController.updateFavourite)
 route.delete('/:id',validator(deleteFavourite),FavouriteController.deleteFavourite)
+route.delete('/deleteUser/:userId',FavouriteController.deleteByUserId)
 
 export default route;
 

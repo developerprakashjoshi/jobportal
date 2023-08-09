@@ -32,32 +32,51 @@ export default class JobService extends Service {
     }
   }
 
-  async list(): Promise<Response<any[]>> {
+  async list(): Promise<Response<any>> {
     try {
-      const record = await this.jobModel.find({ deletedAt: null }).populate('company','logo name')
-      return new Response<any[]>(true, 200, "Read operation successful", record);
+      const records = await this.jobModel.find({ deletedAt: null }).populate('company', 'logo name');
+      
+      const totalApplied = await this.applyModel.countDocuments();
+      
+      const output = {
+        totalApplicants: totalApplied,
+        records: records, 
+      };
+      
+      const response = new Response<any>(true, 200, 'Read operation successful', output);
+      return response;
     } catch (error: any) {
-      return new Response<any[]>(false, 400, error.message);
+      return new Response<any>(false, 400, error.message);
     }
   }
+  
 
-  async retrieve(pid: string): Promise<Response<any[]>> {
-    try {
-      const isValidObjectId = ObjectId.isValid(pid);
-      if (!isValidObjectId) {
-        return new Response<any[]>(false, 400, "Invalid ObjectId", undefined);
+    async retrieve(pid: string): Promise<Response<any[]>> {
+      try {
+        const isValidObjectId = ObjectId.isValid(pid);
+        if (!isValidObjectId) {
+          return new Response<any[]>(false, 400, "Invalid ObjectId");
+        }
+    
+        const record = await this.jobModel.findById(pid);
+        if (!record) {
+          return new Response<any[]>(false, 404, "Record not found");
+        }
+    
+        const totalAppliedCount = await this.countApply(pid);
+        let output = record.toObject()
+        output.totalAppliedCount = totalAppliedCount
+        return new Response<any[]>(true, 200, "Read operation successful", output);
+      } catch (error: any) {
+        return new Response<any[]>(false, 400, error.message);
       }
-      let id = new ObjectId(pid);
-
-      const record = await this.jobModel.findById(pid);
-      if (!record) {
-        return new Response<any[]>(false, 404, "Record not found");
-      }
-      return new Response<any[]>(true, 200, "Read operation successful", record);
-    } catch (error: any) {
-      return new Response<any[]>(false, 400, error.message);
     }
-  }
+    
+    
+    
+    
+    
+    
 
   async retrieveByJob(name: string) {
     try {
@@ -260,7 +279,7 @@ export default class JobService extends Service {
     } catch (error: any) {
       return new Response<any[]>(false, 400, error.message);
     }
-  }
+  }  
 
   async search(data: any): Promise<Response<any>> {
     try {
@@ -696,7 +715,9 @@ export default class JobService extends Service {
             { LastName: { $regex: search, $options: 'i' } },
           ],
         }).select('_id');
+        console.log(matchingUsers)
         const matchingUserIds = matchingUsers.map((recruiter: any) => recruiter._id);
+        
         //end
 
         //For getting companyName from company
@@ -874,10 +895,224 @@ export default class JobService extends Service {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
   }
+  
+  // async datatableAdmin(data: any): Promise<Response<any>> {
+  //   try {
+  //     let { page, limit, search, sort } = data;
+  //     let errorMessage = '';
 
+  //     if (page !== undefined && limit !== undefined) {
+  //       if (isNaN(page) || !Number.isInteger(Number(page)) || isNaN(limit) || !Number.isInteger(Number(limit))) {
+  //         errorMessage = "Both 'page' and 'limit' must be integers.";
+  //       }
+  //     } else if (page !== undefined) {
+  //       if (isNaN(page) || !Number.isInteger(Number(page))) {
+  //         errorMessage = "'page' must be an integer.";
+  //       }
+  //     } else if (limit !== undefined) {
+  //       if (isNaN(limit) || !Number.isInteger(Number(limit))) {
+  //         errorMessage = "'limit' must be an integer.";
+  //       }
+  //     }
+
+  //     if (errorMessage) {
+  //       return new Response<any>(false, 400, errorMessage);
+  //     }
+
+  //     let searchQuery = {};
+  //     if (search !== undefined) {
+
+  //       //For getting recruiterName from user 
+  //       const matchingUsers = await this.recruiterModel.find({
+  //         $or: [
+  //           { firstName: { $regex: search, $options: 'i' } },
+  //           { LastName: { $regex: search, $options: 'i' } },
+  //         ],
+  //       }).select('_id');
+  //       console.log(matchingUsers)
+  //       const matchingUserIds = matchingUsers.map((recruiter: any) => recruiter._id);
+  //       console.log(matchingUserIds)
+  //       //end
+
+  //       //For getting companyName from company
+  //       const matchingCompany = await this.companyModel.find({
+  //         $or: [
+  //           { name: { $regex: search, $options: 'i' } },
+  //         ],
+  //       }).select('_id');
+  //       const companyIds = matchingCompany.map((company: any) => company._id);
+  //       console.log(companyIds)
+  //       //end
+
+  //       searchQuery = {
+  //         $or: [
+  //           { title: { $regex: search, $options: 'i' } },
+  //           { recruiter: { $in: matchingUserIds } },
+  //           { company: { $in: companyIds } },
+  //           { reportAddress: { $regex: search, $options: 'i' } },
+  //           { status: { $regex: search, $options: 'i' } },
+  //         ],
+  //       };
+  //     }
+
+  //     let sortQuery = {};
+  //     if (sort !== undefined) {
+  //       const sortParams = sort.split(':');
+  //       if (sortParams.length === 2) {
+  //         const [column, order] = sortParams;
+  //         sortQuery = { [column]: order === 'desc' ? -1 : 1 };
+  //       }
+  //     } else {
+  //       sortQuery = { createdAt: -1 }
+  //     }
+
+  //     page = page === undefined ? 1 : parseInt(page);
+  //     limit = limit === undefined ? 10 : parseInt(limit);
+  //     const skip = (page - 1) * limit;
+  //     const totalApplied = await this.applyModel.countDocuments();
+  //     const [activeCount, inactiveCount] = await Promise.all([
+  //       this.jobModel.countDocuments({ status: "Active", deletedAt: null }),
+  //       this.jobModel.countDocuments({ status: "Inactive", deletedAt: null }),
+  //     ]);
+  //     const [records, totalCount] = await Promise.all([
+  //       this.jobModel.aggregate([
+  //         {
+  //           $match: {
+  //             $and: [
+  //               searchQuery,
+  //               {
+  //                 deletedAt: null
+  //               }
+  //             ]
+  //           }
+  //         },
+  //         ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
+  //         { $skip: skip },
+  //         { $limit: limit },
+  //         {
+  //           $lookup: {
+  //             from: 'users',
+  //             localField: 'user',
+  //             foreignField: '_id',
+  //             as: 'user',
+  //           },
+  //         },
+  //         {
+  //           $lookup: {
+  //             from: 'companies',
+  //             localField: 'company',
+  //             foreignField: '_id',
+  //             as: 'company',
+  //           },
+  //         },
+  //         {
+  //           $addFields: {
+  //             recruiterName: {
+  //               $concat: [
+  //                 { $arrayElemAt: ['$recruiter.firstName', 0] },
+  //                 ' ',
+  //                 { $arrayElemAt: ['$recruiter.LastName', 0] }
+  //               ]
+  //             },
+  //             companyName: {
+  //               $arrayElemAt: ['$company.name', 0]
+  //             },
+  //             companyLogo: {
+  //               $arrayElemAt: ['$company.logo', 0]
+  //             },
+  //             createdOn: {
+  //               $dateToString: {
+  //                 date: "$createdAt",
+  //                 format: "%d-%m-%Y"
+  //               }
+  //             },
+  //             totalApplied: 500
+
+  //           }
+  //         },
+  //         {
+  //           $project: {
+  //             _id: 1,
+  //             reportToWork: 1,
+  //             isStartPlanned: 1,
+  //             user: 1,
+  //             title: 1,
+  //             reportAddress: 1,
+  //             jobType: 1,
+  //             schedule: 1,
+  //             startDate: 1,
+  //             payRange: 1,
+  //             min: 1,
+  //             max: 1,
+  //             perMonth: 1,
+  //             supplementalPay: 1,
+  //             benefitsOffer: 1,
+  //             description: 1,
+  //             isCVRequired: 1,
+  //             isDeadlineApplicable: 1,
+  //             deadlineDate: 1,
+  //             noOfHiring: 1,
+  //             hiringSlot: 1,
+  //             aboutCompany: 1,
+  //             educationLevel: 1,
+  //             yearOfExperience: 1,
+  //             createdAt: 1,
+  //             createdBy: 1,
+  //             createdFrom: 1,
+  //             status: 1,
+  //             approveAdmin: 1,
+  //             updatedAt: 1,
+  //             companyName: 1,
+  //             recruiterName: 1,
+  //             companyLogo:1,
+  //           },
+  //         },
+  //         {
+  //           $unwind: {
+  //             path: '$user',
+  //             preserveNullAndEmptyArrays: true,
+  //           },
+  //         },
+  //         {
+  //           $unwind: {
+  //             path: '$company',
+  //             preserveNullAndEmptyArrays: true,
+  //           },
+  //         },
+  //       ]).exec(),
+  //       this.jobModel.countDocuments({ deletedAt: { $exists: false } }),
+  //     ]);
+
+  //     if (records.length === 0) {
+  //       return new Response<any>(true, 200, 'No records available', {});
+  //     }
+
+  //     const jobIds = records.map((record: any) => record._id.toString());
+  //     const totalAppliedCounts = await Promise.all(jobIds.map((_id: string) => this.countApply(_id)));
+  //     records.forEach((record: any, index: number) => {
+  //       record.totalApplied = totalAppliedCounts[index];
+  //     });
+
+  //     const totalPages = Math.ceil(totalCount / limit);
+  //     const currentPage = page;
+  //     const output = {
+  //       records: records,
+  //       totalPages: totalPages !== null ? totalPages : 0,
+  //       currentPage: currentPage !== null ? currentPage : 0,
+  //       filterCount: records.length,
+  //       totalCount: totalCount,
+  //       activeStatus: activeCount,
+  //       inactiveStatus: inactiveCount,
+  //       totalApplicants: totalApplied,
+  //     };
+  //     return new Response<any>(true, 200, 'Read operation successful', output);
+  //   } catch (error: any) {
+  //     return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+  //   }
+  // }
   async datatableAdmin(data: any): Promise<Response<any>> {
     try {
-      let { page, limit, search, sort } = data;
+      let { page, limit, search, sort,token } = data;
       let errorMessage = '';
 
       if (page !== undefined && limit !== undefined) {
@@ -898,16 +1133,42 @@ export default class JobService extends Service {
         return new Response<any>(false, 400, errorMessage);
       }
 
+
       let searchQuery = {};
       if (search !== undefined) {
+        //For getting recruiterName from user 
+        const matchingUsers = await this.recruiterModel.find({
+          $or: [
+            { firstName: { $regex: search, $options: 'i' } },
+            { LastName: { $regex: search, $options: 'i' } },
+          ],
+        }).select('_id');
+        console.log(matchingUsers)
+        const matchingUserIds = matchingUsers.map((recruiter: any) => recruiter._id);
+        
+        //end
+
+        //For getting companyName from company
+        const matchingCompany = await this.companyModel.find({
+          $or: [
+            { name: { $regex: search, $options: 'i' } },
+          ],
+        }).select('_id');
+        console.log(matchingCompany)
+        const companyIds = matchingCompany.map((company: any) => company._id);
+        //end
+
         searchQuery = {
           $or: [
             { title: { $regex: search, $options: 'i' } },
-            { recruiterName: { $regex: search, $options: 'i' } },
-            { companyName: { $regex: search, $options: 'i' } },
+            { recruiter: { $in: matchingUserIds } },
+            { company: { $in: companyIds } },
             { reportAddress: { $regex: search, $options: 'i' } },
             { status: { $regex: search, $options: 'i' } },
           ],
+          // deletedAt: { $exists: false },
+          // approveAdmin: { $exists: true, $eq: true },
+          // createdBy: token,
         };
       }
 
@@ -927,8 +1188,8 @@ export default class JobService extends Service {
       const skip = (page - 1) * limit;
       const totalApplied = await this.applyModel.countDocuments();
       const [activeCount, inactiveCount] = await Promise.all([
-        this.jobModel.countDocuments({ status: "Active", deletedAt: null }),
-        this.jobModel.countDocuments({ status: "Inactive", deletedAt: null }),
+        this.jobModel.countDocuments({ status: "Active", deletedAt: null, createdBy:token }),
+        this.jobModel.countDocuments({ status: "Inactive", deletedAt: null, createdBy:token }),
       ]);
       const [records, totalCount] = await Promise.all([
         this.jobModel.aggregate([
@@ -936,9 +1197,6 @@ export default class JobService extends Service {
             $match: {
               $and: [
                 searchQuery,
-                {
-                  deletedAt: null
-                }
               ]
             }
           },
@@ -947,10 +1205,10 @@ export default class JobService extends Service {
           { $limit: limit },
           {
             $lookup: {
-              from: 'users',
-              localField: 'user',
+              from: 'recruiters',
+              localField: 'recruiter',
               foreignField: '_id',
-              as: 'user',
+              as: 'recruiter',
             },
           },
           {
@@ -965,13 +1223,16 @@ export default class JobService extends Service {
             $addFields: {
               recruiterName: {
                 $concat: [
-                  { $arrayElemAt: ['$user.firstName', 0] },
+                  { $arrayElemAt: ['$recruiter.firstName', 0] },
                   ' ',
-                  { $arrayElemAt: ['$user.lastName', 0] }
+                  { $arrayElemAt: ['$recruiter.LastName', 0] }
                 ]
               },
               companyName: {
                 $arrayElemAt: ['$company.name', 0]
+              },
+              companyLogo: {
+                $arrayElemAt: ['$company.logo', 0]
               },
               createdOn: {
                 $dateToString: {
@@ -986,26 +1247,43 @@ export default class JobService extends Service {
           {
             $project: {
               _id: 1,
-              report_address: 1,
-              type: 1,
+              reportToWork: 1,
+              isStartPlanned: 1,
+              user: 1,
               title: 1,
-              noOfHiring: 1,
+              reportAddress: 1,
+              jobType: 1,
               schedule: 1,
               startDate: 1,
+              payRange: 1,
+              min: 1,
+              max: 1,
+              perMonth: 1,
+              supplementalPay: 1,
+              benefitsOffer: 1,
+              description: 1,
+              isCVRequired: 1,
               isDeadlineApplicable: 1,
+              deadlineDate: 1,
+              noOfHiring: 1,
+              hiringSlot: 1,
+              aboutCompany: 1,
+              educationLevel: 1,
+              yearOfExperience: 1,
               createdAt: 1,
-              companyName: 1,
-              recruiterName: 1,
-              reportAddress: 1,
+              createdBy: 1,
+              createdFrom: 1,
               status: 1,
               approveAdmin: 1,
-              totalApplied: 1,
-              deadlineDate: 1,
+              updatedAt: 1,
+              companyName: 1,
+              recruiterName: 1,
+              companyLogo:1,
             },
           },
           {
             $unwind: {
-              path: '$user',
+              path: '$recruiter',
               preserveNullAndEmptyArrays: true,
             },
           },
