@@ -159,7 +159,7 @@ export default class InterviewService extends Service {
 
   async datatable(data: any): Promise<Response<any>> {
     try {
-      let { page, limit, search, sort } = data;
+      let { page, limit, search, sort,token } = data;
 
       let errorMessage = '';
   
@@ -211,6 +211,12 @@ export default class InterviewService extends Service {
           };
         }
       }
+      if (token !== undefined) {
+        searchQuery = {
+          ...searchQuery,
+          createdBy: token, // Assuming token represents the createdBy value
+        };
+      }
   
       let sortQuery = {};
       if (sort !== undefined ) {
@@ -247,6 +253,7 @@ export default class InterviewService extends Service {
               "interviewLink":1,
               "description":1,
               "createdAt":1,
+              "createdBy":1,
             },
           },
           {

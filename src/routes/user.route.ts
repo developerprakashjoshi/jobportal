@@ -11,6 +11,8 @@ const upload = multer({ storage });
 
 route.get('/search', UserController.search);
 route.get('/datatable',UserController.datatable)
+route.get('/admin-datatable',UserController.datatableAdmin)
+route.get('/test',UserController.test)
 route.get('/count',UserController.count)
 route.get('/',UserController.getUsers)
 route.get('/:id',UserController.getUser)

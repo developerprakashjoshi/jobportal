@@ -165,6 +165,19 @@ static  async datatable(req: Request, res: Response) {
     res.status(records.statusCode).json(records);
   }
 
+  static  async datatableAdmin(req: Request, res: Response) {
+    const data = req.query;
+    let userService=new UserService();
+    const records = await userService.datatable(data)
+    res.status(records.statusCode).json(records);
+  }
+  static  async test(req: Request, res: Response) {
+    const data = req.query;
+    let userService=new UserService();
+    const records = await userService.test(data)
+    res.status(records.statusCode).json(records);
+  }
+
     static async search(req: Request, res: Response) {
     const query = req.query.q;
     let userService=new UserService();
