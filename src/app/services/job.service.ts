@@ -418,6 +418,7 @@ export default class JobService extends Service {
           }
           if (payRange !== undefined ) {
             console.log("Pay Range");
+            // searchQuery.$and.push({ payRange: { $regex: payRange, $options: 'i' } });
             searchQuery.$and=[{ payRange: { $regex: payRange, $options: 'i' } }];
           }
          
@@ -513,6 +514,7 @@ export default class JobService extends Service {
           }
           if (payRange !== undefined ) {
             console.log("Pay Range");
+            // searchQuery.$and.push({ payRange: { $regex: payRange, $options: 'i' } });
             searchQuery.$and=[{ payRange: { $regex: payRange, $options: 'i' } }];
           }
 
@@ -737,9 +739,15 @@ export default class JobService extends Service {
             { reportAddress: { $regex: search, $options: 'i' } },
             { status: { $regex: search, $options: 'i' } },
           ],
-          deletedAt: { $exists: false },
+          // deletedAt: { $exists: false },
           // approveAdmin: { $exists: true, $eq: true },
-          createdBy: token,
+          // createdBy: token,
+        };
+      }
+      if (token !== undefined) {
+        searchQuery = {
+          ...searchQuery,
+          createdBy: token, // Assuming token represents the createdBy value
         };
       }
 
@@ -865,7 +873,16 @@ export default class JobService extends Service {
             },
           },
         ]).exec(),
+        (token !== undefined) ?
+        this.jobModel.countDocuments({
+          $and: [
+            searchQuery,
+            { deletedAt: { $exists: false } },
+            { createdBy: token },
+          ],
+        }) :
         this.jobModel.countDocuments({ deletedAt: { $exists: false } }),
+        // this.jobModel.countDocuments({ deletedAt: { $exists: false } }),
       ]);
 
       if (records.length === 0) {
@@ -1327,7 +1344,7 @@ export default class JobService extends Service {
 
   async datatableResume(data: any): Promise<Response<any>> {
     try {
-      let { page, limit, search, sort } = data;
+      let { page, limit, search, sort,token } = data;
       let errorMessage = '';
 
       if (page !== undefined && limit !== undefined) {
@@ -1358,6 +1375,12 @@ export default class JobService extends Service {
             { reportAddress: { $regex: search, $options: 'i' } },
             { status: { $regex: search, $options: 'i' } },
           ],
+        };
+      }
+      if (token !== undefined) {
+        searchQuery = {
+          ...searchQuery,
+          createdBy: token, // Assuming token represents the createdBy value
         };
       }
 
@@ -1452,6 +1475,7 @@ export default class JobService extends Service {
               approveAdmin: 1,
               totalApplied: 1,
               deadlineDate: 1,
+              createdBy:1,
               resume:1
             },
           },
@@ -1468,7 +1492,16 @@ export default class JobService extends Service {
             },
           },
         ]).exec(),
+        (token !== undefined) ?
+        this.jobModel.countDocuments({
+          $and: [
+            searchQuery,
+            { deletedAt: { $exists: false } },
+            { createdBy: token },
+          ],
+        }) :
         this.jobModel.countDocuments({ deletedAt: { $exists: false } }),
+        // this.jobModel.countDocuments({ deletedAt: { $exists: false } }),
       ]);
 
       if (records.length === 0) {

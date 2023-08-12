@@ -263,7 +263,16 @@ export default class InterviewService extends Service {
             },
           },
         ]).exec(),
+        (token !== undefined) ?
+        this.interviewModel.countDocuments({
+          $and: [
+            searchQuery,
+            { deletedAt: { $exists: false } },
+            { createdBy: token },
+          ],
+        }) :
         this.interviewModel.countDocuments({ deletedAt: { $exists: false } }),
+        // this.interviewModel.countDocuments({ deletedAt: { $exists: false } }),
       ]);
   
       if (records.length === 0) {
