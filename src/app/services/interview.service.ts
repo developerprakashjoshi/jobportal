@@ -263,6 +263,7 @@ export default class InterviewService extends Service {
             },
           },
         ]).exec(),
+        
         this.interviewModel.countDocuments({ deletedAt: { $exists: false } }),
       ]);
   
