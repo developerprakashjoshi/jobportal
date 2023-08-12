@@ -124,19 +124,14 @@ export default class FavouriteService extends Service {
     }
   }
 
-  async delete(pid: string ,data:any): Promise<Response<any>> {
+  async delete(data:any): Promise<Response<any>> {
     try {
-      const isValidObjectId = ObjectId.isValid(pid);
-      if (!isValidObjectId) {
-        return new Response<any>(false, 400, 'Invalid ObjectId', undefined);
-      }
-      let id = new ObjectId(pid);
-      const favourite = await this.favouriteModel.findOne(id);
+
+      const favourite = await this.favouriteModel.findOne({user:data.userId,job:data.jobId});
       console.log(favourite)
       if (!favourite) {
         return new Response<any>(true, 200, 'Record not available');
       }
-      
       favourite.deletedAt = moment().toDate(); // Set the deleted_at field to the current timestamp
       favourite.deleteBy = data.deleteBy;
       favourite.deleteFrom = data.ip

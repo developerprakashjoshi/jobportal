@@ -14,6 +14,7 @@ export const updateFavourite = Joi.object({
 }).options({ abortEarly: false });
 
 export const deleteFavourite = Joi.object({
-  id: Joi.string().required(),
+  userId: Joi.string().required(),
+  jobId: Joi.string().required(),
   deletedBy:Joi.string().required()
 });

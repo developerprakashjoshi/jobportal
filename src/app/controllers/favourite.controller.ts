@@ -52,11 +52,10 @@ static  async updateFavourite(req: Request, res: Response) {
   }
 
 static async deleteFavourite(req: Request, res: Response)  {
-    let id = req.params.id;
     const data = req.body;
     data.ip = await Server.remoteAddr(req)
     let favouriteService=new FavouriteService();
-    const result = await favouriteService.delete(id,data)
+    const result = await favouriteService.delete(data)
     res.status(result.statusCode).json(result);
 }
 
