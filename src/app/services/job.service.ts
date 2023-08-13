@@ -256,6 +256,34 @@ export default class JobService extends Service {
     }
   }
 
+  async updateJob(pid: string, data: any) {
+    try {
+      const isValidObjectId = ObjectId.isValid(pid);
+      if (!isValidObjectId) {
+        return new Response<any[]>(false, 400, "Invalid ObjectId", undefined);
+      }
+      let id = new ObjectId(pid);
+      const jobs = await this.jobModel.findById(pid);
+
+      if (!jobs) {
+        return new Response<any[]>(true, 404, "Record not found");
+      }
+
+      if (typeof data.status === "boolean") {
+        jobs.status = data.status
+      }
+
+      jobs.updatedAt = new Date()
+      jobs.updatedBy = data.updatedBy
+      jobs.updatedFrom = data.ip
+      const result = await jobs.save();
+
+      return new Response<any[]>(true, 200, "Update operation successful", result);
+    } catch (error: any) {
+      return new Response<any[]>(false, 400, error.message);
+    }
+  }
+
   async delete(pid: string, data: any) {
     try {
       const isValidObjectId = ObjectId.isValid(pid);

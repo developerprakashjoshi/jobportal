@@ -52,6 +52,15 @@ export default class JobController extends Controller {
     const result = await jobService.updateApproval(id, data)
     res.status(result.statusCode).json(result);
   }
+
+  static async jobUpdateStatus(req: Request, res: Response) {
+    const id = req.params.id
+    const data = req.body
+    data.ip = await Server.remoteAddr(req)
+    let jobService = new JobService();
+    const result = await jobService.updateJob(id, data)
+    res.status(result.statusCode).json(result);
+  }
   static async deleteJob(req: Request, res: Response) {
     let id = req.params.id
     const data = req.body;

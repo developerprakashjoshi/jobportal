@@ -46,7 +46,10 @@ export const updateApproveStatus=Joi.object({
     id:Joi.string().required(),
     approveAdmin:Joi.boolean().required()
 })
-
+export const jobUpdateStatus=Joi.object({
+    id:Joi.string().required(),
+    status:Joi.boolean().required()
+})
 export const updateJob=Joi.object({
     id:Joi.string().required(),
     userId:Joi.string().required(),
