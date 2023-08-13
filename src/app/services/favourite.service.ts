@@ -33,7 +33,7 @@ export default class FavouriteService extends Service {
 
   async list(): Promise<Response<any>> {
     try {
-      const result = await this.favouriteModel.find();
+      const result = await this.favouriteModel.find({ deletedAt: null });
       if (!result) {
         return new Response<any>(true, 200, 'Record not available', result);
       }

@@ -12,10 +12,10 @@ route.get('/admin-datatable',JobController.datatableAdmin)
 route.get('/count',JobController.count)
 route.get('/',JobController.getJobs)
 route.get('/:id',JobController.getJob)
+route.patch('/status/:id',validator(jobUpdateStatus),JobController.jobUpdateStatus)
 route.delete('/:id',validator(deleteJob),JobController.deleteJob)
 route.post('/',validator(createJob),JobController.createJob)
 route.patch('/:id',validator(updateJob),JobController.updateJob)
-route.patch('/approval/:id',validator(jobUpdateStatus),JobController.jobUpdateStatus)
-route.patch('/status/:id',validator(updateApproveStatus),JobController.updateApproveStatus)
+route.patch('/approval/:id',validator(updateApproveStatus),JobController.updateApproveStatus)
 export default route;
 

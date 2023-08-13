@@ -117,7 +117,7 @@ export default class JobService extends Service {
       jobs.createdAt = new Date();
       jobs.createdBy = data.createdBy
       jobs.createdFrom = data.ip
-      jobs.status = "Active",
+      jobs.status = data.status,
         jobs.approveAdmin = false
 
       const result: any = await jobs.save()
@@ -269,7 +269,7 @@ export default class JobService extends Service {
         return new Response<any[]>(true, 404, "Record not found");
       }
 
-      if (typeof data.status === "boolean") {
+      if (data.status) {
         jobs.status = data.status
       }
 
@@ -1399,6 +1399,7 @@ export default class JobService extends Service {
           $or: [
             { title: { $regex: search, $options: 'i' } },
             { recruiterName: { $regex: search, $options: 'i' } },
+            { description: { $regex: search, $options: 'i' } },
             { companyName: { $regex: search, $options: 'i' } },
             { reportAddress: { $regex: search, $options: 'i' } },
             { status: { $regex: search, $options: 'i' } },
@@ -1491,6 +1492,7 @@ export default class JobService extends Service {
               report_address: 1,
               type: 1,
               title: 1,
+              description:1,
               noOfHiring: 1,
               schedule: 1,
               startDate: 1,
