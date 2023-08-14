@@ -98,6 +98,7 @@ interface User {
   recommendationSets: string;
   certificates: Certificate[];
   onboardingStep: number;
+  isPhoneVerify: boolean;
   type: String;
   isReady: boolean;
   file:object;
@@ -132,6 +133,11 @@ export const loginUser = Joi.object<User>({
 export const updatePassword = Joi.object<User>({
   id: Joi.string().required(),
   password: Joi.string().required(),
+}).options({ abortEarly: false });
+
+export const updatePhoneVerify = Joi.object<User>({
+  id: Joi.string().required(),
+  isPhoneVerify: Joi.boolean().required(),
 }).options({ abortEarly: false });
 
 export const forgotPassword = Joi.object<User>({

@@ -44,6 +44,12 @@ static async updatePassword(req: Request, res: Response) {
   const result = await userService.updatePassword(id,password)
   res.status(result.statusCode).json(result);
 }
+static async updatePhoneVerify(req: Request, res: Response) {
+  const {id,isPhoneVerify}=req.body
+  let userService=new UserService();
+  const result = await userService.updatePhoneVerify(id,isPhoneVerify)
+  res.status(result.statusCode).json(result);
+}
 static async forgotPassword(req: Request, res: Response) {
   const {email,redirectUrl}=req.body
   let userService=new UserService();

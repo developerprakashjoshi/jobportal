@@ -21,6 +21,7 @@ export interface IRecruiter extends Document {
   termConditions :boolean,
   companyLocation:string,
   isHiringManager:IsHire,
+  isPhoneVerified: boolean,
   status:string,
   
   createdAt: Date;
@@ -52,7 +53,7 @@ const RecruiterSchema: Schema = new Schema({
   companyLocation :{type:String},
   isHiringManager:{type:Number,enum:[0,1],default:0},
   status:{type:String},
-  
+  isPhoneVerified: {type:Boolean},
 
   createdAt: { type: Date},
   createdBy: { type: String},

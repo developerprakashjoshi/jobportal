@@ -92,6 +92,28 @@ export default class RecruiterService extends Service {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
   }
+  async updatePhoneVerify(isPasswordVerify:boolean,recruiterId:string): Promise<Response<any>> {
+    try {
+      const isValidObjectId = ObjectId.isValid(recruiterId);
+      if (!isValidObjectId) {
+        return new Response<any>(false, 400, 'Invalid ObjectId', undefined);
+      }
+      const recruiter = await this.recruiteModel.findById(recruiterId);
+      if (!recruiter) {
+          return new Response<any[]>(false, 404, "User not found", undefined);
+      }
+
+      recruiter.isPasswordVerify =isPasswordVerify // Or you can use an empty string: user.curriculumVitae = "";
+      recruiter.updatedAt=new Date();
+      recruiter.updatedBy="Self";
+
+      const result = await recruiter.save();
+      
+      return new Response<any>(true, 200, 'Successfully password updated', result);
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
   async forgotPassword(email:string,redirectUrl:string): Promise<Response<any>> {
     try {
       const user = await this.recruiteModel.findOne({email:email});

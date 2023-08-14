@@ -59,6 +59,14 @@ export default class RecruiterController extends Controller {
     const result = await userService.updatePassword(password,id)
     res.status(result.statusCode).json(result);
   }
+
+  static async updatePhoneVerify(req: Request, res: Response) {
+    const {id,isPasswordVerify}=req.body
+    let userService=new RecruiterService();
+    const result = await userService.updatePhoneVerify(isPasswordVerify,id)
+    res.status(result.statusCode).json(result);
+  }
+
   static async updateRecruiter(req: Request, res: Response) {
     const id = req.params.id
     const data = req.body
