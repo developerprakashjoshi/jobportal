@@ -21,7 +21,10 @@ export default class FavouriteService extends Service {
 
   async count(userId: string): Promise<Response<any>> {
     try {
-      const result = await this.favouriteModel.countDocuments({ user: userId });
+      const result = await this.favouriteModel.countDocuments({
+        user: userId,
+        deletedAt: null // Filter out deleted records
+      });
       if (!result) {
         return new Response<any>(true, 200, 'Record not available', result);
       }
@@ -223,7 +226,7 @@ export default class FavouriteService extends Service {
           .sort(sortQuery)
           .skip(skip)
           .limit(limit),
-        this.favouriteModel.countDocuments(searchQuery),
+        this.favouriteModel.countDocuments({ deletedAt: { $exists: false } }),
       ]);
       console.log(records, totalCount)
       if (records.length === 0) {
