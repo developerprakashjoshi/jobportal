@@ -2,8 +2,8 @@ import AppDataSource from "@config/mongoose";
 import Service from "@libs/service";
 import moment from "moment";
 import Response from "@libs/response"
-import  Interview  from "@models/interview.schema";
-import  User  from "@models/interview.schema";
+import Interview from "@models/interview.schema";
+import User from "@models/interview.schema";
 import { ObjectId } from 'mongodb';
 
 export default class InterviewService extends Service {
@@ -25,7 +25,7 @@ export default class InterviewService extends Service {
 
   async list(): Promise<Response<any[]>> {
     try {
-      const record = await this.interviewModel.find({deletedAt: null})
+      const record = await this.interviewModel.find({ deletedAt: null })
       return new Response<any[]>(true, 200, "Read operation successful", record);
     } catch (error: any) {
       return new Response<any[]>(false, 400, error.message);
@@ -52,10 +52,10 @@ export default class InterviewService extends Service {
   async listOfCandidate(): Promise<Response<any[]>> {
     try {
       // const record = await this.companyModel.find().limit(10).populate({path: 'company', select: 'name'})
-      const records:any = await this.userModel.find().limit(10).select('firstName lastName');
+      const records: any = await this.userModel.find().limit(10).select('firstName lastName');
       // const companyNames = records.map((record:any) => record.name);
 
-      
+
       return new Response<any[]>(true, 200, "Read operation successful", records);
     } catch (error: any) {
       return new Response<any[]>(false, 400, error.message);
@@ -83,14 +83,14 @@ export default class InterviewService extends Service {
       interview.createdAt = new Date();
       interview.createdBy = data.createdBy
       interview.createdFrom = data.ip
-      const result:any = await interview.save()
+      const result: any = await interview.save()
       return new Response<any[]>(true, 201, "Insert operation successful", result);
     } catch (error: any) {
       return new Response<any[]>(false, 400, error.message);
     }
   }
 
-  
+
 
   async update(pid: string, data: any) {
     try {
@@ -133,6 +133,38 @@ export default class InterviewService extends Service {
     }
   }
 
+  async updateApproval(candidateId: string, data: any) {
+    try {
+        const isValidObjectId = ObjectId.isValid(candidateId);
+        if (!isValidObjectId) {
+            return new Response<any[]>(false, 400, "Invalid ObjectId", undefined);
+        }
+
+        const interview = await this.interviewModel.findOne({ user:candidateId });
+        console.log("-----")
+        console.log(interview)
+
+        if (!interview) {
+            return new Response<any[]>(true, 404, "Record not found");
+        }
+
+        if (data.status) { // Check if status is provided in the data
+            interview.status = data.status;
+        }
+
+        interview.updatedAt = new Date();
+        interview.updatedBy = data.updatedBy;
+        interview.updatedFrom = data.ip;
+
+        const result = await interview.save();
+
+        return new Response<any[]>(true, 200, "Update operation successful", result);
+    } catch (error: any) {
+        return new Response<any[]>(false, 400, error.message);
+    }
+}
+
+
   async delete(pid: string, data: any) {
     try {
       const isValidObjectId = ObjectId.isValid(pid);
@@ -159,10 +191,10 @@ export default class InterviewService extends Service {
 
   async datatable(data: any): Promise<Response<any>> {
     try {
-      let { page, limit, search, sort,token } = data;
+      let { page, limit, search, sort, token } = data;
 
       let errorMessage = '';
-  
+
       if (page !== undefined && limit !== undefined) {
         if (isNaN(page) || !Number.isInteger(Number(page)) || isNaN(limit) || !Number.isInteger(Number(limit))) {
           errorMessage = "Both 'page' and 'limit' must be integers.";
@@ -176,11 +208,11 @@ export default class InterviewService extends Service {
           errorMessage = "'limit' must be an integer.";
         }
       }
-  
+
       if (errorMessage) {
         return new Response<any>(false, 400, errorMessage);
       }
-  
+
       let searchQuery = {};
       // if (search !== undefined) {
       //   searchQuery = {
@@ -197,7 +229,7 @@ export default class InterviewService extends Service {
           // Valid date format, construct a date range for search
           const nextDay = new Date(searchDate);
           nextDay.setDate(nextDay.getDate() + 1);
-  
+
           searchQuery = {
             $and: [
               { interviewDate: { $gte: searchDate } }, // Greater than or equal to search date
@@ -217,18 +249,18 @@ export default class InterviewService extends Service {
           createdBy: token, // Assuming token represents the createdBy value
         };
       }
-  
+
       let sortQuery = {};
-      if (sort !== undefined ) {
+      if (sort !== undefined) {
         const sortParams = sort.split(':');
         if (sortParams.length === 2) {
           const [column, order] = sortParams;
           sortQuery = { [column]: order === 'desc' ? -1 : 1 };
         }
-      }else{
-        sortQuery = {createdAt:-1}
+      } else {
+        sortQuery = { createdAt: -1 }
       }
-  
+
       page = page === undefined ? 1 : parseInt(page);
       limit = limit === undefined ? 10 : parseInt(limit);
       const skip = (page - 1) * limit;
@@ -248,12 +280,12 @@ export default class InterviewService extends Service {
           {
             $project: {
               "candidateName": 1,
-              "interviewDate":1,
-              "interviewTime":1,
-              "interviewLink":1,
-              "description":1,
-              "createdAt":1,
-              "createdBy":1,
+              "interviewDate": 1,
+              "interviewTime": 1,
+              "interviewLink": 1,
+              "description": 1,
+              "createdAt": 1,
+              "createdBy": 1,
             },
           },
           {
@@ -263,18 +295,18 @@ export default class InterviewService extends Service {
             },
           },
         ]).exec(),
-        
+
         this.interviewModel.countDocuments({ deletedAt: { $exists: false } }),
       ]);
-  
+
       if (records.length === 0) {
         return new Response<any>(true, 200, 'No records available', {});
       }
-  
+
       const totalPages = Math.ceil(totalCount / limit);
       const currentPage = page;
-      
-      
+
+
 
       const output = {
         records: records,
