@@ -89,6 +89,7 @@ export default class JobService extends Service {
 
   async create(data: any) {
     try {
+      console.log(data);
       let jobs = new Jobs()
       jobs.recruiter = data.userId
       jobs.title = data.title

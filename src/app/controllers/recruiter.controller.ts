@@ -38,6 +38,14 @@ export default class RecruiterController extends Controller {
     res.status(records.statusCode).json(records);
   }
 
+  static async getChatUser(req: Request, res: Response) {
+    let id = req.params.id
+    let recruiterService = new RecruiterService();
+    const records = await recruiterService.listUsersByJobUser(id)
+    res.status(records.statusCode).json(records);
+  }
+
+  
   static async createRecruiter(req: Request, res: Response) {
     const data = req.body
     data.ip = await Server.remoteAddr(req)

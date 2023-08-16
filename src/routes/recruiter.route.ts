@@ -8,6 +8,7 @@ const route=express.Router();
 route.get('/datatable',RecruiterController.datatable)
 route.get('/company-name',RecruiterController.getCompanyName)
 route.get('/count',RecruiterController.count)
+route.get('/chat-user/:id',RecruiterController.getChatUser)
 route.get('/',RecruiterController.getRecruiters)
 route.get('/:id',RecruiterController.getRecruiter)
 route.post('/forgot-password',validator(forgotPassword),RecruiterController.forgotPassword)

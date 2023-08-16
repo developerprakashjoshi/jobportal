@@ -13,7 +13,7 @@ export const createInterview=Joi.object({
 
 export const updateInterviewStaus=Joi.object({
     candidateId:Joi.string().required(),
-    status:Joi.string().valid("Active","Inactive").required(),
+    status:Joi.boolean().required(),
 })
 
 export const updateInterview=Joi.object({

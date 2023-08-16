@@ -18,6 +18,7 @@ export default class RecruiterService extends Service {
   private companyModel: any;
   private jobModel: any;
   private applyModel: any;
+
   constructor() {
     super()
     this.recruiteModel = AppDataSource.model('Recruiter');
@@ -44,6 +45,50 @@ export default class RecruiterService extends Service {
     }
   }
 
+  async listUsersByJobUser(jobUserId: string): Promise<Response<any>> {
+    try {
+      const users = await this.jobModel.aggregate([
+        {
+          $match: { 'createdBy': jobUserId }
+        },
+        {
+          $lookup: {
+            from: 'applied',
+            localField: '_id',
+            foreignField: 'job',
+            as: 'appliedDetails'
+          }
+        },
+        {
+          $unwind: '$appliedDetails'
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'appliedDetails.user',
+            foreignField: '_id',
+            as: 'userDetails'
+          }
+        },
+        {
+          $unwind: '$userDetails'
+        },
+        {
+          $project: {
+            userDetails:1
+          }
+        }
+      ]);
+  
+      if (!users || users.length === 0) {
+        return new Response<any>(true, 200, 'No users found for the specified job user', []);
+      }
+  
+      return new Response<any>(true, 200, 'Users matching the specified job user', users);
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
   async retrieve(pid: string) {
     try {
       const isValidObjectId = ObjectId.isValid(pid);

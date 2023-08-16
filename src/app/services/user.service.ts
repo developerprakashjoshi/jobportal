@@ -18,11 +18,13 @@ export default class UserService extends Service {
   private userModel: any;
   private searchEngine: any;
   private applyModel: any;
+  private jobsModel: any;
   constructor() {
     super();
     this.searchEngine = new SearchEngine()
     this.userModel = User;
     this.applyModel = Apply;
+    this.jobsModel=Jobs
   }
 
   async count(): Promise<Response<any>> {
@@ -63,6 +65,91 @@ export default class UserService extends Service {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
   }
+
+  async listUsersByJobUser(jobUserId: string): Promise<Response<any>> {
+    try {
+      const jobsAndApplied = await this.jobsModel.aggregate([
+        {
+          $match: { 'recruiter': new ObjectId(jobUserId) }
+        },
+        {
+          $lookup: {
+            from: 'applied',
+            localField: '_id',
+            foreignField: 'job',
+            as: 'appliedDetails'
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            title: 1,
+            reportToWork: 1,
+            createdBy: 1,
+            appliedDetails: 1
+          }
+        }
+      ]);
+  
+      if (!jobsAndApplied || jobsAndApplied.length === 0) {
+        return new Response<any>(true, 200, 'No jobs found for the specified job user', []);
+      }
+  
+      return new Response<any>(true, 200, 'Jobs and applied documents matching the specified job user', jobsAndApplied);
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
+  
+  
+  // async listUsersByJobUser(jobUserId: string): Promise<Response<any>> {
+  //   try {
+  //     const users = await this.jobsModel.aggregate([
+  //       {
+  //         $match: { 'createdBy': jobUserId }
+  //       },
+  //       {
+  //         $lookup: {
+  //           from: 'applied',
+  //           localField: '_id',
+  //           foreignField: 'job',
+  //           as: 'appliedDetails'
+  //         }
+  //       },
+  //       {
+  //         $unwind: '$appliedDetails'
+  //       },
+  //       // {
+  //       //   $lookup: {
+  //       //     from: 'users',
+  //       //     localField: 'appliedDetails.user',
+  //       //     foreignField: '_id',
+  //       //     as: 'userDetails'
+  //       //   }
+  //       // },
+  //       // {
+  //       //   $unwind: '$userDetails'
+  //       // },
+  //       {
+  //         $project: {
+  //           _id:1,
+  //           title:1,
+  //           appliedDetails:1,
+  //         }
+  //       }
+  //     ]);
+  
+  //     if (!users || users.length === 0) {
+  //       return new Response<any>(true, 200, 'No users found for the specified job user', []);
+  //     }
+  
+  //     return new Response<any>(true, 200, 'Users matching the specified job user', users);
+  //   } catch (error: any) {
+  //     return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+  //   }
+  // }
+  
+
 
   async retrieve(pid: string): Promise<Response<any>> {
     try {
