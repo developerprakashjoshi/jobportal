@@ -63,7 +63,7 @@ export default class FavouriteService extends Service {
   }
   async getUserFav(userId: string):Promise<Response<any[]>> {
     try {
-      const records:any = await this.favouriteModel.find({ user: userId }).populate('user').populate('job');
+      const records:any = await this.favouriteModel.find({ user: userId ,deletedAt: null }).populate('user').populate('job');
       console.log(records);
       return new Response<any[]>(true, 200, "Retrive successfully", records);
     } catch (error:any) {
