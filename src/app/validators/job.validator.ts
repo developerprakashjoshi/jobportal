@@ -39,8 +39,6 @@ export const createJob=Joi.object({
     yearOfExperience:Joi.number().required(),
     createdBy:Joi.string().required(),
     status:Joi.string().valid("Active","Inactive").required(),
-
-
 }).options({ abortEarly: false })
 export const updateApproveStatus=Joi.object({
     id:Joi.string().required(),

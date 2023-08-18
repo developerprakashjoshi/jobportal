@@ -47,44 +47,48 @@ export default class RecruiterService extends Service {
 
   async listUsersByJobUser(jobUserId: string): Promise<Response<any>> {
     try {
-      const users = await this.jobModel.aggregate([
+      const jobsAndApplied = await this.applyModel.aggregate([
         {
-          $match: { 'createdBy': jobUserId }
+          $match: { 'user': new ObjectId(jobUserId) }
         },
         {
           $lookup: {
-            from: 'applied',
-            localField: '_id',
-            foreignField: 'job',
-            as: 'appliedDetails'
-          }
-        },
-        {
-          $unwind: '$appliedDetails'
-        },
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'appliedDetails.user',
+            from: 'jobs',
+            localField: 'job',
             foreignField: '_id',
-            as: 'userDetails'
+            as: 'jobsDetails'
           }
         },
         {
-          $unwind: '$userDetails'
+          $unwind: '$jobsDetails'
+        },
+        {
+          $lookup: {
+            from: 'recruiters',
+            localField: 'jobsDetails.recruiter',
+            foreignField: '_id',
+            as: 'recruiterDetails'
+          }
+        },
+        {
+          $unwind: '$recruiterDetails'
         },
         {
           $project: {
-            userDetails:1
+            _id: 0,
+            // user:1,
+            // job:1,
+            // jobsDetails:1,
+            recruiterDetails:1
           }
         }
       ]);
   
-      if (!users || users.length === 0) {
-        return new Response<any>(true, 200, 'No users found for the specified job user', []);
+      if (!jobsAndApplied || jobsAndApplied.length === 0) {
+        return new Response<any>(true, 200, 'No jobs found for the specified job user', []);
       }
   
-      return new Response<any>(true, 200, 'Users matching the specified job user', users);
+      return new Response<any>(true, 200, 'Jobs and applied documents matching the specified job user', jobsAndApplied);
     } catch (error: any) {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
