@@ -4,6 +4,7 @@ import mongoose,{ Schema, Document, model } from 'mongoose';
 export interface IInterview extends Document {
 
   user:string;
+  job:string;
   candidateName: string;
   interviewDate : Date;
   interviewTime: String;
@@ -27,6 +28,10 @@ const InterviewSchema: Schema = new Schema({
   user:{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'user',
+  },
+  job:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Jobs',
   },
   user_id: {type:Number},
   candidateName: {type:String},
