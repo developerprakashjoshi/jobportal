@@ -19,6 +19,13 @@ export default class RecruiterController extends Controller {
     res.status(result.statusCode).json(result);
   }
 
+  static async emailOTP(req: Request, res: Response) {
+    const {email}=req.body
+    let recruiterService=new RecruiterService();
+    const result = await recruiterService.sendEmailOTP(email)
+    res.status(result.statusCode).json(result);
+  }
+
   static async getRecruiters(req: Request, res: Response) {
     let recruiterService = new RecruiterService();
     const record = await recruiterService.list()

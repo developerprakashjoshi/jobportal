@@ -36,6 +36,10 @@ export const forgotPassword = Joi.object({
     redirectUrl: Joi.string().required(),
   }).options({ abortEarly: false });
   
+  export const emailOTP = Joi.object({
+    email: Joi.string().email().required()
+  }).options({ abortEarly: false });
+
 export const updateRecruiter=Joi.object({
     id:Joi.string().required(),
     updatedBy:Joi.string().required(),

@@ -62,6 +62,12 @@ static async forgotPassword(req: Request, res: Response) {
   const result = await userService.forgotPassword(email,redirectUrl)
   res.status(result.statusCode).json(result);
 }
+static async emailOTP(req: Request, res: Response) {
+  const {email}=req.body
+  let userService=new UserService();
+  const result = await userService.sendEmailOTP(email)
+  res.status(result.statusCode).json(result);
+}
 
 static async uploadCurriculumVitae(req: Request, res: Response) {
   const file=req.file

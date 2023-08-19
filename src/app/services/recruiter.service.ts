@@ -183,6 +183,22 @@ export default class RecruiterService extends Service {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
   }
+  async sendEmailOTP(email:string): Promise<Response<any>> {
+    try {
+      const otp = Math.floor(1000 + Math.random() * 9000);
+      let from=process.env.EMAIL_FROM
+      let to=email
+      let subject="OTP Verification"
+      let text="Your OTP Verification code  is:" + otp
+    
+      const message = {from,to,subject,text};
+
+      const result = await Transporter.sendMail(message);
+      return new Response<any>(true, 200, 'Successfully email send', {email:email,otp:otp});
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
   async retrieveRecruiterByEmailandPassword(email: string,password:string): Promise<Response<any>> {
     try {
       const record = await this.recruiteModel.findOne({email: email});

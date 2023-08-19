@@ -80,9 +80,9 @@ export default class UserService extends Service {
             as: 'appliedDetails'
           }
         },
-        {
-          $unwind: '$appliedDetails'
-        },
+        // {
+        //   $unwind: '$appliedDetails'
+        // },
         {
           $lookup: {
             from: 'users',
@@ -91,9 +91,9 @@ export default class UserService extends Service {
             as: 'userDetails'
           }
         },
-        {
-          $unwind: '$userDetails'
-        },
+        // {
+        //   $unwind: '$userDetails'
+        // },
         {
           $project: {
             _id: 0,
@@ -300,6 +300,22 @@ export default class UserService extends Service {
 
       const result = await Transporter.sendMail(message);
       return new Response<any>(true, 200, 'Successfully email send', {email:email,redirectUrl:text});
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
+  async sendEmailOTP(email:string): Promise<Response<any>> {
+    try {
+      const otp = Math.floor(1000 + Math.random() * 9000);
+      let from=process.env.EMAIL_FROM
+      let to=email
+      let subject="OTP Verification"
+      let text="Your OTP Verification code  is:" + otp
+    
+      const message = {from,to,subject,text};
+
+      const result = await Transporter.sendMail(message);
+      return new Response<any>(true, 200, 'Successfully email send', {email:email,otp:otp});
     } catch (error: any) {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
@@ -888,6 +904,7 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
             { firstName: { $regex: search, $options: 'i' } },
             { lastName: { $regex: search, $options: 'i' } },
             { email: { $regex: search, $options: 'i' } },
+            { 'addresses.city': { $regex: search, $options: 'i' } },
           ],
         };
       }
@@ -1283,7 +1300,7 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
                 $or: [
                     { 'userDetails.firstName': { $regex: search, $options: 'i' } },
                     { 'userDetails.lastName': { $regex: search, $options: 'i' } },
-                    { 'userDetails.email': { $regex: search, $options: 'i' } },
+                    { title: { $regex: search, $options: 'i' } },
                 ],
             };
         }
@@ -1351,10 +1368,14 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
             },
             {
                 $project: {
-                    _id: 0,
+                    _id: 1,
+
                     title: 1,
                     reportToWork: 1,
+                    reportAddress:1,
                     createdBy: 1,
+                    candidateId: '$userDetails._id',
+                    appliedDate: '$appliedDetails.createdAt',
                     appliedStatus: '$appliedDetails.status',
                     firstName: '$userDetails.firstName',
                     lastName: '$userDetails.lastName',
@@ -1364,9 +1385,9 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
                     email:'$userDetails.email',
                     phoneNo:'$userDetails.phoneNo',
                     curriculumVitae: '$userDetails.curriculumVitae',
-                    designation:"Software Developer",
-                    city: "Shilling",
-                    experience: "10",
+                    // designation:"Software Developer",
+                    // city: "Shilling",
+                    // experience: "10",
                     // userDetails: 1,
                     interviewsStatus: {
                       $cond: {
@@ -1494,7 +1515,7 @@ async datatableResume(data: any): Promise<Response<any>> {
           },
           {
               $project: {
-                  _id: 0,
+                  _id: 1,
                   title: 1,
                   reportToWork: 1,
                   createdBy: 1,

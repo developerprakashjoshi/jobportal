@@ -4,7 +4,7 @@ import multer from 'multer';
 
 import UserController from '@controllers/user.controller';
 import validator from "@middlewares/validator.middleware";
-import {registerUser, updateBasicInfo,updateAddress,updateEducation,updateExperience, updateSkillSets,updateConfirmStatus,uploadFile,loginUser,updatePassword,forgotPassword, updatePhoneVerify} from "@validators/user.validator"
+import {registerUser, updateBasicInfo,updateAddress,updateEducation,updateExperience, updateSkillSets,updateConfirmStatus,uploadFile,loginUser,updatePassword,forgotPassword, updatePhoneVerify,emailOTP} from "@validators/user.validator"
 const route=express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -20,6 +20,7 @@ route.get('/',UserController.getUsers)
 
 route.get('/:id',UserController.getUser)
 route.post('/forgot-password',validator(forgotPassword),UserController.forgotPassword)
+route.post('/email-otp',validator(emailOTP),UserController.emailOTP)
 route.post('/login',validator(loginUser),UserController.login)
 route.post('/',validator(registerUser),UserController.createUser)
 route.patch('/curriculum-vitae/:id',upload.single('file'),UserController.uploadCurriculumVitae)

@@ -145,6 +145,10 @@ export const forgotPassword = Joi.object<User>({
   redirectUrl: Joi.string().required(),
 }).options({ abortEarly: false });
 
+export const emailOTP = Joi.object<User>({
+  email: Joi.string().email().required(),
+}).options({ abortEarly: false });
+
 export const updateBasicInfo = Joi.object<User>({
   id: Joi.string().required(),
   firstName: Joi.string().required(),
