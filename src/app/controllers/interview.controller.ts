@@ -50,11 +50,11 @@ export default class InterviewController extends Controller {
     res.json(result)
   }
   static async updateInterviewStaus(req: Request, res: Response) {
-    const candidateId = req.params.candidateId
+    const id = req.params.id
     const data = req.body
     data.ip = await Server.remoteAddr(req)
     let interviewService = new InterviewService();
-    const result = await interviewService.updateApproval(candidateId, data)
+    const result = await interviewService.updateApproval(id, data)
     res.json(result)
   }
 

@@ -11,7 +11,7 @@ route.get('/get-candidateName',InterviewController.getCompanyName)
 route.get('/',InterviewController.getInterviews)
 route.get('/:id',InterviewController.getInterview)
 route.post('/',validator(createInterview),InterviewController.createInterview)
-route.patch('/interview-status/:candidateId',validator(updateInterviewStaus),InterviewController.updateInterviewStaus)
+route.patch('/interview-status/:id',validator(updateInterviewStaus),InterviewController.updateInterviewStaus)
 route.patch('/:id',validator(updateInterview),InterviewController.updateInterview)
 route.delete('/:id',validator(deleteInterview),InterviewController.deleteInterview)
 export default route;

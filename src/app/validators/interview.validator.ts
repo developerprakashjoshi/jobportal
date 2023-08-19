@@ -13,7 +13,7 @@ export const createInterview=Joi.object({
 }).options({ abortEarly: false })
 
 export const updateInterviewStaus=Joi.object({
-    candidateId:Joi.string().required(),
+    id:Joi.string().required(),
     status:Joi.boolean().required(),
 })
 
