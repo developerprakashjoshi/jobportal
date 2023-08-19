@@ -1,7 +1,8 @@
 import Joi from 'joi'
 
 export const createNotification=Joi.object({
-    text:Joi.string().required(),
+    content:Joi.string().required(),
+    type:Joi.string().required(),
     senderId:Joi.string().required(),
     recipientId:Joi.string().required(),
     createdBy:Joi.string().required(),
@@ -10,7 +11,8 @@ export const createNotification=Joi.object({
 
 export const updateNotification=Joi.object({
     id:Joi.string().required(),
-    text:Joi.string().optional(),
+    type:Joi.string().required(),
+    content:Joi.string().optional(),
     senderId:Joi.string().optional(),
     recipientId:Joi.string().optional(),
     updatedBy:Joi.string().required(),

@@ -152,7 +152,7 @@ export default class InterviewService extends Service {
             return new Response<any[]>(true, 404, "Record not found");
         }
 
-        if (data.status) { // Check if status is provided in the data
+        if (typeof data.status =="boolean") { // Check if status is provided in the data
             interview.status = data.status;
         }
 

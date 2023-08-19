@@ -3,9 +3,10 @@ import mongoose,{ Schema, Document, model } from 'mongoose';
 
 
 export interface INotification extends Document {
+  type:string,
+  content: string,
   sender:string,
   recipient:string,
-  text: string;
   
   createdAt: Date;
   createdBy: String;
@@ -30,9 +31,8 @@ const NotificationSchema: Schema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
-
-  text: { type: String },
-
+  content: { type: String },
+  type: { type: String },
   created_at: { type: Date},
   createdAt: { type: Date},
   createdBy: { type: String},
