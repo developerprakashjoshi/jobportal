@@ -175,7 +175,7 @@ export default class ApplyService extends Service {
       if (!apply) {
         return new Response<any>(true, 200, 'Record not available', apply);
       }
-      if (typeof data.status === "boolean") {
+      if (data.status) {
         apply.status = data.status;
       }
       apply.updatedAt = new Date()

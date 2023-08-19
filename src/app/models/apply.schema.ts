@@ -7,7 +7,7 @@ export interface IApply extends Document {
   job:string;
   user:string;
   applyAt: Date;
-  status:boolean;
+  status:string;
   createdAt: Date;
   createdBy: String;
   createdFrom?: String;
@@ -32,7 +32,7 @@ const ApplySchema: Schema = new Schema({
     ref: 'User',
   },
   applyAt: { type: Date },
-  status: { type: Boolean },
+  status: { type: String },
   created_at: { type: String},
   createdAt: { type: Date},
   createdBy: { type: String},

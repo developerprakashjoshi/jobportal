@@ -60,7 +60,8 @@ export default class NotificationService extends Service {
       let notification = new Notification()
       notification.sender = data.senderId
       notification.recipient = data.recipientId
-      notification.text = data.text
+      notification.content = data.content
+      notification.type = data.type
       notification.createdAt = new Date();
       notification.createdBy = data.createdBy
       notification.createdFrom = data.ip
@@ -84,11 +85,11 @@ export default class NotificationService extends Service {
         return new Response<any[]>(true, 404, "Record not found");
       }
       
-      if (data.text) {
-        notification.text = data.text
+      if (data.type) {
+        notification.type = data.type
       }
-      if (data.text) {
-        notification.text = data.text
+      if (data.content) {
+        notification.content = data.content
       }
       if (data.senderId) {
         notification.sender = data.senderId
