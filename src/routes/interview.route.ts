@@ -13,6 +13,6 @@ route.get('/:id',InterviewController.getInterview)
 route.post('/',validator(createInterview),InterviewController.createInterview)
 route.patch('/interview-status/:id',validator(updateInterviewStaus),InterviewController.updateInterviewStaus)
 route.patch('/:id',validator(updateInterview),InterviewController.updateInterview)
-route.delete('/:id',validator(deleteInterview),InterviewController.deleteInterview)
+route.delete('/:id',InterviewController.deleteInterview)
 export default route;
 

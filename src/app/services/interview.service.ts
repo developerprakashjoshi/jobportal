@@ -167,29 +167,52 @@ export default class InterviewService extends Service {
 }
 
 
+  // async delete(pid: string, data: any) {
+  //   try {
+  //     const isValidObjectId = ObjectId.isValid(pid);
+  //     if (!isValidObjectId) {
+  //       return new Response<any[]>(false, 400, "Invalid ObjectId", undefined);
+  //     }
+  //     let id = new ObjectId(pid);
+  //     const interview = await this.interviewModel.findById(pid);
+  //     if (!interview) {
+  //       return new Response<any[]>(true, 404, "Interview not found", interview);
+  //     }
+  //     return new Response<any[]>(true, 200, "Delete operation successful", interview);
+  //   } catch (error: any) {
+  //     return new Response<any[]>(false, 400, error.message);
+  //   }
+  // }
   async delete(pid: string, data: any) {
     try {
       const isValidObjectId = ObjectId.isValid(pid);
       if (!isValidObjectId) {
         return new Response<any[]>(false, 400, "Invalid ObjectId", undefined);
       }
+      
+      // Assuming you have imported and have access to the `ObjectId` class from the MongoDB driver.
       let id = new ObjectId(pid);
-      const interview = await this.interviewModel.findById(pid);
+  
+      // Assuming you have a model called `interviewModel` that represents your MongoDB collection.
+      const interview = await this.interviewModel.findById(id);
+  
       if (!interview) {
         return new Response<any[]>(true, 404, "Interview not found", interview);
       }
-
-      interview.deletedAt = moment().toDate(); // Set the deleted_at field to the current timestamp
-      interview.deleteBy = data.deleteBy;
-      interview.deleteFrom = data.ip
-
-      await interview.save(interview);
-
-      return new Response<any[]>(true, 200, "Delete operation successful", interview);
+  
+      // Assuming you are using a method like `deleteOne` or `findOneAndDelete` to delete the record.
+      const result = await this.interviewModel.deleteOne({ _id: id });
+  
+      if (result.deletedCount === 1) {
+        return new Response<any[]>(true, 200, "Delete operation successful", interview);
+      } else {
+        return new Response<any[]>(false, 500, "Failed to delete the interview");
+      }
     } catch (error: any) {
       return new Response<any[]>(false, 400, error.message);
     }
   }
+  
 
   async datatable(data: any): Promise<Response<any>> {
     try {
