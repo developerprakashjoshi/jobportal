@@ -805,6 +805,7 @@ export default class JobService extends Service {
             $match: {
               $and: [
                 searchQuery,
+                { deletedAt: { $exists: false } },
               ]
             }
           },

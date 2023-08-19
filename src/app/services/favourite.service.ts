@@ -127,23 +127,37 @@ export default class FavouriteService extends Service {
     }
   }
 
-  async delete(data:any): Promise<Response<any>> {
-    try {
+  // async delete(data:any): Promise<Response<any>> {
+  //   try {
 
-      const favourite = await this.favouriteModel.findOne({user:data.userId,job:data.jobId});
-      console.log(favourite)
+  //     const favourite = await this.favouriteModel.findOne({user:data.userId,job:data.jobId});
+  //     console.log(favourite)
+  //     if (!favourite) {
+  //       return new Response<any>(true, 200, 'Record not available');
+  //     }
+  //     favourite.deletedAt = moment().toDate(); // Set the deleted_at field to the current timestamp
+  //     favourite.deleteBy = data.deleteBy;
+  //     favourite.deleteFrom = data.ip
+  //     const result = await favourite.save();
+  //     return new Response<any>(true, 200, 'Delete operation successful', result);
+  //   } catch (error: any) {
+  //     return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+  //   }
+  // }
+  async delete(data: any): Promise<Response<any>> {
+    try {
+      const favourite = await this.favouriteModel.findOneAndDelete({ user: data.userId, job: data.jobId });
+  
       if (!favourite) {
         return new Response<any>(true, 200, 'Record not available');
       }
-      favourite.deletedAt = moment().toDate(); // Set the deleted_at field to the current timestamp
-      favourite.deleteBy = data.deleteBy;
-      favourite.deleteFrom = data.ip
-      const result = await favourite.save();
-      return new Response<any>(true, 200, 'Delete operation successful', result);
+  
+      return new Response<any>(true, 200, 'Delete operation successful');
     } catch (error: any) {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
   }
+  
 
   async findJobsByUserId(userId: string,data:any) {
     try {

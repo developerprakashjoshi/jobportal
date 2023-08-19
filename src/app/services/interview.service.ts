@@ -75,6 +75,7 @@ export default class InterviewService extends Service {
     try {
       let interview = new Interview()
       interview.user = data.candidateId
+      interview.job = data.jobId
       interview.candidateName = data.candidateName
       interview.interviewDate = data.interviewDate
       interview.interviewTime = data.interviewTime
@@ -121,6 +122,9 @@ export default class InterviewService extends Service {
       }
       if (data.description) {
         interview.description = data.description
+      }
+      if (data.jobId) {
+        interview.job = data.jobId;
       }
 
       interview.updatedAt = new Date()
