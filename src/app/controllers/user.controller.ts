@@ -50,6 +50,12 @@ static async updatePassword(req: Request, res: Response) {
   const result = await userService.updatePassword(id,password)
   res.status(result.statusCode).json(result);
 }
+static async updateEmailVerify(req: Request, res: Response) {
+  const {id,isEmailVerify}=req.body
+  let userService=new UserService();
+  const result = await userService.updatePhoneVerify(id,isEmailVerify)
+  res.status(result.statusCode).json(result);
+}
 static async updatePhoneVerify(req: Request, res: Response) {
   const {id,isPhoneVerify}=req.body
   let userService=new UserService();

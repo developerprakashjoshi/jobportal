@@ -284,6 +284,30 @@ export default class UserService extends Service {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
   }
+
+  async updateEmailVerify(userId:string,isEmailVerify:boolean): Promise<Response<any>> {
+    try {
+      const isValidObjectId = ObjectId.isValid(userId);
+      if (!isValidObjectId) {
+        return new Response<any>(false, 400, 'Invalid ObjectId', undefined);
+      }
+      const user = await this.userModel.findById(userId);
+      if (!user) {
+          return new Response<any[]>(false, 404, "User not found", undefined);
+      }
+
+      user.isEmailVerify =isEmailVerify
+      user.updatedAt=new Date();
+      user.updatedBy="Self";
+      
+      const result = await user.save();
+      
+      return new Response<any>(true, 200, 'Successfully password updated', result);
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
+
   async forgotPassword(email:string,redirectUrl:string): Promise<Response<any>> {
     try {
       const user = await this.userModel.findOne({email:email});

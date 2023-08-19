@@ -31,6 +31,11 @@ export const updatePhoneVerify = Joi.object({
     isPhoneVerify: Joi.boolean().required(),
   }).options({ abortEarly: false });
 
+  export const updateEmailVerify = Joi.object({
+    id: Joi.string().required(),
+    isEmailVerify: Joi.boolean().required(),
+  }).options({ abortEarly: false });
+
 export const forgotPassword = Joi.object({
     email: Joi.string().email().required(),
     redirectUrl: Joi.string().required(),

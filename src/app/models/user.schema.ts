@@ -60,6 +60,7 @@ export interface Certificate {
   createdBy: String;
   createdFrom?: String;
   isPhoneVerified: boolean;
+  isEmailVerified: boolean;
   updatedAt: Date;
   updatedBy: String;
   updateFrom?: String;
@@ -130,6 +131,7 @@ const userSchema = new Schema<User>({
   createdBy: { type: String},
   createdFrom: { type: String },
   isPhoneVerified: {type:Boolean},
+  isEmailVerified: {type:Boolean},
   updatedAt: { type: Date },
   updatedBy: { type: String},
   updateFrom: { type: String },

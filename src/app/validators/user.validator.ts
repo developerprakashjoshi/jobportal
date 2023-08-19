@@ -99,6 +99,7 @@ interface User {
   certificates: Certificate[];
   onboardingStep: number;
   isPhoneVerify: boolean;
+  isEmailVerify: boolean;
   type: String;
   isReady: boolean;
   file:object;
@@ -138,6 +139,11 @@ export const updatePassword = Joi.object<User>({
 export const updatePhoneVerify = Joi.object<User>({
   id: Joi.string().required(),
   isPhoneVerify: Joi.boolean().required(),
+}).options({ abortEarly: false });
+
+export const updateEmailVerify = Joi.object<User>({
+  id: Joi.string().required(),
+  isEmailVerify: Joi.boolean().required(),
 }).options({ abortEarly: false });
 
 export const forgotPassword = Joi.object<User>({
