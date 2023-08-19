@@ -1399,6 +1399,7 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
                     reportAddress:1,
                     createdBy: 1,
                     candidateId: '$userDetails._id',
+                    applyId: '$appliedDetails._id',
                     appliedDate: '$appliedDetails.createdAt',
                     appliedStatus: '$appliedDetails.status',
                     firstName: '$userDetails.firstName',
