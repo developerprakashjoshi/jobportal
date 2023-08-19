@@ -180,9 +180,17 @@ static  async datatable(req: Request, res: Response) {
   static  async datatableAdmin(req: Request, res: Response) {
     const data = req.query;
     let userService=new UserService();
-    const records = await userService.datatable(data)
+    const records = await userService.datatableAdmin(data)
     res.status(records.statusCode).json(records);
   }
+
+  static  async datatableResume(req: Request, res: Response) {
+    const data = req.query;
+    let userService=new UserService();
+    const records = await userService.datatableResume(data)
+    res.status(records.statusCode).json(records);
+  }
+
   static  async test(req: Request, res: Response) {
     const data = req.query;
     let userService=new UserService();

@@ -1254,113 +1254,292 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
     }
   }
 
-
   async datatable(data: any): Promise<Response<any>> {
     try {
-      let { page, limit, search, sort,token } = data;
+        let { page, limit, search, sort, token } = data;
+
+        let errorMessage = '';
+        if (page !== undefined && limit !== undefined) {
+            if (isNaN(page) || !Number.isInteger(Number(page)) || isNaN(limit) || !Number.isInteger(Number(limit))) {
+                errorMessage = "Both 'page' and 'limit' must be integers.";
+            }
+        } else if (page !== undefined) {
+            if (isNaN(page) || !Number.isInteger(Number(page))) {
+                errorMessage = "'page' must be an integer.";
+            }
+        } else if (limit !== undefined) {
+            if (isNaN(limit) || !Number.isInteger(Number(limit))) {
+                errorMessage = "'limit' must be an integer.";
+            }
+        }
+
+        if (errorMessage) {
+            return new Response<any>(false, 400, errorMessage);
+        }
+
+        let searchQuery = {};
+        if (search !== undefined) {
+            searchQuery = {
+                $or: [
+                    { 'userDetails.firstName': { $regex: search, $options: 'i' } },
+                    { 'userDetails.lastName': { $regex: search, $options: 'i' } },
+                    { 'userDetails.email': { $regex: search, $options: 'i' } },
+                ],
+            };
+        }
+
+        let sortQuery = {};
+        if (sort !== undefined) {
+            const sortParams = sort.split(':');
+            if (sortParams.length === 2) {
+                const [column, order] = sortParams;
+                sortQuery = { [column]: order === 'desc' ? -1 : 1 };
+            } else {
+                sortQuery = { createdAt: -1 };
+            }
+        }
+
+        page = page === undefined ? 1 : parseInt(page);
+        limit = limit === undefined ? 10 : parseInt(limit);
+        const skip = (page - 1) * limit;
+
+        const records = await this.jobsModel.aggregate([
+            {
+                $match: { 'recruiter': new ObjectId(token) }
+            },
+            {
+                $lookup: {
+                    from: 'applies',
+                    localField: '_id',
+                    foreignField: 'job',
+                    as: 'appliedDetails'
+                }
+            },
+            {
+                $unwind: '$appliedDetails'
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'appliedDetails.user',
+                    foreignField: '_id',
+                    as: 'userDetails'
+                }
+            },
+            {
+                $unwind: '$userDetails'
+            },
+            {
+                $lookup: {
+                    from: 'interviews',
+                    localField: 'appliedDetails.user',
+                    foreignField: 'user',
+                    as: 'interviewsDetails'
+                }
+            },
+            {
+                $match: searchQuery // Apply search query
+            },
+            // {
+            //   ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
+            // },
+            {
+                $skip: skip // Apply skip
+            },
+            {
+                $limit: limit // Apply limit
+            },
+            {
+                $project: {
+                    _id: 0,
+                    title: 1,
+                    reportToWork: 1,
+                    createdBy: 1,
+                    appliedStatus: '$appliedDetails.status',
+                    firstName: '$userDetails.firstName',
+                    lastName: '$userDetails.lastName',
+                    fullName: {
+                      $concat: ['$userDetails.firstName', ' ', '$userDetails.lastName'] // Combine first name and last name
+                    },
+                    email:'$userDetails.email',
+                    phoneNo:'$userDetails.phoneNo',
+                    curriculumVitae: '$userDetails.curriculumVitae',
+                    designation:"Software Developer",
+                    city: "Shilling",
+                    experience: "10",
+                    // userDetails: 1,
+                    interviewsStatus: {
+                      $cond: {
+                          if: { $isArray: "$interviewsDetails" },
+                          then: { $arrayElemAt: ["$interviewsDetails.status", 0] },
+                          else: "false"
+                      }
+                  },
+                }
+            }
+        ]);
+        const totalCount =records.length
+        const totalPages = Math.ceil(totalCount / limit);
+        const currentPage = page;
+        const output = {
+          records: records,
+          totalPages: totalPages !== null ? totalPages : 0,
+          currentPage: currentPage !== null ? currentPage : 0,
+          filterCount: records.length,
+          totalCount: totalCount,
+        };
+        
+        // if (!records || records.length === 0) {
+        //     return new Response<any>(true, 200, 'No jobs found for the specified job user', []);
+        // }
+
+        return new Response<any>(true, 200, 'Jobs and applied documents matching the specified job user', output);
+    } catch (error: any) {
+        return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+}
+
+async datatableResume(data: any): Promise<Response<any>> {
+  try {
+      let { page, limit, search, sort, token } = data;
+
       let errorMessage = '';
       if (page !== undefined && limit !== undefined) {
-        if (isNaN(page) || !Number.isInteger(Number(page)) || isNaN(limit) || !Number.isInteger(Number(limit))) {
-          errorMessage = "Both 'page' and 'limit' must be integers.";
-        }
+          if (isNaN(page) || !Number.isInteger(Number(page)) || isNaN(limit) || !Number.isInteger(Number(limit))) {
+              errorMessage = "Both 'page' and 'limit' must be integers.";
+          }
       } else if (page !== undefined) {
-        if (isNaN(page) || !Number.isInteger(Number(page))) {
-          errorMessage = "'page' must be an integer.";
-        }
+          if (isNaN(page) || !Number.isInteger(Number(page))) {
+              errorMessage = "'page' must be an integer.";
+          }
       } else if (limit !== undefined) {
-        if (isNaN(limit) || !Number.isInteger(Number(limit))) {
-          errorMessage = "'limit' must be an integer.";
-        }
+          if (isNaN(limit) || !Number.isInteger(Number(limit))) {
+              errorMessage = "'limit' must be an integer.";
+          }
       }
 
       if (errorMessage) {
-        return new Response<any>(false, 400, errorMessage);
+          return new Response<any>(false, 400, errorMessage);
       }
 
       let searchQuery = {};
       if (search !== undefined) {
-        searchQuery = {
-          $or: [
-            { firstName: { $regex: search, $options: 'i' } },
-            { lastName: { $regex: search, $options: 'i' } },
-            { email: { $regex: search, $options: 'i' } },
-          ],
-        };
+          searchQuery = {
+              $or: [
+                  { 'userDetails.firstName': { $regex: search, $options: 'i' } },
+                  { 'userDetails.lastName': { $regex: search, $options: 'i' } },
+                  { title: { $regex: search, $options: 'i' } },
+              ],
+          };
       }
 
       let sortQuery = {};
       if (sort !== undefined) {
-        const sortParams = sort.split(':');
-        if (sortParams.length === 2) {
-          const [column, order] = sortParams;
-          sortQuery = { [column]: order === 'desc' ? -1 : 1 };
-        }else{
-          sortQuery = { createdAt:-1 };
-        }
+          const sortParams = sort.split(':');
+          if (sortParams.length === 2) {
+              const [column, order] = sortParams;
+              sortQuery = { [column]: order === 'desc' ? -1 : 1 };
+          } else {
+              sortQuery = { createdAt: -1 };
+          }
       }
 
       page = page === undefined ? 1 : parseInt(page);
       limit = limit === undefined ? 10 : parseInt(limit);
       const skip = (page - 1) * limit;
 
-      const jobsAndApplied = await this.userModel.aggregate([
-        {
-          $lookup: {
-            from: 'applies',
-            localField: '_id',
-            foreignField: 'user',
-            as: 'appliedDetails'
+      const records = await this.jobsModel.aggregate([
+          
+          {
+              $lookup: {
+                  from: 'applies',
+                  localField: '_id',
+                  foreignField: 'job',
+                  as: 'appliedDetails'
+              }
+          },
+          {
+              $unwind: '$appliedDetails'
+          },
+          {
+              $lookup: {
+                  from: 'users',
+                  localField: 'appliedDetails.user',
+                  foreignField: '_id',
+                  as: 'userDetails'
+              }
+          },
+          {
+              $unwind: '$userDetails'
+          },
+          {
+              $lookup: {
+                  from: 'interviews',
+                  localField: 'appliedDetails.user',
+                  foreignField: 'user',
+                  as: 'interviewsDetails'
+              }
+          },
+          {
+              $match: searchQuery // Apply search query
+          },
+          // {
+          //   ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
+          // },
+          {
+              $skip: skip // Apply skip
+          },
+          {
+              $limit: limit // Apply limit
+          },
+          {
+              $project: {
+                  _id: 0,
+                  title: 1,
+                  reportToWork: 1,
+                  createdBy: 1,
+                  appliedStatus: '$appliedDetails.status',
+                  firstName: '$userDetails.firstName',
+                  lastName: '$userDetails.lastName',
+                  fullName: {
+                    $concat: ['$userDetails.firstName', ' ', '$userDetails.lastName'] // Combine first name and last name
+                  },
+                  email:'$userDetails.email',
+                  phoneNo:'$userDetails.phoneNo',
+                  curriculumVitae: '$userDetails.curriculumVitae',
+                  designation:"Software Developer",
+                  city: "Shilling",
+                  experience: "1",
+                  // userDetails: 1,
+                  interviewsStatus: {
+                    $cond: {
+                        if: { $isArray: "$interviewsDetails" },
+                        then: { $arrayElemAt: ["$interviewsDetails.status", 0] },
+                        else: "false"
+                    }
+                },
+              }
           }
-        },
-        {
-          $unwind: '$appliedDetails'
-        },
-        {
-          $lookup: {
-            from: 'jobs',
-            localField: 'appliedDetails.job',
-            foreignField: '_id',
-            as: 'jobDetails'
-          }
-        },
-        {
-          $unwind: '$jobDetails'
-        },
-        {
-            $match: { 'jobDetails.createdBy': token }
-        },
-        {
-          $project: {
-
-            _id: 1,
-            firstName: 1,
-            lastName: 1,
-            // fullName: 1,
-            email:1,
-            phoneNo:1,
-            curriculumVitae: 1,
-            // designation:1,
-            // city: 1,
-            // experience: 1,
-            // interviewSchedule:1,
-            // jobStatus: 1,
-            createdAt:1,
-
-            appliedDetails: 1,
-            jobDetails:1
-          }
-        }
       ]);
-  
-      if (!jobsAndApplied || jobsAndApplied.length === 0) {
-        return new Response<any>(true, 200, 'No jobs found for the specified job user', []);
-      }
-  
-      return new Response<any>(true, 200, 'Jobs and applied documents matching the specified job user', jobsAndApplied);
-    } catch (error: any) {
-      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
-    }
-  }
+      const totalCount =records.length
+      const totalPages = Math.ceil(totalCount / limit);
+      const currentPage = page;
+      const output = {
+        records: records,
+        totalPages: totalPages !== null ? totalPages : 0,
+        currentPage: currentPage !== null ? currentPage : 0,
+        filterCount: records.length,
+        totalCount: totalCount,
+      };
+      
+      // if (!records || records.length === 0) {
+      //     return new Response<any>(true, 200, 'No jobs found for the specified job user', []);
+      // }
 
+      return new Response<any>(true, 200, 'Jobs and applied documents matching the specified job user', output);
+  } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+  }
+}
 
 }

@@ -12,6 +12,7 @@ const upload = multer({ storage });
 route.get('/search', UserController.search);
 route.get('/datatable',UserController.datatable)
 route.get('/admin-datatable',UserController.datatableAdmin)
+route.get('/resume-datatable',UserController.datatableResume)
 route.get('/test',UserController.test)
 route.get('/count',UserController.count)
 route.get('/chat-user/:id',UserController.getChatUser)
