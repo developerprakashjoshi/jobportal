@@ -137,16 +137,14 @@ export default class InterviewService extends Service {
     }
   }
 
-  async updateApproval(candidateId: string, data: any) {
+  async updateApproval(pid: string, data: any) {
     try {
-        const isValidObjectId = ObjectId.isValid(candidateId);
+        const isValidObjectId = ObjectId.isValid(pid);
         if (!isValidObjectId) {
             return new Response<any[]>(false, 400, "Invalid ObjectId", undefined);
         }
 
-        const interview = await this.interviewModel.findOne({ user:candidateId });
-        console.log("-----")
-        console.log(interview)
+        const interview = await this.interviewModel.findById(pid);
 
         if (!interview) {
             return new Response<any[]>(true, 404, "Record not found");
