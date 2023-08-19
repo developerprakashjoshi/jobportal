@@ -1400,6 +1400,7 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
                     createdBy: 1,
                     candidateId: '$userDetails._id',
                     applyId: '$appliedDetails._id',
+                    interviewId: { $arrayElemAt: ["$interviewsDetails._id", 0] },
                     appliedDate: '$appliedDetails.createdAt',
                     appliedStatus: '$appliedDetails.status',
                     firstName: '$userDetails.firstName',
