@@ -80,9 +80,9 @@ export default class UserService extends Service {
             as: 'appliedDetails'
           }
         },
-        // {
-        //   $unwind: '$appliedDetails'
-        // },
+        {
+          $unwind: '$appliedDetails'
+        },
         {
           $lookup: {
             from: 'users',
@@ -91,9 +91,9 @@ export default class UserService extends Service {
             as: 'userDetails'
           }
         },
-        // {
-        //   $unwind: '$userDetails'
-        // },
+        {
+          $unwind: '$userDetails'
+        },
         {
           $project: {
             _id: 0,
