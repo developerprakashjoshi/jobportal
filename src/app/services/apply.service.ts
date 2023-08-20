@@ -4,6 +4,7 @@ import Response from '@libs/response';
 import Apply from '@models/apply.schema';
 import User from "@models/user.schema";
 import Account from "@models/account.schema";
+import  Notification  from "@models/notification.schema";
 import SearchEngine from '@libs/meili.search';
 import { ObjectId } from 'mongodb';
 import moment from 'moment';
@@ -14,12 +15,14 @@ export default class ApplyService extends Service {
   private postModel: any;
   private accountModel: any;
   private searchEngine: any;
+  private notificationModel: any;
   constructor() {
     super();
     this.searchEngine = new SearchEngine()
     this.applyModel = Apply;
     this.userModel = User;
     this.accountModel = Account;
+    this.notificationModel = AppDataSource.model('Notification');
     // this.postModel = Post;
   }
 
@@ -124,6 +127,17 @@ export default class ApplyService extends Service {
       apply.createdFrom = data.ip
       
       const result = await apply.save();
+      if(result){
+        let notification = new Notification()
+        notification.sender = data.userId
+        notification.recipient = data.jobId
+        notification.content = "This job has been applied"
+        notification.type = "Job Apply"
+        notification.createdAt = new Date();
+        notification.createdBy = data.createdBy
+        notification.createdFrom = data.ip
+        const result:any = await notification.save()
+      }
       return new Response<any>(true, 201, 'Insert operation successful',result);
       
     } catch (error:any) {

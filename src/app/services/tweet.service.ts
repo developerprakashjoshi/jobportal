@@ -4,15 +4,19 @@ import moment from "moment";
 import Response from "@libs/response"
 import Room from '@models/room.schema';
 import Account from '@models/account.schema';
+import  Notification  from "@models/notification.schema";
 import Tweet,{ITweet} from '@models/tweet.schema';
 import { ObjectId } from 'mongodb';
 import { v4 as uuidv4 } from 'uuid';
 
 export default class TweetService extends Service {
   private roomModel: any;
+  private notificationModel: any;
   constructor() {
     super()
     this.roomModel = AppDataSource.model('Room');
+    this.notificationModel = AppDataSource.model('Notification');
+    
   }
 
   async accountList(data:any):Promise<Response<any[]>> {

@@ -337,8 +337,9 @@ export default class UserService extends Service {
       let text="Your OTP Verification code  is:" + otp
     
       const message = {from,to,subject,text};
-
+      console.log(message);
       const result = await Transporter.sendMail(message);
+      console.log(result);
       return new Response<any>(true, 200, 'Successfully email send', {email:email,otp:otp});
     } catch (error: any) {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
