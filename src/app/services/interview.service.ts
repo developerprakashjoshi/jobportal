@@ -97,6 +97,14 @@ export default class InterviewService extends Service {
 
   async create(data: any): Promise<Response<any[]>> {
     try {
+      const existingInterview = await Interview.findOne({
+        user: data.candidateId,
+        job: data.jobId
+      });
+  
+      if (existingInterview) {
+        return new Response<any[]>(false, 400, "Record already exists for candidateId and jobId");
+      }
       let interview = new Interview();
       interview.user = data.candidateId;
       interview.job = data.jobId;
