@@ -327,6 +327,7 @@ export default class InterviewService extends Service {
               { "userDetails.firstName": { $regex: search, $options: "i" } },
               { "userDetails.lastName": { $regex: search, $options: "i" } },
               { "userDetails.email": { $regex: search, $options: "i" } },
+              { "userDetails.phoneNo": { $regex: search, $options: "i" } },
             ],
           };
         }
