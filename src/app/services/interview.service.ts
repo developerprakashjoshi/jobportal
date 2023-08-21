@@ -16,7 +16,7 @@ export default class InterviewService extends Service {
   }
   async count(): Promise<Response<any[]>> {
     try {
-      const result = await this.interviewModel.countDocuments();
+      const result = await this.interviewModel.countDocuments({deletedAt:null,createdBy:'64bd4d01c02b6a3246207fc9'});
       return new Response<any[]>(
         true,
         200,
@@ -332,12 +332,12 @@ export default class InterviewService extends Service {
           };
         }
       }
-      if (token !== undefined) {
-        searchQuery = {
-          ...searchQuery,
-          createdBy: token, // Assuming token represents the createdBy value
-        };
-      }
+      // if (token !== undefined) {
+      //   searchQuery = {
+      //     ...searchQuery,
+      //     createdBy: token, // Assuming token represents the createdBy value
+      //   };
+      // }
 
       let sortQuery = {};
       if (sort !== undefined) {
@@ -411,8 +411,8 @@ export default class InterviewService extends Service {
             },
           ])
           .exec(),
-
-        this.interviewModel.countDocuments({ deletedAt: { $exists: false } }),
+          this.interviewModel.countDocuments({deletedAt:null,createdBy:token})
+        // this.interviewModel.countDocuments({ deletedAt: { $exists: false } }),
       ]);
 
       if (records.length === 0) {
