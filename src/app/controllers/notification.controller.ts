@@ -25,6 +25,12 @@ export default class NotificationController extends Controller {
     const records = await notificationService.retrieve(id)
     res.status(records.statusCode).json(records);
   }
+  static async getMyNotification(req: Request, res: Response) {
+    let id = req.params.id
+    let notificationService = new NotificationService();
+    const records = await notificationService.retrieveMyNotification(id)
+    res.status(records.statusCode).json(records);
+  }
 
   static async createNotification(req: Request, res: Response) {
     const data = req.body

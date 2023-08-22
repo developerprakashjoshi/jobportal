@@ -74,7 +74,19 @@ export default class TweetService extends Service {
   
       // Save the tweet in the database
       const savedTweet: any = await tweet.save();
-  
+   
+      let notification = new Notification()
+      notification.sender = sender
+      notification.recipient = room.participants[1]
+      notification.commonUser=room.participants[1]
+      notification.content = `${room.participantsName[1]}: ${content} at ${new Date()}`
+      notification.type = "Message"
+      notification.createdAt = new Date();
+      notification.createdBy =sender
+      notification.createdFrom = '127.0.0.1'
+      const result:any = await notification.save()
+
+
       // Push the tweet's _id to the Room's messages array
       room.messages.push(savedTweet._id);
       await room.save();

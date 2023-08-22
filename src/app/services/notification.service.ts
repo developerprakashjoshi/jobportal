@@ -45,6 +45,17 @@ export default class NotificationService extends Service {
       return new Response<any[]>(false, 400, error.message);
     }
   }
+  async retrieveMyNotification(pid: string) {
+    try {
+      const record = await this.notificationModel.find({commonUser:pid});
+      if (!record) {
+        return new Response<any[]>(false, 404, "Record not found");
+      }
+      return new Response<any[]>(true, 200, "Read operation successful", record);
+    } catch (error: any) {
+      return new Response<any[]>(false, 400, error.message);
+    }
+  }
 
   async retrieveByNotification(name: string) {
     try {
@@ -61,6 +72,7 @@ export default class NotificationService extends Service {
       notification.sender = data.senderId
       notification.recipient = data.recipientId
       notification.content = data.content
+      notification.commonUser=data.recipientId
       notification.type = data.type
       notification.createdAt = new Date();
       notification.createdBy = data.createdBy

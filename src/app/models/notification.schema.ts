@@ -7,7 +7,7 @@ export interface INotification extends Document {
   content: string,
   sender:string,
   recipient:string,
-  
+  commonUser:string,
   createdAt: Date;
   createdBy: String;
   createdFrom?: String;
@@ -33,6 +33,7 @@ const NotificationSchema: Schema = new Schema({
   },
   content: { type: String },
   type: { type: String },
+  commonUser: { type: String },
   created_at: { type: Date},
   createdAt: { type: Date},
   createdBy: { type: String},
