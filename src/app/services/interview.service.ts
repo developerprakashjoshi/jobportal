@@ -332,12 +332,12 @@ export default class InterviewService extends Service {
           };
         }
       }
-      // if (token !== undefined) {
-      //   searchQuery = {
-      //     ...searchQuery,
-      //     createdBy: token, // Assuming token represents the createdBy value
-      //   };
-      // }
+      if (token !== undefined) {
+        searchQuery = {
+          ...searchQuery,
+          createdBy: token, // Assuming token represents the createdBy value
+        };
+      }
 
       let sortQuery = {};
       if (sort !== undefined) {
@@ -364,9 +364,9 @@ export default class InterviewService extends Service {
                 as: "userDetails",
               },
             },
-            {
-              $unwind: "$userDetails",
-            },
+            // {
+            //   $unwind: "$userDetails",
+            // },
 
             {
               $match: {
@@ -382,6 +382,11 @@ export default class InterviewService extends Service {
             { $skip: skip },
             { $limit: limit },
             {
+              $addFields: {
+                userDetails: { $arrayElemAt: ["$userDetails", 0] }, // Extract the first user detail
+              },
+            },
+            {
               $project: {
                 candidateName: 1,
                 interviewDate: 1,
@@ -390,6 +395,7 @@ export default class InterviewService extends Service {
                 description: 1,
                 createdAt: 1,
                 createdBy: 1,
+                // userDetails:1,
                 firstName: "$userDetails.firstName",
                 lastName: "$userDetails.lastName",
                 fullName: {
