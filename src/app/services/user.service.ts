@@ -9,6 +9,7 @@ import jwt from 'jsonwebtoken'
 import User,{Certificate, Address, Education,Experience } from '@models/user.schema';
 import Apply from '@models/apply.schema';
 import Account from '@models/account.schema';
+import Recruiter from '@models/recruiter.schema';
 import Jobs from '@models/job.schema';
 import SearchEngine from '@libs/meili.search';
 import { ObjectId } from 'mongodb';
@@ -17,12 +18,14 @@ import moment from 'moment';
 export default class UserService extends Service {
   private userModel: any;
   private searchEngine: any;
+  private recruiterModel: any;
   private applyModel: any;
   private jobsModel: any;
   constructor() {
     super();
     this.searchEngine = new SearchEngine()
     this.userModel = User;
+    this.recruiterModel = Recruiter;
     this.applyModel = Apply;
     this.jobsModel=Jobs
   }
@@ -349,6 +352,10 @@ export default class UserService extends Service {
     const existEmail = await this.userModel.findOne({ email: data.email });
       if (existEmail) {
         return new Response<any>(false, 400, 'Email already exists', undefined);
+      }
+      const existRecruiterEmail = await this.recruiterModel.findOne({ email: data.email });
+      if(existRecruiterEmail) {
+      return new Response<any[]>(false, 409, "Email already exists");
       }
     try {
       const account = new Account()
