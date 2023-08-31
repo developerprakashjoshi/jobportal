@@ -115,6 +115,7 @@ export default class JobService extends Service {
       jobs.aboutCompany = data.aboutCompany
       jobs.educationLevel = data.educationLevel
       jobs.yearOfExperience = data.yearOfExperience
+      jobs.releYearOFExperience = data.releYearOFExperience
       jobs.createdAt = new Date();
       jobs.createdBy = data.createdBy
       jobs.createdFrom = data.ip
@@ -208,6 +209,9 @@ export default class JobService extends Service {
       }
       if (data.yearOfExperience) {
         jobs.yearOfExperience = data.yearOfExperience
+      }
+      if (data.releYearOFExperience) {
+        jobs.releYearOFExperience = data.releYearOFExperience
       }
       if (data.userId) {
         jobs.recruiter = data.userId

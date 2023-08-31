@@ -34,6 +34,7 @@ export interface IJob extends Document {
   aboutCompany:String,
   educationLevel:String,
   yearOfExperience:number,
+  releYearOFExperience:number,
   approveAdmin:Boolean,
   status:String,
   
@@ -82,6 +83,7 @@ const JobSchema: Schema = new Schema({
   approveAdmin:{type:Boolean},
   educationLevel:{type: String },
   yearOfExperience:{type:Number},
+  releYearOFExperience:{type:Number},
   status:{type:String},
 
   createdAt: { type: Date},
