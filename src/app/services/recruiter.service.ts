@@ -5,6 +5,7 @@ import Response from "@libs/response"
 import Account from '@models/account.schema';
 import Recruiter  from "@models/recruiter.schema";
 import {Transporter} from "@config/mail";
+import User from "@models/user.schema";
 import Apply from '@models/apply.schema';
 import Company  from "@models/company.schema";
 import Jobs  from "@models/job.schema";
@@ -17,10 +18,12 @@ export default class RecruiterService extends Service {
   private recruiteModel: any;
   private companyModel: any;
   private jobModel: any;
+  private userModel: any;
   private applyModel: any;
 
   constructor() {
     super()
+    this.userModel = User;
     this.recruiteModel = AppDataSource.model('Recruiter');
     this.companyModel = AppDataSource.model('Company');
     this.jobModel = AppDataSource.model('Jobs');
@@ -288,6 +291,11 @@ export default class RecruiterService extends Service {
       return new Response<any[]>(false, 409, "Email name already exists");
       }
 
+      const existUserEmail = await this.userModel.findOne({ email: data.email });
+      if (existUserEmail) {
+        return new Response<any>(false, 409, 'Email already exists');
+      }
+      
       const existPhone = await this.recruiteModel.findOne({ phoneNumber: data.phoneNumber });
 
       if(existPhone) {
