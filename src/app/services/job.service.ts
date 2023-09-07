@@ -6,7 +6,9 @@ import Jobs from "@models/job.schema";
 import User from "@models/user.schema";
 import Apply from '@models/apply.schema';
 import Recruiter from '@models/recruiter.schema';
+import  Notification  from "@models/notification.schema";
 import Company from "@models/company.schema";
+import {Transporter} from "@config/mail";
 import { ObjectId } from 'mongodb';
 
 export default class JobService extends Service {
@@ -15,6 +17,7 @@ export default class JobService extends Service {
   private userModel: any;
   private recruiterModel: any;
   private companyModel: any;
+  private notificationModel: any;
   constructor() {
     super()
     this.jobModel = Jobs;
@@ -22,6 +25,8 @@ export default class JobService extends Service {
     this.userModel = User;
     this.recruiterModel = Recruiter;
     this.companyModel = Company;
+    this.notificationModel = AppDataSource.model('Notification');
+
   }
   async count(): Promise<Response<any[]>> {
     try {
@@ -89,7 +94,7 @@ export default class JobService extends Service {
 
   async create(data: any) {
     try {
-      console.log(data);
+      // console.log(data);
       let jobs = new Jobs()
       jobs.recruiter = data.userId
       jobs.title = data.title
@@ -123,7 +128,33 @@ export default class JobService extends Service {
         jobs.approveAdmin = false
 
       const result: any = await jobs.save()
-      console.log(result);
+      if(result){
+      const companyName = await this.companyModel.findById(data.companyId)
+      let notification = new Notification()
+      notification.sender = data.userId
+      notification.content = data.title
+      // notification.content = `${companyName.name}`
+      notification.createdAt = new Date();
+      notification.createdBy = data.createdBy
+      notification.type = "Job Apply"
+      notification.createdAt = new Date();
+      notification.createdBy = data.createdBy
+      notification.createdFrom = data.ip
+      const resultNotification :any = await notification.save()
+
+      let from=process.env.EMAIL_FROM
+      let to="mohittripathi2096a@gmail.com"
+      let subject="The new job has been posted!."
+      let text=`Job title '${data.title}' with '${result._id}' has been approved by the admin`  
+
+      const message = {from,to,subject,text};
+      console.log(message)
+
+      const resultEmail = await Transporter.sendMail(message);
+      console.log(resultEmail)
+      }
+      
+      
       return new Response<any[]>(true, 201, "Insert operation successful", result);
     } catch (error: any) {
       return new Response<any[]>(false, 400, error.message);
@@ -254,10 +285,26 @@ export default class JobService extends Service {
       jobs.updatedBy = data.updatedBy
       jobs.updatedFrom = data.ip
       const result = await jobs.save();
+      let jobId = await this.jobModel.findById(pid);
+      const recuriterId = jobId.recruiter.toString();
+      // console.log(recuriterId)
+      const recruiter = await this.recruiterModel.findById(recuriterId);
+      // console.log(recruiter.email)
+      let from=process.env.EMAIL_FROM
+      let to=recruiter.email
+      let subject="The approval has been done!."
+      let text = `Hello ${recruiter.firstName} ${recruiter.lastName},\n\nYour job has been approved.`;
+
+      const message = {from,to,subject,text};
+
+      const resultEmail = await Transporter.sendMail(message);
+      // console.log(resultEmail)
+      
 
       return new Response<any[]>(true, 200, "Update operation successful", result);
-    } catch (error: any) {
-      return new Response<any[]>(false, 400, error.message);
+    } catch (emailError: any) {
+      console.error("Email sending error:", emailError);
+      return new Response<any[]>(false, 500, "Email sending error");
     }
   }
 

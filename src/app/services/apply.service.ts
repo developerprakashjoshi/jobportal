@@ -7,6 +7,8 @@ import Account from "@models/account.schema";
 import Jobs from "@models/job.schema";
 import  Notification  from "@models/notification.schema";
 import SearchEngine from '@libs/meili.search';
+import Recruiter from '@models/recruiter.schema';
+import {Transporter} from "@config/mail";
 import { ObjectId } from 'mongodb';
 import moment from 'moment';
 
@@ -16,6 +18,7 @@ export default class ApplyService extends Service {
   private postModel: any;
   private accountModel: any;
   private searchEngine: any;
+  private recruiterModel: any;
   private jobModel: any;
   private notificationModel: any;
   constructor() {
@@ -24,6 +27,7 @@ export default class ApplyService extends Service {
     this.applyModel = Apply;
     this.userModel = User;
     this.accountModel = Account;
+    this.recruiterModel = Recruiter;
     this.jobModel = Jobs;
     this.notificationModel = AppDataSource.model('Notification');
     // this.postModel = Post;
@@ -129,19 +133,34 @@ export default class ApplyService extends Service {
       apply.createdBy = data.createdBy
       apply.createdFrom = data.ip
       const result = await apply.save();
+      console.log(result)
       if(result){
         const recordJob = await this.jobModel.findById(data.jobId);
         const recordUser = await this.userModel.findById(data.userId);
         let notification = new Notification()
         notification.sender = data.userId
-        notification.recipient = recordJob.createdBy
-        notification.commonUser=recordJob.createdBy
-        notification.content = `${recordUser.firstName} ${recordUser.lastName} applied for the ${recordJob.title} position at ${new Date()}`
+        // notification.recipient = recordJob.createdBy
+        // notification.commonUser=recordJob.createdBy
+        // notification.content = `${recordUser.firstName} ${recordUser.lastName} applied for the ${recordJob.title} position at ${new Date()}`
         notification.type = "Job Apply"
         notification.createdAt = new Date();
         notification.createdBy = data.createdBy
         notification.createdFrom = data.ip
-        const result:any = await notification.save()
+        const resultNotification:any = await notification.save()
+
+      let ajobId = result.job.toString();
+      let applyJobId = await this.jobModel.findById(ajobId);
+      const recuriterId = applyJobId.recruiter.toString();
+      const recruiter = await this.recruiterModel.findById(recuriterId);
+      // console.log(recruiter)
+       
+      let from=process.env.EMAIL_FROM
+      let to=recruiter.email
+      let subject="You are successfully applied !."
+      // let text=`${recordUser.firstName} ${recordUser.lastName} applied for the ${recordJob.title} position at ${new Date()}`
+
+      const message = {from,to,subject};
+      const resultEmail = await Transporter.sendMail(message);
       }
       return new Response<any>(true, 201, 'Insert operation successful',result);
       

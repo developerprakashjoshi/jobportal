@@ -364,6 +364,14 @@ export default class InterviewService extends Service {
                 as: "userDetails",
               },
             },
+            {
+              $lookup: {
+                from: "jobs",
+                localField: "job",
+                foreignField: "_id",
+                as: "jobDetails",
+              },
+            },
             // {
             //   $unwind: "$userDetails",
             // },
@@ -387,6 +395,11 @@ export default class InterviewService extends Service {
               },
             },
             {
+              $addFields: {
+                jobDetails: { $arrayElemAt: ["$jobDetails", 0] }, // Extract the first user detail
+              },
+            },
+            {
               $project: {
                 candidateName: 1,
                 interviewDate: 1,
@@ -398,6 +411,7 @@ export default class InterviewService extends Service {
                 // userDetails:1,
                 firstName: "$userDetails.firstName",
                 lastName: "$userDetails.lastName",
+                title:"$jobDetails.title",
                 fullName: {
                   $concat: [
                     "$userDetails.firstName",
