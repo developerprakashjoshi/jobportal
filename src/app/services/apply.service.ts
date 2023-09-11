@@ -139,9 +139,9 @@ export default class ApplyService extends Service {
         const recordUser = await this.userModel.findById(data.userId);
         let notification = new Notification()
         notification.sender = data.userId
-        // notification.recipient = recordJob.createdBy
-        // notification.commonUser=recordJob.createdBy
-        // notification.content = `${recordUser.firstName} ${recordUser.lastName} applied for the ${recordJob.title} position at ${new Date()}`
+        notification.recipient = recordJob.createdBy
+        notification.commonUser=recordJob.createdBy
+        notification.content = `${recordUser.firstName} ${recordUser.lastName} applied for the ${recordJob.title} position at ${new Date()}`
         notification.type = "Job Apply"
         notification.createdAt = new Date();
         notification.createdBy = data.createdBy
@@ -156,10 +156,16 @@ export default class ApplyService extends Service {
        
       let from=process.env.EMAIL_FROM
       let to=recruiter.email
-      let subject="You are successfully applied !."
-      // let text=`${recordUser.firstName} ${recordUser.lastName} applied for the ${recordJob.title} position at ${new Date()}`
+      let subject="Job apply"
+      let text=`Hello ${recruiter.firstName} ${recruiter.LastName},
 
-      const message = {from,to,subject};
+      You have a new job application! A candidate has applied for the ${recordJob.title} position. Please review their profile at your earliest convenience.
+      
+      Regards,
+      Simandhar Education
+      `
+
+      const message = {from,to,subject,text};
       const resultEmail = await Transporter.sendMail(message);
       }
       return new Response<any>(true, 201, 'Insert operation successful',result);

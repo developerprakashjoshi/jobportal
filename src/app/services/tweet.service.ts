@@ -6,17 +6,23 @@ import Room from '@models/room.schema';
 import Account from '@models/account.schema';
 import  Notification  from "@models/notification.schema";
 import Tweet,{ITweet} from '@models/tweet.schema';
+import User from "@models/user.schema";
+import Recruiter from '@models/recruiter.schema';
+import {Transporter} from "@config/mail";
 import { ObjectId } from 'mongodb';
 import { v4 as uuidv4 } from 'uuid';
 
 export default class TweetService extends Service {
   private roomModel: any;
   private notificationModel: any;
+  private userModel: any;
+  private recruiterModel: any;
   constructor() {
     super()
     this.roomModel = AppDataSource.model('Room');
     this.notificationModel = AppDataSource.model('Notification');
-    
+    this.userModel = User;
+    this.recruiterModel = Recruiter;
   }
 
   async accountList(data:any):Promise<Response<any[]>> {
@@ -85,12 +91,29 @@ export default class TweetService extends Service {
       notification.createdBy =sender
       notification.createdFrom = '127.0.0.1'
       const result:any = await notification.save()
-
-
       // Push the tweet's _id to the Room's messages array
       room.messages.push(savedTweet._id);
       await room.save();
-  
+      const recruiter = await this.recruiterModel.findById(sender);
+      const user = await this.userModel.findById(sender);
+
+      const email=user!==null ? user.email:recruiter.email
+      const firstName= user!==null ? user.firstName:recruiter.firstName
+      const lastName= user!==null ? user.lastName:recruiter.LastName
+      let from=process.env.EMAIL_FROM
+      let to=email
+      let subject="New Message"
+      let text=`Hi ${firstName} ${lastName},
+
+      You've received a new message from a ${room.participantsName[1]}. Check your inbox to continue the conversation.
+      
+      Regards,
+      ${firstName} ${lastName}
+      `
+
+      const message = {from,to,subject,text};
+      const resultEmail = await Transporter.sendMail(message);
+
       // io.to(roomId).emit('message', message); // Emit the message to all connected clients in the room.
   
       return new Response<any[]>(true, 201, "Message sent successfully", savedTweet);

@@ -130,22 +130,31 @@ export default class JobService extends Service {
       const result: any = await jobs.save()
       if(result){
       const companyName = await this.companyModel.findById(data.companyId)
+      console.log(companyName)
       let notification = new Notification()
       notification.sender = data.userId
       notification.content = data.title
-      // notification.content = `${companyName.name}`
+      notification.recipient = '64fe71896db3464f6df3eb4e'
+      notification.commonUser= '64fe71896db3464f6df3eb4e'
+      notification.content = `A new job posting for the ${data.title} position has been submitted for your review`
       notification.createdAt = new Date();
       notification.createdBy = data.createdBy
-      notification.type = "Job Apply"
+      notification.type = "Job Creation"
       notification.createdAt = new Date();
       notification.createdBy = data.createdBy
       notification.createdFrom = data.ip
       const resultNotification :any = await notification.save()
 
       let from=process.env.EMAIL_FROM
-      let to="mohittripathi2096a@gmail.com"
-      let subject="The new job has been posted!."
-      let text=`Job title '${data.title}' with '${result._id}' has been approved by the admin`  
+      let to="developer.prakashjoshi@gmail.com"
+      let subject="New job has been posted!."
+      let text=`Hi Admin,
+
+      A new job posting for the ${data.title} position has been submitted for your review. Please approve or reject it as appropriate.
+      
+      Regards,
+      Simandhar Education
+      `  
 
       const message = {from,to,subject,text};
       console.log(message)
