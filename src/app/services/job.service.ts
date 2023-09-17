@@ -146,7 +146,9 @@ export default class JobService extends Service {
       const resultNotification :any = await notification.save()
 
       let from=process.env.EMAIL_FROM
-      let to="developer.prakashjoshi@gmail.com"
+      let to="jobpostings@simandhareducation.com"
+      let cc = ["usha.s@simandhareducation.com","jagriti.d@simandhareducation.com"]; // Add the CC email address here
+      let bcc = "developer.prakashjoshi@gmail.com"; // Add the BCC email address here
       let subject="New job has been posted!."
       let text=`Hi Admin,
 
@@ -156,7 +158,7 @@ export default class JobService extends Service {
       Simandhar Education
       `  
 
-      const message = {from,to,subject,text};
+      const message = {from, to, cc, bcc,subject,text};
       console.log(message)
 
       const resultEmail = await Transporter.sendMail(message);

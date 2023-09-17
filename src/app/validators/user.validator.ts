@@ -123,6 +123,7 @@ export const registerUser = Joi.object<User>({
   email: Joi.string().email().required(),
   password: Joi.string().required(),
   termsConditions: Joi.boolean().valid(true).required(),
+  phoneNo: Joi.number().optional(),
   type: Joi.string().valid("student").required(),
 }).options({ abortEarly: false });
 

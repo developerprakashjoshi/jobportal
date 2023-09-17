@@ -368,6 +368,7 @@ export default class UserService extends Service {
       user.firstName = data.firstName;
       user.lastName =data.lastName;
       user.email= data.email;
+      user.phoneNo= data.phoneNo;
       user.password=await this.hashPassword(data.password);
       user.termsConditions=data.termsConditions;
       user.type=data.type;

@@ -8,6 +8,7 @@ import Jobs from "@models/job.schema";
 import  Notification  from "@models/notification.schema";
 import SearchEngine from '@libs/meili.search';
 import Recruiter from '@models/recruiter.schema';
+import Interview from "@models/interview.schema";
 import {Transporter} from "@config/mail";
 import { ObjectId } from 'mongodb';
 import moment from 'moment';
@@ -21,6 +22,7 @@ export default class ApplyService extends Service {
   private recruiterModel: any;
   private jobModel: any;
   private notificationModel: any;
+  private interviewModel: any;
   constructor() {
     super();
     this.searchEngine = new SearchEngine()
@@ -30,6 +32,7 @@ export default class ApplyService extends Service {
     this.recruiterModel = Recruiter;
     this.jobModel = Jobs;
     this.notificationModel = AppDataSource.model('Notification');
+    this.interviewModel = AppDataSource.model("Interview");
     // this.postModel = Post;
   }
 
@@ -107,8 +110,14 @@ export default class ApplyService extends Service {
 
   async getApplyData(userId:string):Promise<Response<any[]>> {
     try {
-      const records:any = await this.applyModel.find({ user: userId }).populate('user').populate('job');
-      return new Response<any[]>(true, 200, "Retrive successfully", records);
+      const records:any = await this.applyModel.findOne({ user: userId }).populate('user').populate('job').populate('job');
+      const interviewRecords = await this.interviewModel
+      .find({ user: records.user._id, job: records.job._id })
+      const combinedData:any = {
+        records,
+        interview: interviewRecords,
+      };
+      return new Response<any[]>(true, 200, "Retrive successfully", combinedData);
     } catch (error:any) {
       console.error('Error fetching :', error);
       return new Response<any[]>(false, 400, error.message);
