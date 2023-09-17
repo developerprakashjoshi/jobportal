@@ -4,6 +4,7 @@ import moment from "moment";
 import Response from "@libs/response";
 import Interview from "@models/interview.schema";
 import User from "@models/interview.schema";
+import {Transporter} from "@config/mail";
 import { ObjectId } from "mongodb";
 
 export default class InterviewService extends Service {
@@ -185,6 +186,7 @@ export default class InterviewService extends Service {
       }
 
       const interview = await this.interviewModel.findById(pid);
+      
 
       if (!interview) {
         return new Response<any[]>(true, 404, "Record not found");
@@ -194,12 +196,27 @@ export default class InterviewService extends Service {
         // Check if status is provided in the data
         interview.status = data.status;
       }
-
+      
       interview.updatedAt = new Date();
       interview.updatedBy = data.updatedBy;
       interview.updatedFrom = data.ip;
 
       const result = await interview.save();
+      if(result){
+        const candidateId = interview.user;
+        let checkCandidateId = await this.userModel.find({_id:candidateId});
+        let candidateEmail = checkCandidateId[0].email
+        console.log(candidateEmail)
+        
+        let from=process.env.EMAIL_FROM
+        let to= candidateEmail
+        let subject="Interview Schedule"
+        let text = `Dear ${checkCandidateId[0].firstName} ${checkCandidateId[0].lastName}, Your interview has been scheduled for [${interview.interviewDate}/${interview.interviewTime}/${interview.interviewLink}]. Please prepare for the interview and arrive on time. Best regards`;
+  
+  
+        const message = {from,to,subject,text};
+        const resultEmail = await Transporter.sendMail(message);
+      }
 
       return new Response<any[]>(
         true,
