@@ -237,6 +237,41 @@ export default class ApplyService extends Service {
       // await this.searchEngine.updateIndex('apply', apply);
       const result = await apply.save();
       
+      const jobId = result.job.toString();
+      const job = await this.jobModel.findById(jobId)
+      const userId = result.user.toString();
+      const candidate = await this.userModel.findById(userId)
+      // console.log(job,'',candidate)
+
+      if (result.status === 'Accepted') {
+        let from = process.env.EMAIL_FROM;
+        let to = candidate.email;
+        let subject = "The approval has been done!";
+        let text = `Hello ${candidate.firstName} ${candidate.lastName},
+          Great news! Your profile has been shortlisted for the ${job.title} position. Expect further communication from us soon.
+          
+          Regards,
+          Simandhar Education
+        
+        `
+        const message = { from, to, subject, text };
+  
+        const resultEmail = await Transporter.sendMail(message);
+      }else{
+        let from = process.env.EMAIL_FROM;
+        let to = candidate.email;
+        let subject = "The approval has not been approved!";
+        let text = `Hello ${candidate.firstName} ${candidate.lastName},
+            We regret to inform you that your profile has not been shortlisted for the ${job.title} position. Thank you for your interest.
+            
+            Regards,
+            Simandhar Education
+          `
+        const message = { from, to, subject, text };
+  
+        const resultEmail = await Transporter.sendMail(message);
+      }
+      
       return new Response<any>(true, 200, 'Update operation successful', result);
     } catch (error: any) {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
