@@ -937,6 +937,7 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
             { firstName: { $regex: search, $options: 'i' } },
             { lastName: { $regex: search, $options: 'i' } },
             { email: { $regex: search, $options: 'i' } },
+            { jobTitle: { $regex: search, $options: 'i' } },
             { 'addresses.city': { $regex: search, $options: 'i' } },
           ],
         };
