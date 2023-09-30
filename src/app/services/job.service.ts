@@ -296,20 +296,32 @@ export default class JobService extends Service {
       jobs.updatedBy = data.updatedBy
       jobs.updatedFrom = data.ip
       const result = await jobs.save();
+      console.log(result)
       let jobId = await this.jobModel.findById(pid);
       const recuriterId = jobId.recruiter.toString();
       // console.log(recuriterId)
       const recruiter = await this.recruiterModel.findById(recuriterId);
-      // console.log(recruiter.email)
-      let from=process.env.EMAIL_FROM
-      let to=recruiter.email
-      let subject="The approval has been done!."
-      let text = `Hello ${recruiter.firstName} ${recruiter.lastName},\n\nYour job has been approved.`;
-
-      const message = {from,to,subject,text};
-
-      const resultEmail = await Transporter.sendMail(message);
-      // console.log(resultEmail)
+      
+      if (result.approveAdmin === true) {
+        let from = process.env.EMAIL_FROM;
+        let to = recruiter.email;
+        let subject = "The approval has been done!";
+        let text = `Hello ${recruiter.firstName} ${recruiter.LastName},\n\nYour job has been approved.`;
+  
+        const message = { from, to, subject, text };
+  
+        const resultEmail = await Transporter.sendMail(message);
+      } else {
+        let from = process.env.EMAIL_FROM;
+        let to = recruiter.email;
+        let subject = "The approval has not been approved";
+        let text = `Hello ${recruiter.firstName} ${recruiter.LastName},\n\nYour job has not been approved.`;
+  
+        const message = { from, to, subject, text };
+  
+        const resultEmail = await Transporter.sendMail(message);
+      }
+  
       
 
       return new Response<any[]>(true, 200, "Update operation successful", result);
