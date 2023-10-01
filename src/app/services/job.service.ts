@@ -296,19 +296,56 @@ export default class JobService extends Service {
       jobs.updatedBy = data.updatedBy
       jobs.updatedFrom = data.ip
       const result = await jobs.save();
+            
       let jobId = await this.jobModel.findById(pid);
       const recuriterId = jobId.recruiter.toString();
       // console.log(recuriterId)
       const recruiter = await this.recruiterModel.findById(recuriterId);
       // console.log(recruiter.email)
+
+      if(result.approveAdmin === true){
+
+        let notification = new Notification()
+        notification.sender = "64fe71896db3464f6df3eb4e"
+        notification.content = result.title
+        notification.content = `${recruiter.firstName} ${recruiter.LastName},\n\nYour job has been approved.`
+        notification.createdAt = new Date();
+        notification.createdBy = result.createdBy
+        notification.type = "The approval has been done!."
+        notification.createdFrom = data.ip
+        const resultNotification :any = await notification.save()
+
+
       let from=process.env.EMAIL_FROM
       let to=recruiter.email
       let subject="The approval has been done!."
-      let text = `Hello ${recruiter.firstName} ${recruiter.lastName},\n\nYour job has been approved.`;
+      let text = `Hello ${recruiter.firstName} ${recruiter.LastName},\n\nYour job has been approved.`;
 
       const message = {from,to,subject,text};
 
       const resultEmail = await Transporter.sendMail(message);
+      } else{
+
+        let notification = new Notification()
+        notification.sender = "64fe71896db3464f6df3eb4e"
+        notification.content = result.title
+        notification.content = `${recruiter.firstName} ${recruiter.LastName},\n\nYour job has not been approved.`
+        notification.createdAt = new Date();
+        notification.createdBy = result.createdBy
+        notification.type = "The approval has not been done!."
+        notification.createdFrom = data.ip
+        const resultNotification :any = await notification.save()
+
+      let from=process.env.EMAIL_FROM
+      let to=recruiter.email
+      let subject="The approval has not been done!."
+      let text = `Hello ${recruiter.firstName} ${recruiter.LastName},\n\nYour job has not been approved.`;
+
+      const message = {from,to,subject,text};
+
+      const resultEmail = await Transporter.sendMail(message);
+      }
+
       // console.log(resultEmail)
       
 

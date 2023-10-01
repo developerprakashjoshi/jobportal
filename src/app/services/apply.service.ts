@@ -239,11 +239,26 @@ export default class ApplyService extends Service {
       
       const jobId = result.job.toString();
       const job = await this.jobModel.findById(jobId)
+      const recuriterId = job.recruiter.toString()
+      const recruiters = await this.recruiterModel.findById(recuriterId)
       const userId = result.user.toString();
       const candidate = await this.userModel.findById(userId)
       // console.log(job,'',candidate)
 
       if (result.status === 'Accepted') {
+
+        let notification = new Notification()
+        notification.sender = recruiters._id
+        notification.content = job.title
+        notification.content = `Great news! Your profile has been shortlisted for the ${job.title} position`
+        notification.createdAt = new Date();
+        notification.createdBy = recruiters._id
+        notification.type = "The approval has been done!."
+        notification.createdFrom = data.ip
+        const resultNotification :any = await notification.save()
+
+
+
         let from = process.env.EMAIL_FROM;
         let to = candidate.email;
         let subject = "The approval has been done!";
@@ -258,6 +273,20 @@ export default class ApplyService extends Service {
   
         const resultEmail = await Transporter.sendMail(message);
       }else{
+
+        let notification = new Notification()
+        notification.sender = recruiters._id
+        notification.content = job.title
+        notification.content = `We regret to inform you that your profile has not been shortlisted for the ${job.title} position.`
+        notification.createdAt = new Date();
+        notification.createdBy = recruiters._id
+        notification.type = "The approval has not been done!."
+        notification.createdFrom = data.ip
+        const resultNotification :any = await notification.save()
+
+
+
+
         let from = process.env.EMAIL_FROM;
         let to = candidate.email;
         let subject = "The approval has not been approved!";

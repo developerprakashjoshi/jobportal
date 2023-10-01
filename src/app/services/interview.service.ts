@@ -4,16 +4,23 @@ import moment from "moment";
 import Response from "@libs/response";
 import Interview from "@models/interview.schema";
 import User from "@models/interview.schema";
+import Jobs from "@models/job.schema";
+import  Notification  from "@models/notification.schema";
 import {Transporter} from "@config/mail";
 import { ObjectId } from "mongodb";
 
 export default class InterviewService extends Service {
   private interviewModel: any;
   private userModel: any;
+  private jobModel: any;
+  private notificationModel: any;
   constructor() {
     super();
+    this.jobModel = Jobs;
     this.interviewModel = AppDataSource.model("Interview");
     this.userModel = AppDataSource.model("User");
+    this.notificationModel = AppDataSource.model('Notification');
+
   }
   async count(): Promise<Response<any[]>> {
     try {
@@ -202,16 +209,65 @@ export default class InterviewService extends Service {
       interview.updatedFrom = data.ip;
 
       const result = await interview.save();
-      if(result){
+        console.log('*result*')
+        console.log(result)
+        
         const candidateId = interview.user;
         let checkCandidateId = await this.userModel.find({_id:candidateId});
         let candidateEmail = checkCandidateId[0].email
-        console.log(candidateEmail)
+        const jobId = result.job.toString();
+        const job = await this.jobModel.findById(jobId)
+        
+
+      if(result.status === 'true'){
+        
+        let notification = new Notification()
+        notification.sender = checkCandidateId[0]._id
+        notification.content = job.title
+        notification.content = `${checkCandidateId[0].firstName} ${checkCandidateId[0].lastName},\n\n Good news! An interview has been scheduled for the ${job.title} position.`
+        notification.createdAt = new Date();
+        notification.createdBy = result.createdBy
+        notification.type = "An interview has been scheduled."
+        notification.createdFrom = data.ip
+        const resultNotification :any = await notification.save()
         
         let from=process.env.EMAIL_FROM
         let to= candidateEmail
         let subject="Interview Schedule"
-        let text = `Dear ${checkCandidateId[0].firstName} ${checkCandidateId[0].lastName}, Your interview has been scheduled for [${interview.interviewDate}/${interview.interviewTime}/${interview.interviewLink}]. Please prepare for the interview and arrive on time. Best regards`;
+        // let text = `Dear ${checkCandidateId[0].firstName} ${checkCandidateId[0].lastName}, Your interview has been scheduled for [${interview.interviewDate}/${interview.interviewTime}/${interview.interviewLink}]. Please prepare for the interview and arrive on time. Best regards`;
+        let text = `Hello ${checkCandidateId[0].firstName} ${checkCandidateId[0].lastName},
+
+        Good news! An interview has been scheduled for the ${job.title} position. Check your email for detailed information.
+
+        Regards,
+        Simandhar Education`
+  
+  
+        const message = {from,to,subject,text};
+        const resultEmail = await Transporter.sendMail(message);
+      }else{
+        
+        let notification = new Notification()
+        notification.sender = checkCandidateId[0]._id
+        notification.content = job.title
+        notification.content = `${checkCandidateId[0].firstName} ${checkCandidateId[0].lastName},\n\n We regret to inform you that your application for the ${job.title} position's skills interview has not been successful.`
+        notification.createdAt = new Date();
+        notification.createdBy = result.createdBy
+        notification.type = "We regret to inform you that your application for the ${job.title} position's skills interview has not been successful."
+        notification.createdFrom = data.ip
+        const resultNotification :any = await notification.save()
+
+
+
+        let from=process.env.EMAIL_FROM
+        let to= candidateEmail
+        let subject="Interview Cancel."
+        let text = `Hello ${checkCandidateId[0].firstName} ${checkCandidateId[0].lastName},
+
+        We regret to inform you that your application for the ${job.title} position's skills interview has not been successful. Keep applying for other opportunities with us.
+
+        Regards,
+        Simandhar Education `;
   
   
         const message = {from,to,subject,text};
