@@ -45,6 +45,7 @@ import courseRoute from '@routes/course.route'
 import payRange from '@routes/payrange.route';
 import tweetRoute from '@routes/tweet.route';
 import favouriteRoute from '@routes/favourite.route';
+import searchRoute from '@routes/search.route';
 
 import { errorHandler, notFound } from "@libs/error.handler";
 
@@ -98,6 +99,7 @@ app.use('/api/v1/course',courseRoute);
 app.use('/api/v1/payRange',payRange);
 app.use('/api/v1/tweet',tweetRoute);
 app.use('/api/v1/favourite',favouriteRoute);
+app.use('/api/v1/search',searchRoute);
 
 
 app.get("/", (req: Request, res: Response) => {

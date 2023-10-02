@@ -1,4 +1,4 @@
-import { Schema, Document, model } from 'mongoose';
+import mongoose,{ Schema, Document, model } from 'mongoose';
 
 export enum SearchStatus {
   Active = 1,
@@ -6,8 +6,9 @@ export enum SearchStatus {
 }
 
 export interface ISearch extends Document {
-  name: string;
-  description: string;
+  userId:string;
+  email:string;
+  keywords: string;
   status: SearchStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -15,8 +16,12 @@ export interface ISearch extends Document {
 }
 
 const SearchSchema: Schema = new Schema({
-  name: { type: String, required: true },
-  description: { type: String, required: true },
+  userId:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  email: { type: String, required: true },
+  keywords: { type: String, required: true },
   status: { type: Number, enum: [0, 1], default: 1 },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },

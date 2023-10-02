@@ -94,23 +94,29 @@ export default class TweetService extends Service {
       // Push the tweet's _id to the Room's messages array
       room.messages.push(savedTweet._id);
       await room.save();
-      const recruiter = await this.recruiterModel.findById(sender);
-      const user = await this.userModel.findById(sender);
+      const recruiterReceiver = await this.recruiterModel.findById(room.participants[1]);
+      const userReceiver = await this.userModel.findById(room.participants[1]);
 
-      const email=user!==null ? user.email:recruiter.email
-      const firstName= user!==null ? user.firstName:recruiter.firstName
-      const lastName= user!==null ? user.lastName:recruiter.LastName
+      const recruiterSender = await this.recruiterModel.findById(sender);
+      const userSender = await this.userModel.findById(sender);
+    
+      const firstNameSender= userSender!==null ? userSender.firstName:recruiterSender.firstName
+      const lastNameSender= userSender!==null ? userSender.lastName:recruiterSender.LastName
+
+      const emailReceiver=userReceiver!==null ? userReceiver.email:recruiterReceiver.email
+      const firstNameReceiver= userReceiver!==null ? userReceiver.firstName:recruiterReceiver.firstName
+      const lastNameReceiver= userReceiver!==null ? userReceiver.lastName:recruiterReceiver.LastName
       let from=process.env.EMAIL_FROM
-      let to=email
+      let to=emailReceiver
       let subject="New Message"
-      let text=`Hi ${firstName} ${lastName},
+      let text=`Hi ${firstNameReceiver} ${lastNameReceiver},
 
-      You've received a new message from a ${room.participantsName[1]}. Check your inbox to continue the conversation.
+      You've received a new message from a ${room.participantsName[0]}. Check your inbox to continue the conversation.
       
       Regards,
-      ${firstName} ${lastName}
+      Simandhar Education
       `
-
+ // ${firstNameSender} ${lastNameSender}
       const message = {from,to,subject,text};
       const resultEmail = await Transporter.sendMail(message);
 

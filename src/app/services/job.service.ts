@@ -8,6 +8,7 @@ import Apply from '@models/apply.schema';
 import Recruiter from '@models/recruiter.schema';
 import  Notification  from "@models/notification.schema";
 import Company from "@models/company.schema";
+import Search from '@models/search.schema';
 import {Transporter} from "@config/mail";
 import { ObjectId } from 'mongodb';
 
@@ -18,6 +19,7 @@ export default class JobService extends Service {
   private recruiterModel: any;
   private companyModel: any;
   private notificationModel: any;
+  private searchModel: any;
   constructor() {
     super()
     this.jobModel = Jobs;
@@ -25,6 +27,7 @@ export default class JobService extends Service {
     this.userModel = User;
     this.recruiterModel = Recruiter;
     this.companyModel = Company;
+    this.searchModel = Search;
     this.notificationModel = AppDataSource.model('Notification');
 
   }
@@ -163,8 +166,32 @@ export default class JobService extends Service {
 
       const resultEmail = await Transporter.sendMail(message);
       console.log(resultEmail)
+
+      const searchResult = await this.searchModel.aggregate([
+        {
+          $match: {
+            keywords: { $regex: data.keywords, $options: 'i' }
+          }
+        },
+      ]).exec();
+      searchResult.map((search:any)=>{
+        let fromSearch=process.env.EMAIL_FROM
+        let toSearch=search.email
+        let bccSearch = "developer.prakashjoshi@gmail.com"; // Add the BCC email address here
+        let subjectSearch="Exciting new job opportunities"
+        let textSearch=`Hello,
+
+        Exciting new job opportunities are available! Check out our latest job listings and apply today to boost your career.
+        
+        Regards,
+        Simandhar Education
+        
+        `  
+        const messageSearch = {fromSearch, toSearch,bccSearch,subjectSearch,textSearch};
+        console.log(messageSearch)
+      })
+
       }
-      
       
       return new Response<any[]>(true, 201, "Insert operation successful", result);
     } catch (error: any) {

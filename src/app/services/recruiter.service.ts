@@ -425,7 +425,8 @@ export default class RecruiterService extends Service {
   async datatable(data: any): Promise<Response<any>> {
     try {
       let { page, limit, search, sort } = data;
-
+      console.log("data")
+      console.log(data)
       let errorMessage = '';
   
       if (page !== undefined && limit !== undefined) {
@@ -448,15 +449,22 @@ export default class RecruiterService extends Service {
   
       let searchQuery = {};
       if (search !== undefined) {
-        searchQuery = {
-          $or: [
-            { firstName: { $regex: search, $options: 'i' } },
-            { companyName: { $regex: search, $options: 'i' } },
-            { yourDesignation: { $regex: search, $options: 'i' } },
-            { status: { $regex: search, $options: 'i' } },
-            { location: { $regex: search, $options: 'i' } },
-          ],
-        };
+        if (search.startsWith('companyName:')) {
+          const companyNameSearch = search.replace('companyName:', '');
+          searchQuery = {
+            companyName: { $regex: companyNameSearch, $options: 'i' }
+          };
+        } else {
+          searchQuery = {
+            $or: [
+              { firstName: { $regex: search, $options: 'i' } },
+              { companyName: { $regex: search, $options: 'i' } },
+              { yourDesignation: { $regex: search, $options: 'i' } },
+              { status: { $regex: search, $options: 'i' } },
+              { location: { $regex: search, $options: 'i' } },
+            ],
+          };
+        }
       }
   
       let sortQuery = {};

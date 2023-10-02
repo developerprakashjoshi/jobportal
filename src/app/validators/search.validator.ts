@@ -1,8 +1,9 @@
 import Joi from "joi";
 
 export const createSearch = Joi.object({
-  name: Joi.string().required(),
-  description: Joi.string().required(),
+  userId: Joi.string().required(),
+  email: Joi.string().required(),
+  keywords: Joi.string().required(),
   status: Joi.number().required(),
 }).options({ abortEarly: false });
 

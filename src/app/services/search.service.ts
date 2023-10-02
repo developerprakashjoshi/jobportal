@@ -72,16 +72,24 @@ export default class SearchService extends Service {
 
   async create(data: any): Promise<Response<any>> {
     try {
-      const search = new Search();
-      search.name = data.name;
-      search.description =data.description;
-      search.status= data.status;
-      search.createdAt=moment().toDate();
-      search.updatedAt=moment().toDate();
-      await this.searchEngine.addDocuments('search', search);
-      const result = await search.save();
-      return new Response<any>(true, 201, 'Insert operation successful',result);
-      
+      const searchData = await this.searchModel.findOne({userId: data.userId});
+      if (!searchData) {
+          const search = new Search();
+          search.userId = data.userId;
+          search.email = data.email;
+          search.keywords =data.keywords;
+          search.status= data.status;
+          search.createdAt=moment().toDate();
+          search.updatedAt=moment().toDate();
+          // await this.searchEngine.addDocuments('search', search);
+          const result = await search.save();
+          return new Response<any>(true, 201, 'Insert operation successful',result);
+      }
+      if (data.keywords) {
+        searchData.keywords=data.keywords;
+      }
+      const result = await searchData.save();
+      return new Response<any>(true, 200, 'Update operation successful', result);
     } catch (error:any) {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
