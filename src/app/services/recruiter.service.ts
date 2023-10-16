@@ -424,8 +424,8 @@ export default class RecruiterService extends Service {
 
   async datatable(data: any): Promise<Response<any>> {
     try {
-      let { page, limit, search, sort } = data;
-      console.log("data")
+      let { page, limit, search, sort,name,company,designation,status,location } = data;
+      console.log("data...")
       console.log(data)
       let errorMessage = '';
   
@@ -466,6 +466,31 @@ export default class RecruiterService extends Service {
           };
         }
       }
+
+      if ( name !== undefined || company !== undefined) {
+        const andConditions = [];
+      
+        if (name !== undefined) {
+         andConditions.push({$or:[
+          { firstName: { $regex: name, $options: 'i' } },
+          { LastName: { $regex: name, $options: 'i' } }
+        ]})
+        }
+      
+        if (company !== undefined) {
+          andConditions.push({ companyName: { $regex: company, $options: 'i' } });
+        }
+        if (designation !== undefined) {
+          andConditions.push({ yourDesignation: { $regex: designation, $options: 'i' } });
+        }
+        if (status !== undefined) {
+          andConditions.push({ status: { $eq: status} });
+        }
+        if (location !== undefined) {
+          andConditions.push({ location: { $regex: location, $options: 'i' } });
+        }
+        searchQuery = { $and: andConditions };
+      }
   
       let sortQuery = {};
       if (sort !== undefined ) {
@@ -485,6 +510,8 @@ export default class RecruiterService extends Service {
       const skip = (page - 1) * limit;
       const totalApplied = await this.applyModel.countDocuments();
       const totalJobPost = await  this.jobModel.countDocuments();
+      console.log(totalApplied);
+      console.log(totalJobPost);
       const [records, totalCount] = await Promise.all([
         this.recruiteModel.aggregate([
           {
@@ -496,8 +523,8 @@ export default class RecruiterService extends Service {
             }
           },
           ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
-          { $skip: skip },
-          { $limit: limit },
+          // { $skip: skip },
+          // { $limit: limit },
           {
             $project: {
               _id: 1,
@@ -510,7 +537,7 @@ export default class RecruiterService extends Service {
               'totalJobPosted':1,
               'totalApplied':1,
               'location':1,
-              'createdAt':1
+              'createdAt':1,
             },
           },
           {
@@ -533,20 +560,31 @@ export default class RecruiterService extends Service {
         console.log(row._id);
          return await this.countJob(row._id)
       })
-      const userIds = records.map((record:any) => record._id.toString());
-        const totalJobPosted = await Promise.all(userIds.map((_id:string) => this.countJob(_id)));
-        records.forEach((record:any, index:number) => {
-          record.totalJobPost = totalJobPosted[index];
-        });
+      // const userIds = records.map((record:any) => record._id.toString());
+      // console.log("userIds");
+      // console.log(userIds);
+      //   const totalJobPosted = await Promise.all(userIds.map((_id:string) => this.countJob(_id)));
 
-      const jobIds = records.map((record:any) => record._id.toString());
-      const totalAppliedCounts = await Promise.all(jobIds.map((_id:string) => this.countApply(_id)));
-      records.forEach((record:any, index:number) => {
-      record.totalApplied = totalAppliedCounts[index];
-      }); 
+      //   records.forEach((record:any, index:number) => {
+      //     record.totalJobPost = totalJobPosted[index];
+      //   });
 
+      // const jobIds = records.map((record:any) => record._id.toString());
+      // const totalAppliedCounts = await Promise.all(jobIds.map((_id:string) => this.countApply(_id)));
+      // records.forEach((record:any, index:number) => {
+      //   record.totalApplied = totalAppliedCounts[index];
+      // }); 
+      const info = await Promise.all(records.map(async (record: any) => {
+        const job = await this.jobModel.findOne({ createdBy: record._id });
+        let totalApplied=0
+        if(job!==null) {
+           totalApplied = await this.applyModel.countDocuments({ job:job._id});
+        }
+        const totalJobPosted = await this.jobModel.countDocuments({ createdBy: record._id });
+        return { ...record, totalApplied,totalJobPosted };
+      }));
       const output = {
-        records: records,
+        records: info,
         totalPages: totalPages !== null ? totalPages : 0,
         currentPage: currentPage !== null ? currentPage : 0,
         filterCount: records.length,
@@ -555,7 +593,7 @@ export default class RecruiterService extends Service {
         totalApplicants: totalApplied,
 
       };
-      return new Response<any>(true, 200, 'Read operation successful', output);
+      return new Response<any>(true, 200, 'Datatable operation successful', output);
     } catch (error: any) {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }

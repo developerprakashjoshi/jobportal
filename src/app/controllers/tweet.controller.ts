@@ -23,6 +23,18 @@ static async getRooms(req: Request, res: Response) {
     const result = await tweetService.getRooms(id)
     res.status(result.statusCode).json(result);
 }
+static async readCount(req: Request, res: Response) {
+    let id = req.params.userId
+    let tweetService=new TweetService();
+    const result = await tweetService.messageReadCount(id)
+    res.status(result.statusCode).json(result);
+}
+static async readUpdate(req: Request, res: Response) {
+    let id = req.params.userId
+    let tweetService=new TweetService();
+    const result = await tweetService.messageReadUpdate(id)
+    res.status(result.statusCode).json(result);
+}
 static async getRoomsByName(req: Request, res: Response) {
     let name = req.params.roomName
     let tweetService=new TweetService();

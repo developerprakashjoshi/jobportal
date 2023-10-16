@@ -13,5 +13,7 @@ route.get('/my/:id',NotificationController.getMyNotification)
 route.post('/',validator(createNotification),NotificationController.createNotification)
 route.patch('/:id',validator(updateNotification),NotificationController.updateNotification)
 route.delete('/:id',validator(deleteNotification),NotificationController.deleteNotification)
+route.get('/count-unread/:id',  NotificationController.countUnread);
+route.patch('/update-unread/:id',  NotificationController.updateUnread);
 export default route;
 

@@ -144,6 +144,52 @@ export default class NotificationService extends Service {
       return new Response<any[]>(false, 400, error.message);
     }
   }
+  async countUnread(recipientId: string) {
+    try {
+      const isValidObjectId = ObjectId.isValid(recipientId);
+      if (!isValidObjectId) {
+          return new Response<number>(false, 400, "Invalid ObjectId", undefined);
+      }
+      const count = await this.notificationModel.countDocuments({
+          recipient: new ObjectId(recipientId), // Filter by recipient
+          read: false, // Filter by read: false
+      });
+
+      return new Response<number>(true, 200, "Count operation successful", count);
+  } catch (error: any) {
+      return new Response<number>(false, 400, error.message);
+  }
+  }
+  async updateUnread(recipientId: string) {
+    try {
+      const isValidRecipientId = ObjectId.isValid(recipientId);
+
+      if (!isValidRecipientId) {
+          return new Response<boolean>(false, 400, "Invalid Recipient ObjectId");
+      }
+
+      const filter = {
+          recipient: new ObjectId(recipientId),
+          read: false,
+      };
+
+      const update = {
+          $set: {
+              read: true,
+          }
+      };
+
+      const result = await this.notificationModel.updateMany(filter, update);
+
+      if (result.modifiedCount > 0) {
+          return new Response<boolean>(true, 200, "Notifications marked as read successfully");
+      } else {
+          return new Response<boolean>(false, 404, "No matching notifications found to mark as read");
+      }
+  } catch (error: any) {
+      return new Response<boolean>(false, 400, error.message);
+  }
+  }
 
   async datatable(data: any): Promise<Response<any>> {
     try {

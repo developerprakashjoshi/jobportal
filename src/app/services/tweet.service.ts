@@ -70,22 +70,46 @@ export default class TweetService extends Service {
       if (!room) {
         return new Response<any[]>(true, 200, "Room not found", undefined);
       }
-  
+      console.log("Room") 
+      console.log(room);
       // Save the tweet as a Tweet document
       const tweet = new Tweet({
         content,
         sender,
         room: roomId,
+        read:false,
       });
-  
+      
       // Save the tweet in the database
       const savedTweet: any = await tweet.save();
-   
+      console.log("savedTweet")
+      console.log(savedTweet)
+
+      let recipientId;
+      // Check if sender matches any participant and select the other element
+      if (room.participants[0].equals(sender)) {
+        recipientId = room.participants[1];
+      } else if (room.participants[1].equals(sender)) {
+        recipientId = room.participants[0];
+      } else {
+        return new Response<any[]>(true, 201, "Sender is not in the participants array.",[] );
+      }
+
+      let recipientName;
+      // Check if sender matches any participant and select the other element
+      if (room.participants[0].equals(sender)) {
+        recipientName = room.participantsName[1];
+      } else if (room.participants[1].equals(sender)) {
+        recipientName = room.participantsName[0];
+      } else {
+        return new Response<any[]>(true, 201, "Sender is not in the participants array.",[] );
+      }
+
       let notification = new Notification()
       notification.sender = sender
-      notification.recipient = room.participants[1]
-      notification.commonUser=room.participants[1]
-      notification.content = `${room.participantsName[1]}: ${content} at ${new Date()}`
+      notification.recipient = recipientId
+      notification.commonUser=recipientId
+      notification.content = `${recipientName}: ${content} at ${new Date()}`
       notification.type = "Message"
       notification.createdAt = new Date();
       notification.createdBy =sender
@@ -94,8 +118,8 @@ export default class TweetService extends Service {
       // Push the tweet's _id to the Room's messages array
       room.messages.push(savedTweet._id);
       await room.save();
-      const recruiterReceiver = await this.recruiterModel.findById(room.participants[1]);
-      const userReceiver = await this.userModel.findById(room.participants[1]);
+      const recruiterReceiver = await this.recruiterModel.findById(recipientId);
+      const userReceiver = await this.userModel.findById(recipientId);
 
       const recruiterSender = await this.recruiterModel.findById(sender);
       const userSender = await this.userModel.findById(sender);
@@ -111,7 +135,7 @@ export default class TweetService extends Service {
       let subject="New Message"
       let text=`Hi ${firstNameReceiver} ${lastNameReceiver},
 
-      You've received a new message from a ${room.participantsName[0]}. Check your inbox to continue the conversation.
+      You've received a new message from a ${firstNameSender}. Check your inbox to continue the conversation.
       
       Regards,
       Simandhar Education
@@ -143,6 +167,87 @@ export default class TweetService extends Service {
       return new Response<any[]>(false, 400, error.message);
     }
   };
+  async messageReadCount(pid:string):Promise<Response<any[]>> {
+    try {
+      const isValidObjectId = ObjectId.isValid(pid);
+      if (!isValidObjectId) {
+        return new Response<any[]>(false, 400, "Invalid ObjectId", undefined);
+      }
+      let id=new ObjectId(pid);
+      const rooms:any = await Room.find({'participants.0':pid}).populate('messages');
+      
+      let totalUnreadMessages = 0;
+      for (const room of rooms) {
+        // Check if the first participant's ID matches one of the room's participants
+        if (room.participants[0]?.equals(pid)) {
+          for (const message of room.messages) {
+            if (message.read === false) {
+              totalUnreadMessages++;
+            }
+          }
+        }
+        if (room.participants[1]?.equals(pid)) {
+          for (const message of room.messages) {
+            if (message.read === false) {
+              totalUnreadMessages++;
+            }
+          }
+        }
+      }
+      console.log(totalUnreadMessages);
+      const output=[{count: totalUnreadMessages}]
+      return new Response<any[]>(true, 200, "Messages read successfully", output);
+    } catch (error:any) {
+      console.error('Error fetching user rooms:', error);
+      return new Response<any[]>(false, 400, error.message);
+    }
+  };
+
+  async messageReadUpdate(pid:string):Promise<Response<any[]>> {
+      try {
+        const isValidObjectId = ObjectId.isValid(pid);
+        if (!isValidObjectId) {
+          return new Response<any[]>(false, 400, "Invalid ObjectId", undefined);
+        }
+    
+        let id = new ObjectId(pid);
+        const rooms: any = await Room.find({ 'participants.0': pid }).populate('messages');
+    
+        let totalUnreadMessages = 0;
+    
+        for (const room of rooms) {
+          // Check if the first participant's ID matches one of the room's participants
+          if (room.participants[0]?.equals(pid)) {
+            for (const message of room.messages) {
+              if (message.read === false) {
+                totalUnreadMessages++;
+    
+                // Update the message's read status to true
+                await Tweet.updateOne({ _id: message._id }, { $set: { read: true } });
+              }
+            }
+          }
+          if (room.participants[1]?.equals(pid)) {
+            for (const message of room.messages) {
+              if (message.read === false) {
+                totalUnreadMessages++;
+    
+                // Update the message's read status to true
+                await Tweet.updateOne({ _id: message._id }, { $set: { read: true } });
+              }
+            }
+          }
+        }
+        
+        console.log(totalUnreadMessages);
+        const output = [{ count: totalUnreadMessages }];
+        return new Response<any[]>(true, 200, "Messages read successfully", output);
+      } catch (error: any) {
+        console.error('Error updating messages and fetching user rooms:', error);
+        return new Response<any[]>(false, 400, error.message);
+      }
+  };
+
 
   async getRoomsByName(name:string):Promise<Response<any[]>> {
     try {

@@ -312,7 +312,9 @@ export default class CompanyService extends Service {
   // }
   async  datatable(data: any): Promise<Response<any>> {
     try {
-      let { page, limit, search, sort } = data;
+      let { page, limit, search, sort,name,location,size } = data;
+      console.log("data................................");
+      console.log(data);
       let errorMessage = '';
   
       if (page !== undefined && limit !== undefined) {
@@ -344,18 +346,38 @@ export default class CompanyService extends Service {
       //     ],
       //   };
       // }
-      if (search !== undefined) {
-        const searchNumber = parseFloat(search);
-        if (!isNaN(searchNumber)) {
-          searchQuery = { size: { $eq: searchNumber } };
-        } else {
-          searchQuery = {
-            $or: [
-              { name: { $regex: search, $options: 'i' } },
-              { location: { $regex: search, $options: 'i' } },
-            ],
-          };
+
+
+      // if (search !== undefined) {
+      //   const searchNumber = parseFloat(search);
+      //   if (!isNaN(searchNumber)) {
+      //     searchQuery = { size: { $eq: searchNumber } };
+      //   } else {
+      //     searchQuery = {
+      //       $or: [
+      //         { name: { $regex: search, $options: 'i' } },
+      //         { location: { $regex: search, $options: 'i' } },
+      //       ],
+      //     };
+      //   }
+      // }
+      if (size !== undefined || name !== undefined || location !== undefined) {
+        const andConditions = [];
+      
+        if (size !== undefined) {
+          const sizeNumber = parseFloat(size);
+          andConditions.push({ size: { $eq: sizeNumber } });
         }
+      
+        if (name !== undefined) {
+          andConditions.push({ name: { $regex: name, $options: 'i' } });
+        }
+      
+        if (location !== undefined) {
+          andConditions.push({ location: { $regex: location, $options: 'i' } });
+        }
+      
+        searchQuery = { $and: andConditions };
       }
   
       let sortQuery = {};
@@ -383,8 +405,8 @@ export default class CompanyService extends Service {
           }
         },
         ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
-        { $skip: skip },
-        { $limit: limit },
+        // { $skip: skip },
+        // { $limit: limit },
         {
           $project: {
             logo: 1,

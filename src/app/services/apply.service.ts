@@ -110,14 +110,64 @@ export default class ApplyService extends Service {
 
   async getApplyData(userId:string):Promise<Response<any[]>> {
     try {
-      const records:any = await this.applyModel.findOne({ user: userId }).populate('user').populate('job').populate('job');
-      const interviewRecords = await this.interviewModel
-      .find({ user: records.user._id, job: records.job._id })
-      const combinedData:any = {
-        records,
-        interview: interviewRecords,
-      };
-      return new Response<any[]>(true, 200, "Retrive successfully", combinedData);
+      // const records:any = await this.applyModel.find({ user: userId }).populate('user').populate('job').populate('job');
+      // const records:any = await this.applyModel.find({ user: userId }).populate('job').populate('user');
+      // const interviewRecords = await this.interviewModel
+      // .find({ user: records.user._id, job: records.job._id })
+      // const combinedData:any = {
+      //   records,
+      //   interview: interviewRecords,
+      // };
+
+      const records:any = await this.applyModel.aggregate([
+        {
+          $match: {
+            user: new ObjectId(userId) // Convert the userId to ObjectId
+          }
+        },
+        {
+          $lookup: {
+            from: "jobs", // Name of the jobs collection
+            localField: "job",
+            foreignField: "_id",
+            as: "job"
+          }
+        },
+        {
+          $unwind: "$job" // Unwind the job array (since $lookup returns an array)
+        },
+        {
+          $lookup: {
+            from: "users", // Name of the jobs collection
+            localField: "user",
+            foreignField: "_id",
+            as: "user"
+          }
+        },
+        {
+          $unwind: "$user" // Unwind the job array (since $lookup returns an array)
+        },
+        // {
+        //   $lookup: {
+        //     from: "interviews", // Name of the jobs collection
+        //     localField: "job._id",
+        //     foreignField: "job",
+        //     as: "interview"
+        //   }
+        // },
+        // {
+        //   $unwind: "$interview" // Unwind the job array (since $lookup returns an array)
+        // }
+      ])
+      const dataSet= await Promise.all(records.map(async(record:any) =>{
+        console.log(record.job._id)
+        console.log(record.user._id)
+        const records = await this.interviewModel.find({user:record.user._id,job:record.job._id});
+        return {...record,interview:records}
+      }))
+      // 
+
+      return new Response<any[]>(true, 200, "Retrive successfully", dataSet);
     } catch (error:any) {
       console.error('Error fetching :', error);
       return new Response<any[]>(false, 400, error.message);
@@ -250,7 +300,7 @@ export default class ApplyService extends Service {
         let notification = new Notification()
         notification.sender = recruiters._id
         notification.content = job.title
-        notification.content = `Great news! Your profile has been shortlisted for the ${job.title} position`
+        notification.content = `Great news! Your profile has been shortlisted for the ${job.title} position. Expect further communication from us soon.`
         notification.createdAt = new Date();
         notification.createdBy = recruiters._id
         notification.type = "The approval has been done!."

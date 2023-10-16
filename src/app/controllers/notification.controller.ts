@@ -59,6 +59,19 @@ export default class NotificationController extends Controller {
     res.status(result.statusCode).json(result);
   }
 
+  static async countUnread(req: Request, res: Response) {
+    let id = req.params.id;
+    let notificationService = new NotificationService();
+    const result = await notificationService.countUnread(id)
+    res.status(result.statusCode).json(result);
+  }
+  static async updateUnread(req: Request, res: Response) {
+    let id = req.params.id;
+    let notificationService = new NotificationService();
+    const result = await notificationService.updateUnread(id)
+    res.status(result.statusCode).json(result);
+  }
+
   static async datatable(req: Request, res: Response) {
     const data = req.query
     let addressService = new NotificationService();

@@ -909,7 +909,7 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
 
   async datatableAdmin(data: any): Promise<Response<any>> {
     try {
-      let { page, limit, search, sort } = data;
+      let { page, limit, search, sort,name,email,job,designation,city } = data;
       let errorMessage = '';
 
       if (page !== undefined && limit !== undefined) {
@@ -938,9 +938,40 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
             { lastName: { $regex: search, $options: 'i' } },
             { email: { $regex: search, $options: 'i' } },
             { jobTitle: { $regex: search, $options: 'i' } },
+            { designation: { $regex: search, $options: 'i' } },
             { 'addresses.city': { $regex: search, $options: 'i' } },
+            { 'experiences.jobTitle': { $regex: search, $options: 'i' } },
           ],
         };
+      }
+
+      if (name !== undefined || email !== undefined || job !== undefined|| designation !== undefined || city !== undefined) {
+        const andConditions = [];
+    
+        if (name !== undefined) {
+          andConditions.push({$or: [
+            { firstName: { $regex: name, $options: 'i' } },
+            { lastName: { $regex: name, $options: 'i' } },
+          ]});
+        }
+      
+        if (email !== undefined) {
+          andConditions.push({ email: { $regex: email, $options: 'i' } });
+        }
+
+        if (job !== undefined) {
+          andConditions.push({ 'experiences.jobTitle': { $regex: job, $options: 'i' } });
+        }
+
+        if (designation !== undefined) {
+          andConditions.push({ 'experiences.jobTitle': { $regex: designation, $options: 'i' } });
+        }
+
+        if (city !== undefined) {
+          andConditions.push({ 'addresses.city': { $regex: city, $options: 'i' } });
+        }
+      
+        searchQuery = { $and: andConditions };
       }
 
       let sortQuery = {};
@@ -968,12 +999,12 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
             }
           },
           ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
-          {
-            $skip: skip
-          },
-          {
-            $limit: limit
-          },
+          // {
+          //   $skip: skip
+          // },
+          // {
+          //   $limit: limit
+          // },
           {
             $lookup: {
               from: 'applies',
@@ -1307,8 +1338,9 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
 
   async datatable(data: any): Promise<Response<any>> {
     try {
-        let { page, limit, search, sort, token } = data;
-
+      let { page, limit, search, sort, token,name,email,title,status } = data;
+      console.log('datatable')
+      console.log(data);
         let errorMessage = '';
         if (page !== undefined && limit !== undefined) {
             if (isNaN(page) || !Number.isInteger(Number(page)) || isNaN(limit) || !Number.isInteger(Number(limit))) {
@@ -1337,6 +1369,33 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
                     { title: { $regex: search, $options: 'i' } },
                 ],
             };
+        }
+
+        if ( name !== undefined || title !== undefined || email !== undefined  || status !== undefined) {
+          const andConditions = [];
+        
+          if (name !== undefined) {
+           andConditions.push({$or: [
+              { 'userDetails.firstName': { $regex: name, $options: 'i' } },
+              { 'userDetails.lastName': { $regex: name, $options: 'i' } },
+            ]})
+          }
+        
+          if (title !== undefined) {
+            andConditions.push({ title: { $regex: title, $options: 'i' } });
+          }
+          if (email !== undefined) {
+            andConditions.push( { 'userDetails.email': { $regex: email, $options: 'i' } });
+          }
+
+          if (status !== undefined ) {
+            console.log("status")
+            console.log(status)
+            if(status !== 'All' && status !== ''){
+             andConditions.push( { 'appliedDetails.status': { $eq: status} }); 
+            }
+          }
+          searchQuery = { $and: andConditions };
         }
 
         let sortQuery = {};
@@ -1394,12 +1453,12 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
             // {
             //   ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
             // },
-            {
-                $skip: skip // Apply skip
-            },
-            {
-                $limit: limit // Apply limit
-            },
+            // {
+            //     $skip: skip // Apply skip
+            // },
+            // {
+            //     $limit: limit // Apply limit
+            // },
             {
                 $project: {
                     _id: 1,
@@ -1458,7 +1517,7 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
 
 async datatableResume(data: any): Promise<Response<any>> {
   try {
-      let { page, limit, search, sort, token } = data;
+      let { page, limit, search, sort, token,name,title } = data;
 
       let errorMessage = '';
       if (page !== undefined && limit !== undefined) {
@@ -1488,6 +1547,21 @@ async datatableResume(data: any): Promise<Response<any>> {
                   { title: { $regex: search, $options: 'i' } },
               ],
           };
+      }
+      if ( name !== undefined || title !== undefined) {
+        const andConditions = [];
+      
+        if (name !== undefined) {
+         andConditions.push({$or: [
+            { 'userDetails.firstName': { $regex: name, $options: 'i' } },
+            { 'userDetails.lastName': { $regex: name, $options: 'i' } },
+          ]})
+        }
+      
+        if (title !== undefined) {
+          andConditions.push({ title: { $regex: title, $options: 'i' } });
+        }
+        searchQuery = { $and: andConditions };
       }
 
       let sortQuery = {};
@@ -1543,12 +1617,12 @@ async datatableResume(data: any): Promise<Response<any>> {
           // {
           //   ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
           // },
-          {
-              $skip: skip // Apply skip
-          },
-          {
-              $limit: limit // Apply limit
-          },
+          // {
+          //     $skip: skip // Apply skip
+          // },
+          // {
+          //     $limit: limit // Apply limit
+          // },
           {
               $project: {
                   _id: 1,

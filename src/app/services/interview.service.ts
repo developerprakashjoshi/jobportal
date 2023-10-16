@@ -5,8 +5,8 @@ import Response from "@libs/response";
 import Interview from "@models/interview.schema";
 import User from "@models/interview.schema";
 import Jobs from "@models/job.schema";
-import  Notification  from "@models/notification.schema";
-import {Transporter} from "@config/mail";
+import Notification from "@models/notification.schema";
+import { Transporter } from "@config/mail";
 import { ObjectId } from "mongodb";
 
 export default class InterviewService extends Service {
@@ -19,12 +19,14 @@ export default class InterviewService extends Service {
     this.jobModel = Jobs;
     this.interviewModel = AppDataSource.model("Interview");
     this.userModel = AppDataSource.model("User");
-    this.notificationModel = AppDataSource.model('Notification');
-
+    this.notificationModel = AppDataSource.model("Notification");
   }
   async count(): Promise<Response<any[]>> {
     try {
-      const result = await this.interviewModel.countDocuments({deletedAt:null,createdBy:'64bd4d01c02b6a3246207fc9'});
+      const result = await this.interviewModel.countDocuments({
+        deletedAt: null,
+        createdBy: "64bd4d01c02b6a3246207fc9",
+      });
       return new Response<any[]>(
         true,
         200,
@@ -107,11 +109,15 @@ export default class InterviewService extends Service {
     try {
       const existingInterview = await Interview.findOne({
         user: data.candidateId,
-        job: data.jobId
+        job: data.jobId,
       });
-  
+
       if (existingInterview) {
-        return new Response<any[]>(false, 400, "Record already exists for candidateId and jobId");
+        return new Response<any[]>(
+          false,
+          400,
+          "Record already exists for candidateId and jobId"
+        );
       }
       let interview = new Interview();
       interview.user = data.candidateId;
@@ -193,7 +199,6 @@ export default class InterviewService extends Service {
       }
 
       const interview = await this.interviewModel.findById(pid);
-      
 
       if (!interview) {
         return new Response<any[]>(true, 404, "Record not found");
@@ -203,74 +208,68 @@ export default class InterviewService extends Service {
         // Check if status is provided in the data
         interview.status = data.status;
       }
-      
+
       interview.updatedAt = new Date();
       interview.updatedBy = data.updatedBy;
       interview.updatedFrom = data.ip;
 
       const result = await interview.save();
-        console.log('*result*')
-        console.log(result)
-        
-        const candidateId = interview.user;
-        let checkCandidateId = await this.userModel.find({_id:candidateId});
-        let candidateEmail = checkCandidateId[0].email
-        const jobId = result.job.toString();
-        const job = await this.jobModel.findById(jobId)
-        
+      console.log("*result*");
+      console.log(result);
 
-      if(result.status === 'true'){
-        
-        let notification = new Notification()
-        notification.sender = checkCandidateId[0]._id
-        notification.content = job.title
-        notification.content = `${checkCandidateId[0].firstName} ${checkCandidateId[0].lastName},\n\n Good news! An interview has been scheduled for the ${job.title} position.`
+      const candidateId = interview.user;
+      let checkCandidateId = await this.userModel.find({ _id: candidateId });
+      let candidateEmail = checkCandidateId[0].email;
+      const jobId = result.job.toString();
+      const job = await this.jobModel.findById(jobId);
+
+      if (result.status === "true") {
+        let notification = new Notification();
+        notification.sender = checkCandidateId[0]._id;
+        notification.content = job.title;
+        notification.content = `${checkCandidateId[0].firstName} ${checkCandidateId[0].lastName},\n\n Good news! An interview has been scheduled for the ${job.title} position.`;
         notification.createdAt = new Date();
-        notification.createdBy = result.createdBy
-        notification.type = "An interview has been scheduled."
-        notification.createdFrom = data.ip
-        const resultNotification :any = await notification.save()
-        
-        let from=process.env.EMAIL_FROM
-        let to= candidateEmail
-        let subject="Interview Schedule"
+        notification.createdBy = result.createdBy;
+        notification.type = "An interview has been scheduled.";
+        notification.createdFrom = data.ip;
+        const resultNotification: any = await notification.save();
+
+        let from = process.env.EMAIL_FROM;
+        let to = candidateEmail;
+        let subject = "Interview Schedule";
         // let text = `Dear ${checkCandidateId[0].firstName} ${checkCandidateId[0].lastName}, Your interview has been scheduled for [${interview.interviewDate}/${interview.interviewTime}/${interview.interviewLink}]. Please prepare for the interview and arrive on time. Best regards`;
         let text = `Hello ${checkCandidateId[0].firstName} ${checkCandidateId[0].lastName},
 
         Good news! An interview has been scheduled for the ${job.title} position. Check your email for detailed information.
 
         Regards,
-        Simandhar Education`
-  
-  
-        const message = {from,to,subject,text};
+        Simandhar Education`;
+
+        const message = { from, to, subject, text };
         const resultEmail = await Transporter.sendMail(message);
-      }else{
-        
-        let notification = new Notification()
-        notification.sender = checkCandidateId[0]._id
-        notification.content = job.title
-        notification.content = `${checkCandidateId[0].firstName} ${checkCandidateId[0].lastName},\n\n We regret to inform you that your application for the ${job.title} position's skills interview has not been successful.`
+      } else {
+        let notification = new Notification();
+        notification.sender = checkCandidateId[0]._id;
+        notification.content = job.title;
+        notification.content = `${checkCandidateId[0].firstName} ${checkCandidateId[0].lastName},\n\n We regret to inform you that your application for the ${job.title} position's skills interview has not been successful.`;
         notification.createdAt = new Date();
-        notification.createdBy = result.createdBy
-        notification.type = "We regret to inform you that your application for the ${job.title} position's skills interview has not been successful."
-        notification.createdFrom = data.ip
-        const resultNotification :any = await notification.save()
+        notification.createdBy = result.createdBy;
+        notification.type =
+          "We regret to inform you that your application for the ${job.title} position's skills interview has not been successful.";
+        notification.createdFrom = data.ip;
+        const resultNotification: any = await notification.save();
 
-
-
-        let from=process.env.EMAIL_FROM
-        let to= candidateEmail
-        let subject="Interview Cancel."
+        let from = process.env.EMAIL_FROM;
+        let to = candidateEmail;
+        let subject = "Interview Cancel.";
         let text = `Hello ${checkCandidateId[0].firstName} ${checkCandidateId[0].lastName},
 
         We regret to inform you that your application for the ${job.title} position's skills interview has not been successful. Keep applying for other opportunities with us.
 
         Regards,
         Simandhar Education `;
-  
-  
-        const message = {from,to,subject,text};
+
+        const message = { from, to, subject, text };
         const resultEmail = await Transporter.sendMail(message);
       }
 
@@ -342,7 +341,7 @@ export default class InterviewService extends Service {
 
   async datatable(data: any): Promise<Response<any>> {
     try {
-      let { page, limit, search, sort, token } = data;
+      let { page, limit, search, sort, token, date, name, email, phone } = data;
 
       let errorMessage = "";
 
@@ -405,6 +404,52 @@ export default class InterviewService extends Service {
           };
         }
       }
+
+      if (
+        name !== undefined ||
+        email !== undefined ||
+        phone !== undefined ||
+        date !== undefined
+      ) {
+        const andConditions = [];
+
+        if (name !== undefined) {
+          andConditions.push({
+            $or: [
+              { candidateName: { $regex: name, $options: "i" } },
+              { "userDetails.firstName": { $regex: name, $options: "i" } },
+              { "userDetails.lastName": { $regex: name, $options: "i" } },
+            ],
+          });
+        }
+
+        if (email !== undefined) {
+          andConditions.push({
+            "userDetails.email": { $regex: email, $options: "i" },
+          });
+        }
+        if (phone !== undefined) {
+          andConditions.push({
+            "userDetails.phoneNo": { $regex: phone, $options: "i" },
+          });
+        }
+
+        if (date !== undefined) {
+          const searchDate = new Date(date);
+          console.log(searchDate)
+          if (!isNaN(searchDate.getTime())) {
+          //   // Valid date format, construct a date range for search
+          //   const nextDay = new Date(searchDate);
+          //   nextDay.setDate(nextDay.getDate() + 1);
+
+          andConditions.push( { interviewDate: { $eq: searchDate } });
+
+          }
+        }
+
+        searchQuery = { $and: andConditions };
+      }
+
       if (token !== undefined) {
         searchQuery = {
           ...searchQuery,
@@ -484,7 +529,7 @@ export default class InterviewService extends Service {
                 // userDetails:1,
                 firstName: "$userDetails.firstName",
                 lastName: "$userDetails.lastName",
-                title:"$jobDetails.title",
+                title: "$jobDetails.title",
                 fullName: {
                   $concat: [
                     "$userDetails.firstName",
@@ -504,7 +549,10 @@ export default class InterviewService extends Service {
             },
           ])
           .exec(),
-          this.interviewModel.countDocuments({deletedAt:null,createdBy:token})
+        this.interviewModel.countDocuments({
+          deletedAt: null,
+          createdBy: token,
+        }),
         // this.interviewModel.countDocuments({ deletedAt: { $exists: false } }),
       ]);
 

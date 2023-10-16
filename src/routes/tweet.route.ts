@@ -11,6 +11,8 @@ route.post('/send-message',  TweetController.sendMessage);
 route.get('/rooms-user/:userId',  TweetController.getUserRooms);
 route.get('/rooms-message/:userId',  TweetController.getRooms);
 route.get('/rooms-search/:roomName',  TweetController.getRoomsByName);
+route.get('/message-count-read/:userId',  TweetController.readCount);
+route.patch('/message-update-read/:userId',  TweetController.readUpdate);
 
 export default route;
 

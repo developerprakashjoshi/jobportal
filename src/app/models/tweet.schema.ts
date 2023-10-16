@@ -7,6 +7,7 @@ export interface ITweet extends Document {
   sender: IAccount['_id'];
   room: IRoom['_id'];
   timestamp?: Date;
+  read: boolean;
 }
 
 const messageSchema: Schema = new mongoose.Schema({
@@ -14,6 +15,7 @@ const messageSchema: Schema = new mongoose.Schema({
   sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   room: { type: mongoose.Schema.Types.ObjectId, ref: 'Room', required: true },
   timestamp: { type: Date, default: Date.now },
+  read: { type: Boolean, default: false },
 });
 
 const Tweet: Model<ITweet> = mongoose.model<ITweet>('Tweet', messageSchema);

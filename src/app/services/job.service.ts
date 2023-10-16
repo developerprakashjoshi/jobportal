@@ -167,29 +167,29 @@ export default class JobService extends Service {
       const resultEmail = await Transporter.sendMail(message);
       console.log(resultEmail)
 
-      const searchResult = await this.searchModel.aggregate([
-        {
-          $match: {
-            keywords: { $regex: data.keywords, $options: 'i' }
-          }
-        },
-      ]).exec();
-      searchResult.map((search:any)=>{
-        let fromSearch=process.env.EMAIL_FROM
-        let toSearch=search.email
-        let bccSearch = "developer.prakashjoshi@gmail.com"; // Add the BCC email address here
-        let subjectSearch="Exciting new job opportunities"
-        let textSearch=`Hello,
+      // const searchResult = await this.searchModel.aggregate([
+      //   {
+      //     $match: {
+      //       keywords: { $regex: data.keywords, $options: 'i' }
+      //     }
+      //   },
+      // ]).exec();
+      // searchResult.map((search:any)=>{
+      //   let fromSearch=process.env.EMAIL_FROM
+      //   let toSearch=search.email
+      //   let bccSearch = "developer.prakashjoshi@gmail.com"; // Add the BCC email address here
+      //   let subjectSearch="Exciting new job opportunities"
+      //   let textSearch=`Hello,
 
-        Exciting new job opportunities are available! Check out our latest job listings and apply today to boost your career.
+      //   Exciting new job opportunities are available! Check out our latest job listings and apply today to boost your career.
         
-        Regards,
-        Simandhar Education
+      //   Regards,
+      //   Simandhar Education
         
-        `  
-        const messageSearch = {fromSearch, toSearch,bccSearch,subjectSearch,textSearch};
-        console.log(messageSearch)
-      })
+      //   `  
+      //   const messageSearch = {fromSearch, toSearch,bccSearch,subjectSearch,textSearch};
+      //   console.log(messageSearch)
+      // })
 
       }
       
@@ -838,10 +838,1060 @@ export default class JobService extends Service {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
     }
   }
+  async searchApprovedJob(data: any): Promise<Response<any>> {
+    try {
+      let { page, limit, search, sort,skills,designation,company,experience,location,jobType,datePosted,payRange,salaryEstimates,others } = data;
+      console.log(data)
+      let errorMessage = '';
 
+      if (page !== undefined && limit !== undefined) {
+        if (isNaN(page) || !Number.isInteger(Number(page)) || isNaN(limit) || !Number.isInteger(Number(limit))) {
+          errorMessage = "Both 'page' and 'limit' must be integers.";
+        }
+      } else if (page !== undefined) {
+        if (isNaN(page) || !Number.isInteger(Number(page))) {
+          errorMessage = "'page' must be an integer.";
+        }
+      } else if (limit !== undefined) {
+        if (isNaN(limit) || !Number.isInteger(Number(limit))) {
+          errorMessage = "'limit' must be an integer.";
+        }
+      }
+
+      if (errorMessage) {
+        return new Response<any>(false, 400, errorMessage);
+      }
+
+
+      let searchQuery:any = {};
+
+      if (
+        skills!==undefined || designation!==undefined ||company !==undefined ||  others!==undefined ||
+        experience !==undefined || location !==undefined ||jobType !==undefined|| 
+        datePosted !==undefined || payRange !==undefined || salaryEstimates !==undefined
+      ) {
+        const andConditions = [];
+
+        if (others !== undefined) {
+          const matchingCompany = await this.companyModel.find({
+            $or: [
+              { name: { $regex: others, $options: 'i' } },
+            ],
+          }).select('_id');
+          const companyIds:any = matchingCompany.map((company: any) => company._id);
+          console.log("companyIds")
+          console.log(companyIds)
+          andConditions.push({$or:[
+            { company: { $in: companyIds } },
+            { description: { $regex: others, $options: 'i' } },
+            { title: { $regex: others, $options: 'i' } },
+          ]})
+        }
+
+        if (experience !== undefined && experience !=="") {
+          console.log("experience")
+          console.log(experience)
+          andConditions.push({
+            yearOfExperience: { $eq: parseInt(experience)},
+          });
+        }
+
+        if (location !== undefined) {
+          console.log("experience")
+          console.log(location)
+          andConditions.push({
+            reportAddress: { $regex: location, $options: 'i'},
+          });
+        }
+
+        // if (location !== undefined) {
+        //   andConditions.push({
+        //     yearOfExperience: { $regex: location, $options: 'i' },
+        //   });
+        // }
+
+
+        if (datePosted === 'today') {
+          console.log("date")
+          const today = new Date();
+          const startOfToday = new Date(today);
+          startOfToday.setHours(0, 0, 0, 0);
+          andConditions.push({
+            createdAt: {
+              $gte: startOfToday,
+              $lt: today,
+            }
+          });
+        }
+        //this week
+        if (datePosted === 'this-week') {
+          console.log("This Week");
+          const today = new Date();
+          const startOfThisWeek = new Date(today);
+          startOfThisWeek.setDate(today.getDate() - today.getDay()); // Go back to the first day of the week (Sunday).
+          startOfThisWeek.setHours(0, 0, 0, 0);
+          const endOfThisWeek = new Date(startOfThisWeek);
+          endOfThisWeek.setDate(startOfThisWeek.getDate() + 7); // Go forward to the last day of the week (Saturday).
+          andConditions.push({
+            createdAt: {
+              $gte: startOfThisWeek,
+              $lt: today,
+            }
+          });
+        }
+        
+        if (datePosted === 'this-month') {
+          console.log("This Month");
+          const today = new Date();
+          const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+          const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+          endOfMonth.setHours(23, 59, 59, 999);
+
+          andConditions.push({
+            createdAt: {
+              $gte: startOfMonth,
+              $lt: endOfMonth,
+            }
+          });
+        }
+
+        if (datePosted === 'this-year') {
+          console.log("This Year");
+          const today = new Date();
+          const startOfYear = new Date(today.getFullYear(), 0, 1);
+          const endOfYear = new Date(today.getFullYear(), 11, 31);
+          endOfYear.setHours(23, 59, 59, 999);
+
+          andConditions.push({
+            createdAt: {
+              $gte: startOfYear,
+              $lt: endOfYear,
+            }
+          });
+        }
+        if (payRange !== undefined ) {
+          console.log("Pay Range");
+          // searchQuery.$and.push({ payRange: { $regex: payRange, $options: 'i' } });
+          andConditions.push({ payRange: { $regex: payRange, $options: 'i' } })
+        }
+
+        if (payRange !== undefined ) {
+          console.log("Pay Range");
+          // searchQuery.$and.push({ payRange: { $regex: payRange, $options: 'i' } });
+          andConditions.push({ payRange: { $regex: payRange, $options: 'i' } });
+        }
+        if (jobType !== undefined ) {
+          console.log("Pay Range");
+          // searchQuery.$and.push({ payRange: { $regex: payRange, $options: 'i' } });
+          andConditions.push({ jobType: { $regex: jobType, $options: 'i' } });
+        }
+
+
+        searchQuery = { $and: andConditions };
+      }
+
+      if (search !== undefined) {
+        //For getting recruiterName from user 
+        const matchingUsers = await this.recruiterModel.find({
+          $or: [
+            { firstName: { $regex: search, $options: 'i' } },
+            { LastName: { $regex: search, $options: 'i' } },
+          ],
+        }).select('_id');
+        const matchingUserIds = matchingUsers.map((recruiter: any) => recruiter._id);
+        //For getting companyName from company
+        const matchingCompany = await this.companyModel.find({
+          $or: [
+            { name: { $regex: search, $options: 'i' } },
+          ],
+        }).select('_id');
+        const companyIds:any = matchingCompany.map((company: any) => company._id);
+        //end
+        console.log("HERE");
+        if (jobType !== undefined) {
+      console.log("HERE IF");
+          searchQuery.$and= [
+            { jobType: { $regex: jobType, $options: 'i' } },
+            {
+              $or: [
+                { recruiter: { $in: matchingUserIds } },
+                { company: { $in: companyIds } },
+                { title: { $regex: search, $options: 'i' } },
+                { reportAddress: { $regex: search, $options: 'i' } },
+                { schedule: { $regex: search, $options: 'i' } },
+                { startDate: { $regex: search, $options: 'i' } },
+                { payRange: { $regex: search, $options: 'i' } },
+                { min: { $regex: search, $options: 'i' } },
+                { max: { $regex: search, $options: 'i' } },
+                { perMonth: { $regex: search, $options: 'i' } },
+                { supplementalPay: { $regex: search, $options: 'i' } },
+                { benefitsOffer: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } },
+                { isCVRequired: { $regex: search, $options: 'i' } },
+                { isDeadlineApplicable: { $regex: search, $options: 'i' } },
+                { deadlineDate: { $regex: search, $options: 'i' } },
+                { noOfHiring: { $regex: search, $options: 'i' } },
+                { hiringSlot: { $regex: search, $options: 'i' } },
+                { aboutCompany: { $regex: search, $options: 'i' } },
+                { educationLevel: { $regex: search, $options: 'i' } },
+                { yearOfExperience: { $regex: search, $options: 'i' } },
+                { createdAt: { $regex: search, $options: 'i' } },
+                { createdBy: { $regex: search, $options: 'i' } },
+                { createdFrom: { $regex: search, $options: 'i' } },
+                { status: { $regex: search, $options: 'i' } },
+                { approveAdmin: { $regex: search, $options: 'i' } },
+                { updatedAt: { $regex: search, $options: 'i' } },
+              ],
+            }
+          ]
+          if (datePosted === 'today') {
+            console.log("date")
+            const today = new Date();
+            const startOfToday = new Date(today);
+            startOfToday.setHours(0, 0, 0, 0);
+            searchQuery.$and.push({
+              createdAt: {
+                $gte: startOfToday,
+                $lt: today,
+              }
+            });
+          }
+          //this week
+          if (datePosted === 'this-week') {
+            console.log("This Week");
+            const today = new Date();
+            const startOfThisWeek = new Date(today);
+            startOfThisWeek.setDate(today.getDate() - today.getDay()); // Go back to the first day of the week (Sunday).
+            startOfThisWeek.setHours(0, 0, 0, 0);
+            const endOfThisWeek = new Date(startOfThisWeek);
+            endOfThisWeek.setDate(startOfThisWeek.getDate() + 7); // Go forward to the last day of the week (Saturday).
+            searchQuery.$and.push({
+              createdAt: {
+                $gte: startOfThisWeek,
+                $lt: today,
+              }
+            });
+          }
+          
+          if (datePosted === 'this-month') {
+            console.log("This Month");
+            const today = new Date();
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            endOfMonth.setHours(23, 59, 59, 999);
+
+            searchQuery.$and.push({
+              createdAt: {
+                $gte: startOfMonth,
+                $lt: endOfMonth,
+              }
+            });
+          }
+
+          if (datePosted === 'this-year') {
+            console.log("This Year");
+            const today = new Date();
+            const startOfYear = new Date(today.getFullYear(), 0, 1);
+            const endOfYear = new Date(today.getFullYear(), 11, 31);
+            endOfYear.setHours(23, 59, 59, 999);
+
+            searchQuery.$and.push({
+              createdAt: {
+                $gte: startOfYear,
+                $lt: endOfYear,
+              }
+            });
+          }
+          if (payRange !== undefined ) {
+            console.log("Pay Range");
+            // searchQuery.$and.push({ payRange: { $regex: payRange, $options: 'i' } });
+            searchQuery.$and=[{ payRange: { $regex: payRange, $options: 'i' } }];
+          }
+         
+        }else{
+          console.log("HERE ELSE");
+          searchQuery = {
+            $or: [
+              { recruiter: { $in: matchingUserIds } },
+              { company: { $in: companyIds } },
+              { title: { $regex: search, $options: 'i' } },
+              { reportAddress: { $regex: search, $options: 'i' } },
+              { schedule: { $regex: search, $options: 'i' } },
+              { startDate: { $regex: search, $options: 'i' } },
+              { min: { $regex: search, $options: 'i' } },
+              { max: { $regex: search, $options: 'i' } },
+              { perMonth: { $regex: search, $options: 'i' } },
+              { supplementalPay: { $regex: search, $options: 'i' } },
+              { benefitsOffer: { $regex: search, $options: 'i' } },
+              { description: { $regex: search, $options: 'i' } },
+              { isCVRequired: { $regex: search, $options: 'i' } },
+              { isDeadlineApplicable: { $regex: search, $options: 'i' } },
+              { deadlineDate: { $regex: search, $options: 'i' } },
+              { noOfHiring: { $regex: search, $options: 'i' } },
+              { hiringSlot: { $regex: search, $options: 'i' } },
+              { aboutCompany: { $regex: search, $options: 'i' } },
+              { educationLevel: { $regex: search, $options: 'i' } },
+              { yearOfExperience: { $regex: search, $options: 'i' } },
+              { createdAt: { $regex: search, $options: 'i' } },
+              { createdBy: { $regex: search, $options: 'i' } },
+              { createdFrom: { $regex: search, $options: 'i' } },
+              { status: { $regex: search, $options: 'i' } },
+              { approveAdmin: { $regex: search, $options: 'i' } },
+              { updatedAt: { $regex: search, $options: 'i' } },
+            ],
+          };
+          if (datePosted === 'Today') {
+            console.log("date")
+            const today = new Date();
+            const startOfToday = new Date(today);
+            startOfToday.setHours(0, 0, 0, 0);
+            searchQuery.$and=[{
+              createdAt: {
+                $gte: startOfToday,
+                $lt: today,
+              }
+            }];
+          }
+          //This week
+          if (datePosted === 'This Week') {
+            console.log("This Week");
+            const today = new Date();
+            const startOfThisWeek = new Date(today);
+            startOfThisWeek.setDate(today.getDate() - today.getDay()); // Go back to the first day of the week (Sunday).
+            startOfThisWeek.setHours(0, 0, 0, 0);
+            const endOfThisWeek = new Date(startOfThisWeek);
+            endOfThisWeek.setDate(startOfThisWeek.getDate() + 7); // Go forward to the last day of the week (Saturday).
+
+            searchQuery.$and=[{
+              createdAt: {
+                $gte: startOfThisWeek,
+                $lt: today,
+              }
+            }];
+          }
+
+          if (datePosted === 'This Month') {
+            console.log("This Month");
+            const today = new Date();
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            endOfMonth.setHours(23, 59, 59, 999);
+
+            searchQuery.$and=[{
+              createdAt: {
+                $gte: startOfMonth,
+                $lt: today,
+              }
+            }];
+          }
+
+          if (datePosted === 'This Year') {
+            console.log("This Year");
+            const today = new Date();
+            const startOfYear = new Date(today.getFullYear(), 0, 1);
+            const endOfYear = new Date(today.getFullYear(), 11, 31);
+            endOfYear.setHours(23, 59, 59, 999);
+            
+            searchQuery.$and=[{
+              createdAt: {
+                $gte: startOfYear,
+                $lt: today,
+              }
+            }];
+          }
+          if (payRange !== undefined ) {
+            console.log("Pay Range");
+            // searchQuery.$and.push({ payRange: { $regex: payRange, $options: 'i' } });
+            searchQuery.$and=[{ payRange: { $regex: payRange, $options: 'i' } }];
+          }
+
+
+        }
+        
+      }
+
+      let sortQuery = {};
+      if (sort !== undefined) {
+        const sortParams = sort.split(':');
+        if (sortParams.length === 2) {
+          const [column, order] = sortParams;
+          sortQuery = { [column]: order === 'desc' ? -1 : 1 };
+        }
+      } else {
+        sortQuery = { createdAt: -1 }
+      }
+
+      page = page === undefined ? 1 : parseInt(page);
+      limit = limit === undefined ? 10 : parseInt(limit);
+      const skip = (page - 1) * limit;
+      const totalApplied = await this.applyModel.countDocuments();
+      const [activeCount, inactiveCount] = await Promise.all([
+        this.jobModel.countDocuments({ status: "Active" }),
+        this.jobModel.countDocuments({ status: "Inactive" }),
+      ]);
+      const [records, totalCount] = await Promise.all([
+        this.jobModel.aggregate([
+          {
+            $match: {
+              $and: [
+                searchQuery,
+                {
+                  deletedAt: { $exists: false },
+                  approveAdmin:true,
+                  $or: [
+
+                    { approveAdmin: { $ne: null } },
+                    // { approveAdmin: true },
+                  ],
+                }
+              ]
+            }
+          },
+          ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
+          // { $skip: skip },
+          // { $limit: limit },
+          {
+            $lookup: {
+              from: 'recruiters',
+              localField: 'recruiter',
+              foreignField: '_id',
+              as: 'recruiter',
+            },
+          },
+          {
+            $lookup: {
+              from: 'companies',
+              localField: 'company',
+              foreignField: '_id',
+              as: 'company',
+            },
+          },
+          {
+            $addFields: {
+              recruiterName: {
+                $concat: [
+                  { $arrayElemAt: ['$recruiter.firstName', 0] },
+                  ' ',
+                  { $arrayElemAt: ['$recruiter.LastName', 0] }
+                ]
+              },
+              companyName: {
+                $arrayElemAt: ['$company.name', 0]
+              },
+              companyLogo: {
+                $arrayElemAt: ['$company.logo', 0]
+              },
+              createdOn: {
+                $dateToString: {
+                  date: "$createdAt",
+                  format: "%d-%m-%Y"
+                }
+              },
+              totalApplied: 500
+
+            }
+          },
+          {
+            $project: {
+              _id: 1,
+              reportToWork: 1,
+              isStartPlanned: 1,
+              user: 1,
+              title: 1,
+              reportAddress: 1,
+              jobType: 1,
+              schedule: 1,
+              startDate: 1,
+              payRange: 1,
+              min: 1,
+              max: 1,
+              perMonth: 1,
+              supplementalPay: 1,
+              benefitsOffer: 1,
+              description: 1,
+              isCVRequired: 1,
+              isDeadlineApplicable: 1,
+              deadlineDate: 1,
+              noOfHiring: 1,
+              hiringSlot: 1,
+              aboutCompany: 1,
+              educationLevel: 1,
+              yearOfExperience: 1,
+              createdAt: 1,
+              createdBy: 1,
+              createdFrom: 1,
+              status: 1,
+              approveAdmin: 1,
+              updatedAt: 1,
+              companyName: 1,
+              recruiterName: 1,
+              companyLogo:1,
+            },
+          },
+          {
+            $unwind: {
+              path: '$recruiter',
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          {
+            $unwind: {
+              path: '$company',
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+        ]).exec(),
+        this.jobModel.countDocuments({ deletedAt: { $exists: false } }),
+      ]);
+
+      if (records.length === 0) {
+        return new Response<any>(true, 200, 'No records available', {});
+      }
+
+      const jobIds = records.map((record: any) => record._id.toString());
+      const totalAppliedCounts = await Promise.all(jobIds.map((_id: string) => this.countApply(_id)));
+      records.forEach((record: any, index: number) => {
+        record.totalApplied = totalAppliedCounts[index];
+      });
+
+      const totalPages = Math.ceil(totalCount / limit);
+      const currentPage = page;
+      const output = {
+        records: records,
+        totalPages: totalPages !== null ? totalPages : 0,
+        currentPage: currentPage !== null ? currentPage : 0,
+        filterCount: records.length,
+        countRecords:records.length,
+        totalCount: totalCount,
+        activeStatus: activeCount,
+        inactiveStatus: inactiveCount,
+        totalApplicants: totalApplied,
+      };
+      return new Response<any>(true, 200, 'Read operation successful', output);
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
+
+  async searchApprovedTest(data: any): Promise<Response<any>> {
+    try {
+      let { page, limit, search, sort,skills,designation,company,experience,location,jobType,datePosted,payRange,salaryEstimates,others } = data;
+      console.log(data)
+      let errorMessage = '';
+
+      if (page !== undefined && limit !== undefined) {
+        if (isNaN(page) || !Number.isInteger(Number(page)) || isNaN(limit) || !Number.isInteger(Number(limit))) {
+          errorMessage = "Both 'page' and 'limit' must be integers.";
+        }
+      } else if (page !== undefined) {
+        if (isNaN(page) || !Number.isInteger(Number(page))) {
+          errorMessage = "'page' must be an integer.";
+        }
+      } else if (limit !== undefined) {
+        if (isNaN(limit) || !Number.isInteger(Number(limit))) {
+          errorMessage = "'limit' must be an integer.";
+        }
+      }
+
+      if (errorMessage) {
+        return new Response<any>(false, 400, errorMessage);
+      }
+
+
+      let searchQuery:any = {};
+
+      if (
+        skills!==undefined || designation!==undefined ||company !==undefined ||  others!==undefined ||
+        experience !==undefined || location !==undefined ||jobType !==undefined|| 
+        datePosted !==undefined || payRange !==undefined || salaryEstimates !==undefined
+      ) {
+        const andConditions = [];
+
+        if (others !== undefined) {
+          const matchingCompany = await this.companyModel.find({
+            $or: [
+              { name: { $regex: others, $options: 'i' } },
+            ],
+          }).select('_id');
+          const companyIds:any = matchingCompany.map((company: any) => company._id);
+          console.log("companyIds")
+          console.log(companyIds)
+          andConditions.push({$or:[
+            { company: { $in: companyIds } },
+            { description: { $regex: others, $options: 'i' } }
+          ]})
+        }
+
+        if (experience !== undefined) {
+          console.log("experience")
+          console.log(experience)
+          andConditions.push({yearOfExperience: { $eq: parseInt(experience) }});
+        }
+
+        if (location !== undefined) {
+          andConditions.push({
+            yearOfExperience: { $regex: location, $options: 'i' },
+          });
+        }
+
+
+        if (datePosted === 'today') {
+          console.log("date")
+          const today = new Date();
+          const startOfToday = new Date(today);
+          startOfToday.setHours(0, 0, 0, 0);
+          andConditions.push({
+            createdAt: {
+              $gte: startOfToday,
+              $lt: today,
+            }
+          });
+        }
+        //this week
+        if (datePosted === 'this-week') {
+          console.log("This Week");
+          const today = new Date();
+          const startOfThisWeek = new Date(today);
+          startOfThisWeek.setDate(today.getDate() - today.getDay()); // Go back to the first day of the week (Sunday).
+          startOfThisWeek.setHours(0, 0, 0, 0);
+          const endOfThisWeek = new Date(startOfThisWeek);
+          endOfThisWeek.setDate(startOfThisWeek.getDate() + 7); // Go forward to the last day of the week (Saturday).
+          andConditions.push({
+            createdAt: {
+              $gte: startOfThisWeek,
+              $lt: today,
+            }
+          });
+        }
+        
+        if (datePosted === 'this-month') {
+          console.log("This Month");
+          const today = new Date();
+          const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+          const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+          endOfMonth.setHours(23, 59, 59, 999);
+
+          andConditions.push({
+            createdAt: {
+              $gte: startOfMonth,
+              $lt: endOfMonth,
+            }
+          });
+        }
+
+        if (datePosted === 'this-year') {
+          console.log("This Year");
+          const today = new Date();
+          const startOfYear = new Date(today.getFullYear(), 0, 1);
+          const endOfYear = new Date(today.getFullYear(), 11, 31);
+          endOfYear.setHours(23, 59, 59, 999);
+
+          andConditions.push({
+            createdAt: {
+              $gte: startOfYear,
+              $lt: endOfYear,
+            }
+          });
+        }
+        if (payRange !== undefined ) {
+          console.log("Pay Range");
+          // searchQuery.$and.push({ payRange: { $regex: payRange, $options: 'i' } });
+          andConditions.push({ payRange: { $regex: payRange, $options: 'i' } });
+        }
+
+        searchQuery = { $and: andConditions };
+
+      }
+
+      if (search !== undefined) {
+        //For getting recruiterName from user 
+        const matchingUsers = await this.recruiterModel.find({
+          $or: [
+            { firstName: { $regex: search, $options: 'i' } },
+            { LastName: { $regex: search, $options: 'i' } },
+          ],
+        }).select('_id');
+        const matchingUserIds = matchingUsers.map((recruiter: any) => recruiter._id);
+        //For getting companyName from company
+        const matchingCompany = await this.companyModel.find({
+          $or: [
+            { name: { $regex: search, $options: 'i' } },
+          ],
+        }).select('_id');
+        const companyIds:any = matchingCompany.map((company: any) => company._id);
+        //end
+        console.log("HERE");
+        if (jobType !== undefined) {
+      console.log("HERE IF");
+          searchQuery.$and= [
+            { jobType: { $regex: jobType, $options: 'i' } },
+            {
+              $or: [
+                { recruiter: { $in: matchingUserIds } },
+                { company: { $in: companyIds } },
+                { title: { $regex: search, $options: 'i' } },
+                { reportAddress: { $regex: search, $options: 'i' } },
+                { schedule: { $regex: search, $options: 'i' } },
+                { startDate: { $regex: search, $options: 'i' } },
+                { payRange: { $regex: search, $options: 'i' } },
+                { min: { $regex: search, $options: 'i' } },
+                { max: { $regex: search, $options: 'i' } },
+                { perMonth: { $regex: search, $options: 'i' } },
+                { supplementalPay: { $regex: search, $options: 'i' } },
+                { benefitsOffer: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } },
+                { isCVRequired: { $regex: search, $options: 'i' } },
+                { isDeadlineApplicable: { $regex: search, $options: 'i' } },
+                { deadlineDate: { $regex: search, $options: 'i' } },
+                { noOfHiring: { $regex: search, $options: 'i' } },
+                { hiringSlot: { $regex: search, $options: 'i' } },
+                { aboutCompany: { $regex: search, $options: 'i' } },
+                { educationLevel: { $regex: search, $options: 'i' } },
+                { yearOfExperience: { $regex: search, $options: 'i' } },
+                { createdAt: { $regex: search, $options: 'i' } },
+                { createdBy: { $regex: search, $options: 'i' } },
+                { createdFrom: { $regex: search, $options: 'i' } },
+                { status: { $regex: search, $options: 'i' } },
+                { approveAdmin: { $regex: search, $options: 'i' } },
+                { updatedAt: { $regex: search, $options: 'i' } },
+              ],
+            }
+          ]
+          if (datePosted === 'today') {
+            console.log("date")
+            const today = new Date();
+            const startOfToday = new Date(today);
+            startOfToday.setHours(0, 0, 0, 0);
+            searchQuery.$and.push({
+              createdAt: {
+                $gte: startOfToday,
+                $lt: today,
+              }
+            });
+          }
+          //this week
+          if (datePosted === 'this-week') {
+            console.log("This Week");
+            const today = new Date();
+            const startOfThisWeek = new Date(today);
+            startOfThisWeek.setDate(today.getDate() - today.getDay()); // Go back to the first day of the week (Sunday).
+            startOfThisWeek.setHours(0, 0, 0, 0);
+            const endOfThisWeek = new Date(startOfThisWeek);
+            endOfThisWeek.setDate(startOfThisWeek.getDate() + 7); // Go forward to the last day of the week (Saturday).
+            searchQuery.$and.push({
+              createdAt: {
+                $gte: startOfThisWeek,
+                $lt: today,
+              }
+            });
+          }
+          
+          if (datePosted === 'this-month') {
+            console.log("This Month");
+            const today = new Date();
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            endOfMonth.setHours(23, 59, 59, 999);
+
+            searchQuery.$and.push({
+              createdAt: {
+                $gte: startOfMonth,
+                $lt: endOfMonth,
+              }
+            });
+          }
+
+          if (datePosted === 'this-year') {
+            console.log("This Year");
+            const today = new Date();
+            const startOfYear = new Date(today.getFullYear(), 0, 1);
+            const endOfYear = new Date(today.getFullYear(), 11, 31);
+            endOfYear.setHours(23, 59, 59, 999);
+
+            searchQuery.$and.push({
+              createdAt: {
+                $gte: startOfYear,
+                $lt: endOfYear,
+              }
+            });
+          }
+          if (payRange !== undefined ) {
+            console.log("Pay Range");
+            // searchQuery.$and.push({ payRange: { $regex: payRange, $options: 'i' } });
+            searchQuery.$and=[{ payRange: { $regex: payRange, $options: 'i' } }];
+          }
+         
+        }else{
+          console.log("HERE ELSE");
+          searchQuery = {
+            $or: [
+              { recruiter: { $in: matchingUserIds } },
+              { company: { $in: companyIds } },
+              { title: { $regex: search, $options: 'i' } },
+              { reportAddress: { $regex: search, $options: 'i' } },
+              { schedule: { $regex: search, $options: 'i' } },
+              { startDate: { $regex: search, $options: 'i' } },
+              { min: { $regex: search, $options: 'i' } },
+              { max: { $regex: search, $options: 'i' } },
+              { perMonth: { $regex: search, $options: 'i' } },
+              { supplementalPay: { $regex: search, $options: 'i' } },
+              { benefitsOffer: { $regex: search, $options: 'i' } },
+              { description: { $regex: search, $options: 'i' } },
+              { isCVRequired: { $regex: search, $options: 'i' } },
+              { isDeadlineApplicable: { $regex: search, $options: 'i' } },
+              { deadlineDate: { $regex: search, $options: 'i' } },
+              { noOfHiring: { $regex: search, $options: 'i' } },
+              { hiringSlot: { $regex: search, $options: 'i' } },
+              { aboutCompany: { $regex: search, $options: 'i' } },
+              { educationLevel: { $regex: search, $options: 'i' } },
+              { yearOfExperience: { $regex: search, $options: 'i' } },
+              { createdAt: { $regex: search, $options: 'i' } },
+              { createdBy: { $regex: search, $options: 'i' } },
+              { createdFrom: { $regex: search, $options: 'i' } },
+              { status: { $regex: search, $options: 'i' } },
+              { approveAdmin: { $regex: search, $options: 'i' } },
+              { updatedAt: { $regex: search, $options: 'i' } },
+            ],
+          };
+          if (datePosted === 'Today') {
+            console.log("date")
+            const today = new Date();
+            const startOfToday = new Date(today);
+            startOfToday.setHours(0, 0, 0, 0);
+            searchQuery.$and=[{
+              createdAt: {
+                $gte: startOfToday,
+                $lt: today,
+              }
+            }];
+          }
+          //This week
+          if (datePosted === 'This Week') {
+            console.log("This Week");
+            const today = new Date();
+            const startOfThisWeek = new Date(today);
+            startOfThisWeek.setDate(today.getDate() - today.getDay()); // Go back to the first day of the week (Sunday).
+            startOfThisWeek.setHours(0, 0, 0, 0);
+            const endOfThisWeek = new Date(startOfThisWeek);
+            endOfThisWeek.setDate(startOfThisWeek.getDate() + 7); // Go forward to the last day of the week (Saturday).
+
+            searchQuery.$and=[{
+              createdAt: {
+                $gte: startOfThisWeek,
+                $lt: today,
+              }
+            }];
+          }
+
+          if (datePosted === 'This Month') {
+            console.log("This Month");
+            const today = new Date();
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            endOfMonth.setHours(23, 59, 59, 999);
+
+            searchQuery.$and=[{
+              createdAt: {
+                $gte: startOfMonth,
+                $lt: today,
+              }
+            }];
+          }
+
+          if (datePosted === 'This Year') {
+            console.log("This Year");
+            const today = new Date();
+            const startOfYear = new Date(today.getFullYear(), 0, 1);
+            const endOfYear = new Date(today.getFullYear(), 11, 31);
+            endOfYear.setHours(23, 59, 59, 999);
+            
+            searchQuery.$and=[{
+              createdAt: {
+                $gte: startOfYear,
+                $lt: today,
+              }
+            }];
+          }
+          if (payRange !== undefined ) {
+            console.log("Pay Range");
+            // searchQuery.$and.push({ payRange: { $regex: payRange, $options: 'i' } });
+            searchQuery.$and=[{ payRange: { $regex: payRange, $options: 'i' } }];
+          }
+
+
+        }
+        
+      }
+
+      let sortQuery = {};
+      if (sort !== undefined) {
+        const sortParams = sort.split(':');
+        if (sortParams.length === 2) {
+          const [column, order] = sortParams;
+          sortQuery = { [column]: order === 'desc' ? -1 : 1 };
+        }
+      } else {
+        sortQuery = { createdAt: -1 }
+      }
+
+      page = page === undefined ? 1 : parseInt(page);
+      limit = limit === undefined ? 10 : parseInt(limit);
+      const skip = (page - 1) * limit;
+      const totalApplied = await this.applyModel.countDocuments();
+      const [activeCount, inactiveCount] = await Promise.all([
+        this.jobModel.countDocuments({ status: "Active" }),
+        this.jobModel.countDocuments({ status: "Inactive" }),
+      ]);
+
+      const [records, totalCount] = await Promise.all([
+        this.jobModel.aggregate([
+          {
+            $match: {
+              $and: [
+                searchQuery,
+               
+                {
+                  deletedAt: { $exists: false },
+
+                  approveAdmin:true,
+                  $or: [
+
+                    { approveAdmin: { $ne: null } },
+                    // { approveAdmin: true },
+                  ],
+                }
+              ]
+            }
+          },
+          ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
+          // { $skip: skip },
+          // { $limit: limit },
+          {
+            $lookup: {
+              from: 'recruiters',
+              localField: 'recruiter',
+              foreignField: '_id',
+              as: 'recruiter',
+            },
+          },
+          {
+            $lookup: {
+              from: 'companies',
+              localField: 'company',
+              foreignField: '_id',
+              as: 'company',
+            },
+          },
+          {
+            $addFields: {
+              recruiterName: {
+                $concat: [
+                  { $arrayElemAt: ['$recruiter.firstName', 0] },
+                  ' ',
+                  { $arrayElemAt: ['$recruiter.LastName', 0] }
+                ]
+              },
+              companyName: {
+                $arrayElemAt: ['$company.name', 0]
+              },
+              companyLogo: {
+                $arrayElemAt: ['$company.logo', 0]
+              },
+              createdOn: {
+                $dateToString: {
+                  date: "$createdAt",
+                  format: "%d-%m-%Y"
+                }
+              },
+              totalApplied: 500
+
+            }
+          },
+          {
+            $project: {
+              _id: 1,
+              reportToWork: 1,
+              isStartPlanned: 1,
+              user: 1,
+              title: 1,
+              reportAddress: 1,
+              jobType: 1,
+              schedule: 1,
+              startDate: 1,
+              payRange: 1,
+              min: 1,
+              max: 1,
+              perMonth: 1,
+              supplementalPay: 1,
+              benefitsOffer: 1,
+              description: 1,
+              isCVRequired: 1,
+              isDeadlineApplicable: 1,
+              deadlineDate: 1,
+              noOfHiring: 1,
+              hiringSlot: 1,
+              aboutCompany: 1,
+              educationLevel: 1,
+              yearOfExperience: 1,
+              createdAt: 1,
+              createdBy: 1,
+              createdFrom: 1,
+              status: 1,
+              approveAdmin: 1,
+              updatedAt: 1,
+              companyName: 1,
+              recruiterName: 1,
+              companyLogo:1,
+            },
+          },
+          {
+            $unwind: {
+              path: '$recruiter',
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          {
+            $unwind: {
+              path: '$company',
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+        ]).exec(),
+        this.jobModel.countDocuments({ deletedAt: { $exists: false } }),
+      ]);
+
+      if (records.length === 0) {
+        return new Response<any>(true, 200, 'No records available', {});
+      }
+      console.log("searchQuery")
+      console.log(searchQuery)
+      const jobIds = records.map((record: any) => record._id.toString());
+      const totalAppliedCounts = await Promise.all(jobIds.map((_id: string) => this.countApply(_id)));
+      records.forEach((record: any, index: number) => {
+        record.totalApplied = totalAppliedCounts[index];
+      });
+
+      const totalPages = Math.ceil(totalCount / limit);
+      const currentPage = page;
+      const output = {
+        records: records,
+        totalPages: totalPages !== null ? totalPages : 0,
+        currentPage: currentPage !== null ? currentPage : 0,
+        filterCount: records.length,
+        countRecords:records.length,
+        totalCount: totalCount,
+        activeStatus: activeCount,
+        inactiveStatus: inactiveCount,
+        totalApplicants: totalApplied,
+      };
+      return new Response<any>(true, 200, 'Read operation successful', output);
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
   async datatable(data: any): Promise<Response<any>> {
     try {
-      let { page, limit, search, sort,token } = data;
+      let { page, limit, search, sort,token,title,recruiter,company,address,status } = data;
       let errorMessage = '';
 
       if (page !== undefined && limit !== undefined) {
@@ -899,6 +1949,49 @@ export default class JobService extends Service {
           // createdBy: token,
         };
       }
+
+      if (  title !== undefined || recruiter !== undefined || company !== undefined || address !== undefined || status !== undefined) {
+        const andConditions = [];
+
+        if (title !== undefined) {
+          andConditions.push({ title: { $regex: title, $options: 'i' } });
+        }
+
+        if(recruiter !== undefined){
+          //For getting recruiterName from user 
+          const matchingUsers = await this.recruiterModel.find({
+            $or: [
+              { firstName: { $regex: recruiter, $options: 'i' } },
+              { LastName: { $regex: recruiter, $options: 'i' } },
+            ],
+          }).select('_id');
+          console.log(matchingUsers)
+          const matchingUserIds = matchingUsers.map((recruiter: any) => recruiter._id);
+          andConditions.push({ recruiter: { $in: matchingUserIds } });
+        }
+
+        if(company !==undefined){
+          //For getting companyName from company
+          const matchingCompany = await this.companyModel.find({
+            $or: [
+              { name: { $regex: company, $options: 'i' } },
+            ],
+          }).select('_id');
+          const companyIds = matchingCompany.map((company: any) => company._id);
+          andConditions.push({ company: { $in: companyIds } });
+        }
+
+        if(address !==undefined){
+          andConditions.push({ reportAddress: { $regex: address, $options: 'i' } });
+        }
+
+        if(status !==undefined){
+         
+        }
+
+        searchQuery = { $and: andConditions };
+      }
+
       if (token !== undefined) {
         searchQuery = {
           ...searchQuery,
@@ -936,8 +2029,8 @@ export default class JobService extends Service {
             }
           },
           ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
-          { $skip: skip },
-          { $limit: limit },
+          // { $skip: skip },
+          // { $limit: limit },
           {
             $lookup: {
               from: 'recruiters',
@@ -1285,7 +2378,7 @@ export default class JobService extends Service {
   // }
   async datatableAdmin(data: any): Promise<Response<any>> {
     try {
-      let { page, limit, search, sort,token } = data;
+      let { page, limit, search, sort,token,title,recruiter,company,address,status,approved } = data;
       let errorMessage = '';
 
       if (page !== undefined && limit !== undefined) {
@@ -1337,14 +2430,63 @@ export default class JobService extends Service {
             { recruiter: { $in: matchingUserIds } },
             { company: { $in: companyIds } },
             { reportAddress: { $regex: search, $options: 'i' } },
-            { status: { $regex: search, $options: 'i' } },
+            { status: { $eq: search} },
           ],
           // deletedAt: { $exists: false },
           // approveAdmin: { $exists: true, $eq: true },
           // createdBy: token,
         };
       }
+      if (  title !== undefined || recruiter !== undefined || company !== undefined || address !== undefined || status !== undefined) {
+        const andConditions = [];
 
+        if (title !== undefined) {
+          andConditions.push({ title: { $regex: title, $options: 'i' } });
+        }
+
+        if(recruiter !== undefined){
+          //For getting recruiterName from user 
+          const matchingUsers = await this.recruiterModel.find({
+            $or: [
+              { firstName: { $regex: recruiter, $options: 'i' } },
+              { LastName: { $regex: recruiter, $options: 'i' } },
+            ],
+          }).select('_id');
+          console.log(matchingUsers)
+          const matchingUserIds = matchingUsers.map((recruiter: any) => recruiter._id);
+          andConditions.push({ recruiter: { $in: matchingUserIds } });
+        }
+
+        if(company !==undefined){
+          //For getting companyName from company
+          const matchingCompany = await this.companyModel.find({
+            $or: [
+              { name: { $regex: company, $options: 'i' } },
+            ],
+          }).select('_id');
+          const companyIds = matchingCompany.map((company: any) => company._id);
+          andConditions.push({ company: { $in: companyIds } });
+        }
+
+        if(address !==undefined){
+          andConditions.push({ reportAddress: { $regex: address, $options: 'i' } });
+        }
+
+        if(status !==undefined && status !=="All"){
+          andConditions.push({ status: { $eq: status } });
+        }
+
+        if(approved !==undefined && approved !=="All"){
+          console.log("approved");
+          console.log(approved);
+          approved ==="true"?
+            andConditions.push({ approveAdmin: { $eq: true } }):
+            andConditions.push({ approveAdmin: { $eq: false } });  
+          
+        }
+
+        searchQuery = { $and: andConditions };
+      }
       let sortQuery = {};
       if (sort !== undefined) {
         const sortParams = sort.split(':');
@@ -1374,8 +2516,8 @@ export default class JobService extends Service {
             }
           },
           ...(Object.keys(sortQuery).length > 0 ? [{ $sort: sortQuery }] : []),
-          { $skip: skip },
-          { $limit: limit },
+          // { $skip: skip },
+          // { $limit: limit },
           {
             $lookup: {
               from: 'recruiters',
@@ -1500,7 +2642,7 @@ export default class JobService extends Service {
 
   async datatableResume(data: any): Promise<Response<any>> {
     try {
-      let { page, limit, search, sort,token } = data;
+      let { page, limit, search, sort,token,title,recruiter,description,company,address,status } = data;
       let errorMessage = '';
 
       if (page !== undefined && limit !== undefined) {
@@ -1533,6 +2675,31 @@ export default class JobService extends Service {
             { status: { $regex: search, $options: 'i' } },
           ],
         };
+      }
+
+      if (  title !== undefined||recruiter !== undefined) {
+        const andConditions = [];
+    
+        if (title !== undefined) {
+          andConditions.push({ title: { $regex: title, $options: 'i' } });
+        }
+        if(recruiter!== undefined) {
+          andConditions.push({ recruiterName: { $regex: recruiter, $options: 'i' } });
+        }
+        if(description!== undefined) {
+          andConditions.push({ description: { $regex: description, $options: 'i' } });
+        }
+        if(company!== undefined) {
+          andConditions.push({ companyName: { $regex: company, $options: 'i' } });
+        }
+        if(address!== undefined) {
+          andConditions.push({ reportAddress: { $regex: address, $options: 'i' } });
+        }
+        if(status!== undefined) {
+          andConditions.push({ status: { $eq: status} });
+        }
+
+        searchQuery = { $and: andConditions };
       }
       if (token !== undefined) {
         searchQuery = {
