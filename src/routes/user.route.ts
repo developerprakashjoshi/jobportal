@@ -19,6 +19,7 @@ route.get('/chat-user/:id',UserController.getChatUser)
 route.get('/',UserController.getUsers)
 
 route.get('/:id',UserController.getUser)
+route.get('/qualification/:id',UserController.getUserQualification)
 route.post('/forgot-password',validator(forgotPassword),UserController.forgotPassword)
 route.post('/email-otp',validator(emailOTP),UserController.emailOTP)
 route.post('/login',validator(loginUser),UserController.login)
@@ -38,6 +39,7 @@ route.patch('/email-verify/:id',validator(updateEmailVerify),UserController.upda
 route.patch('/:id',validator(registerUser),UserController.updateUser)
 route.delete('/curriculum-vitae/:id',UserController.deleteCurriculumVitae)
 route.delete('/:id',UserController.deleteUser)
+
 
 export default route;
 

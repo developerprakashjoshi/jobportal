@@ -200,7 +200,7 @@ export default class RecruiterService extends Service {
       let from=process.env.EMAIL_FROM
       let to=email
       let subject="Forgot Password"
-      let text=redirectUrl+"?token="+user._id
+      let text="Please click the given link to reset your password. "+redirectUrl+"?token="+user._id
     
       const message = {from,to,subject,text};
 
@@ -228,7 +228,7 @@ export default class RecruiterService extends Service {
   }
   async retrieveRecruiterByEmailandPassword(email: string,password:string): Promise<Response<any>> {
     try {
-      const record = await this.recruiteModel.findOne({email: email});
+      const record = await this.recruiteModel.findOne({email: email, deletedAt: null });
       if (!record) {
         const response={
           token:"",

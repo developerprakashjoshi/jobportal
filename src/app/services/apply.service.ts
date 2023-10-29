@@ -200,7 +200,7 @@ export default class ApplyService extends Service {
         notification.sender = data.userId
         notification.recipient = recordJob.createdBy
         notification.commonUser=recordJob.createdBy
-        notification.content = `${recordUser.firstName} ${recordUser.lastName} applied for the ${recordJob.title} position at ${new Date()}`
+        notification.content = `${recordUser.firstName} ${recordUser.lastName} applied for the ${recordJob.title} position at ${moment().format('YYYY-MM-DD')}`
         notification.type = "Job Apply"
         notification.createdAt = new Date();
         notification.createdBy = data.createdBy
@@ -327,10 +327,11 @@ export default class ApplyService extends Service {
         let notification = new Notification()
         notification.sender = recruiters._id
         notification.content = job.title
-        notification.content = `We regret to inform you that your profile has not been shortlisted for the ${job.title} position.`
+        notification.content = `Thank you for your interest in our company. We have reviewed your application for the  ${job.title} position and regret to
+        inform you that it has not been selected. Keep an eye out for future opportunities.`
         notification.createdAt = new Date();
         notification.createdBy = recruiters._id
-        notification.type = "The approval has not been done!."
+        notification.type = "Thank you for your interest!."
         notification.createdFrom = data.ip
         const resultNotification :any = await notification.save()
 
@@ -341,9 +342,9 @@ export default class ApplyService extends Service {
         let to = candidate.email;
         let subject = "The approval has not been approved!";
         let text = `Hello ${candidate.firstName} ${candidate.lastName},
-            We regret to inform you that your profile has not been shortlisted for the ${job.title} position. Thank you for your interest.
-            
-            Regards,
+        Thank you for your interest in our company. We have reviewed your application for the ${job.title}  position and regret to
+        inform you that it has not been selected. Keep an eye out for future opportunities.
+        Regards,
             Simandhar Education
           `
         const message = { from, to, subject, text };

@@ -24,6 +24,12 @@ static async getUser(req: Request, res: Response) {
   const records = await userService.retrieve(id)
   res.status(records.statusCode).json(records);
 }
+static async getUserQualification(req: Request, res: Response) {
+  let id = req.params.id
+  let userService=new UserService();
+  const records = await userService.retrieveQualification(id)
+  res.status(records.statusCode).json(records);
+}
 static async getChatUser(req: Request, res: Response) {
   let id = req.params.id
   let userService=new UserService();

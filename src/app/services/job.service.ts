@@ -148,6 +148,8 @@ export default class JobService extends Service {
       notification.createdFrom = data.ip
       const resultNotification :any = await notification.save()
 
+      const recordRecruiter = await this.recruiterModel.findById(data.userId);
+
       let from=process.env.EMAIL_FROM
       let to="jobpostings@simandhareducation.com"
       let cc = ["usha.s@simandhareducation.com","jagriti.d@simandhareducation.com"]; // Add the CC email address here
@@ -166,6 +168,22 @@ export default class JobService extends Service {
 
       const resultEmail = await Transporter.sendMail(message);
       console.log(resultEmail)
+
+      let fromRec=process.env.EMAIL_FROM
+      let toRec=recordRecruiter.email
+      let subjectRec="New job has been posted!."
+      let textRec=`Hi ${recordRecruiter.firstName} ${recordRecruiter.LastName},
+
+      A new job posting for the ${data.title} position has been submitted for your review. Please wait for approval.
+      
+      Regards,
+      Simandhar Education
+      `  
+
+      const messageRec = {fromRec,toRec,subjectRec,textRec};
+      console.log(messageRec)
+
+      const resultEmailRec = await Transporter.sendMail(message);
 
       // const searchResult = await this.searchModel.aggregate([
       //   {
@@ -317,6 +335,11 @@ export default class JobService extends Service {
 
       if (typeof data.approveAdmin === "boolean") {
         jobs.approveAdmin = data.approveAdmin
+        if(data.approveAdmin===true){
+          jobs.status='Active'
+        }else{
+          jobs.status='Inactive'
+        }
       }
 
       jobs.updatedAt = new Date()
@@ -2501,16 +2524,28 @@ export default class JobService extends Service {
       page = page === undefined ? 1 : parseInt(page);
       limit = limit === undefined ? 10 : parseInt(limit);
       const skip = (page - 1) * limit;
-      const totalApplied = await this.applyModel.countDocuments();
-      const [activeCount, inactiveCount] = await Promise.all([
-        this.jobModel.countDocuments({ status: "Active", deletedAt: null, createdBy:token }),
-        this.jobModel.countDocuments({ status: "Inactive", deletedAt: null, createdBy:token }),
-      ]);
+      // const totalApplied = await this.applyModel.countDocuments();
+      let activeCount, inactiveCount,totalApplied;
+      if(token !==undefined){
+          [activeCount, inactiveCount,totalApplied] = await Promise.all([
+          this.jobModel.countDocuments({ status: "Active", deletedAt: null, createdBy:token }),
+          this.jobModel.countDocuments({ status: "Inactive", deletedAt: null, createdBy:token }),
+          this.applyModel.countDocuments({deletedAt: null, createdBy:token }),
+        ]);
+      }else{
+        [activeCount, inactiveCount,totalApplied] = await Promise.all([
+          this.jobModel.countDocuments({ status: "Active", deletedAt: null }),
+          this.jobModel.countDocuments({ status: "Inactive", deletedAt: null}),
+          this.applyModel.countDocuments({deletedAt: null}),
+        ]);
+      }
+
       const [records, totalCount] = await Promise.all([
         this.jobModel.aggregate([
           {
             $match: {
               $and: [
+                { deletedAt: { $eq: null} },
                 searchQuery,
               ]
             }

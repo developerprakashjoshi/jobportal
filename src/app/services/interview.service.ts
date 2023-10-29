@@ -5,21 +5,25 @@ import Response from "@libs/response";
 import Interview from "@models/interview.schema";
 import User from "@models/interview.schema";
 import Jobs from "@models/job.schema";
+import Company from "@models/company.schema";
 import Notification from "@models/notification.schema";
 import { Transporter } from "@config/mail";
 import { ObjectId } from "mongodb";
+
 
 export default class InterviewService extends Service {
   private interviewModel: any;
   private userModel: any;
   private jobModel: any;
   private notificationModel: any;
+  private companyModel: any;
   constructor() {
     super();
     this.jobModel = Jobs;
     this.interviewModel = AppDataSource.model("Interview");
     this.userModel = AppDataSource.model("User");
     this.notificationModel = AppDataSource.model("Notification");
+    this.companyModel = AppDataSource.model("Company");
   }
   async count(): Promise<Response<any[]>> {
     try {
@@ -107,40 +111,66 @@ export default class InterviewService extends Service {
 
   async create(data: any): Promise<Response<any[]>> {
     try {
-      const existingInterview = await Interview.findOne({
-        user: data.candidateId,
-        job: data.jobId,
-      });
 
-      if (existingInterview) {
+        const today = moment();
+        const inputDateTime = moment(`${data.interviewDate} ${data.interviewTime}`, 'YYYY-MM-DD HH:mm a');
+
+        // return new Response<any[]>(false, 400, inputDateTime.toString());
+        if (inputDateTime.isSameOrBefore(today)) {
+            return new Response<any[]>(false, 400, "Invalid interview date or time");
+        }
+        // const today = new Date();
+        // const currentTime = today.getHours() * 60 + today.getMinutes(); // Current time in minutes
+
+        // const inputDate = new Date(data.interviewDate);
+        // const inputTime = this.parseTime(data.interviewTime); // Parse input time to minutes
+
+        // if (inputDate < today || (inputDate.getTime() === today.getTime() && inputTime <= currentTime)) {
+        //     return new Response<any[]>(false, 400, "Invalid interview date or time");
+        // }
+
+        const existingInterview = await Interview.findOne({
+            user: data.candidateId,
+            job: data.jobId,
+        });
+
+        if (existingInterview) {
+            return new Response<any[]>(
+                false,
+                400,
+                "Record already exists for candidateId and jobId"
+            );
+        }
+
+        let interview = new Interview();
+        interview.user = data.candidateId;
+        interview.job = data.jobId;
+        interview.candidateName = data.candidateName;
+        interview.interviewDate = data.interviewDate;
+        interview.interviewTime = data.interviewTime;
+        interview.interviewLink = data.interviewLink;
+        interview.description = data.description;
+        interview.createdAt = new Date();
+        interview.createdBy = data.createdBy;
+        interview.createdFrom = data.ip;
+        const result: any = await interview.save();
         return new Response<any[]>(
-          false,
-          400,
-          "Record already exists for candidateId and jobId"
+            true,
+            201,
+            "Insert operation successful",
+            result
         );
-      }
-      let interview = new Interview();
-      interview.user = data.candidateId;
-      interview.job = data.jobId;
-      interview.candidateName = data.candidateName;
-      interview.interviewDate = data.interviewDate;
-      interview.interviewTime = data.interviewTime;
-      interview.interviewLink = data.interviewLink;
-      interview.description = data.description;
-      interview.createdAt = new Date();
-      interview.createdBy = data.createdBy;
-      interview.createdFrom = data.ip;
-      const result: any = await interview.save();
-      return new Response<any[]>(
-        true,
-        201,
-        "Insert operation successful",
-        result
-      );
     } catch (error: any) {
-      return new Response<any[]>(false, 400, error.message);
+        return new Response<any[]>(false, 400, error.message);
     }
-  }
+}
+
+// Helper function to parse time and convert it to minutes
+ parseTime(timeString: string): number {
+    const [hours, minutes] = timeString.split(':').map(part => parseInt(part));
+    return hours * 60 + minutes;
+}
+
 
   async update(pid: string, data: any) {
     try {
@@ -222,7 +252,12 @@ export default class InterviewService extends Service {
       let candidateEmail = checkCandidateId[0].email;
       const jobId = result.job.toString();
       const job = await this.jobModel.findById(jobId);
-
+      console.log("job")
+      console.log(job)
+      console.log("job.companyId")
+      console.log(job.companyId)
+      const company = await this.companyModel.findById(job.company);
+      console.log(company)
       if (result.status === "true") {
         let notification = new Notification();
         notification.sender = checkCandidateId[0]._id;
@@ -239,8 +274,9 @@ export default class InterviewService extends Service {
         let subject = "Interview Schedule";
         // let text = `Dear ${checkCandidateId[0].firstName} ${checkCandidateId[0].lastName}, Your interview has been scheduled for [${interview.interviewDate}/${interview.interviewTime}/${interview.interviewLink}]. Please prepare for the interview and arrive on time. Best regards`;
         let text = `Hello ${checkCandidateId[0].firstName} ${checkCandidateId[0].lastName},
+        Good news! An interview has been scheduled for the ${job.title} position for ${company.name}. Please find the interview details  ${interview.interviewLink} and ${moment(interview.interviewDate).format('DD MMM YYYY')} at ${interview.interviewTime} .
 
-        Good news! An interview has been scheduled for the ${job.title} position. Check your email for detailed information.
+       
 
         Regards,
         Simandhar Education`;

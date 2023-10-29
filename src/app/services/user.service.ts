@@ -11,6 +11,7 @@ import Apply from '@models/apply.schema';
 import Account from '@models/account.schema';
 import Recruiter from '@models/recruiter.schema';
 import Jobs from '@models/job.schema';
+import Interview from '@models/interview.schema';
 import SearchEngine from '@libs/meili.search';
 import { ObjectId } from 'mongodb';
 import moment from 'moment';
@@ -21,13 +22,15 @@ export default class UserService extends Service {
   private recruiterModel: any;
   private applyModel: any;
   private jobsModel: any;
+  private interviewModel: any;
   constructor() {
     super();
     this.searchEngine = new SearchEngine()
     this.userModel = User;
     this.recruiterModel = Recruiter;
     this.applyModel = Apply;
-    this.jobsModel=Jobs
+    this.jobsModel=Jobs;
+    this.interviewModel=Interview
   }
 
   async count(): Promise<Response<any>> {
@@ -185,6 +188,26 @@ export default class UserService extends Service {
     }
   }
 
+  async retrieveQualification(pid: string): Promise<Response<any>> {
+    try {
+      console.log(pid);
+      const isValidObjectId = ObjectId.isValid(pid);
+      if (!isValidObjectId) {
+        return new Response<any>(false, 400, 'Invalid ObjectId', undefined);
+      }
+      const record = await this.userModel.findById(pid);
+      if (!record) {
+        return new Response<any>(true, 200, 'Record not available', record);
+      }
+      const output= record.education.map((row:any)=>{
+        return row.course
+      })
+      return new Response<any>(true, 200, 'Read operation successful', output);
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
+
   async retrieveByUser(name: string): Promise<any> {
     try {
       const records = await this.userModel.findOne({ name: name });
@@ -206,7 +229,7 @@ export default class UserService extends Service {
 
   async retrieveUserByEmailandPassword(email: string,password:string): Promise<Response<any>> {
     try {
-      const record = await this.userModel.findOne({email: email});
+      const record = await this.userModel.findOne({email: email, deletedAt: null });
       if (!record) {
         const response={
           token:"",
@@ -321,7 +344,7 @@ export default class UserService extends Service {
       let from=process.env.EMAIL_FROM
       let to=email
       let subject="Forgot Password"
-      let text=redirectUrl+"?token="+user._id
+      let text="Please click the given link to reset your password. "+redirectUrl+"?token="+user._id
     
       const message = {from,to,subject,text};
 
@@ -908,6 +931,7 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
   }
 
   async datatableAdmin(data: any): Promise<Response<any>> {
+    console.log("HERE")
     try {
       let { page, limit, search, sort,name,email,job,designation,city } = data;
       let errorMessage = '';
@@ -1030,27 +1054,41 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
                 ]
               },
              
+              // experience: {
+              //   $subtract: [
+              //     {
+              //       $toInt: {
+              //         $cond: [
+              //           { $and: [{ $ne: [{ $arrayElemAt: ["$experiences.toYear", 0] }, ""] }, { $ne: [{ $arrayElemAt: ["$experiences.toYear", 0] }, null] }] },
+              //           { $arrayElemAt: ["$experiences.toYear", 0] },
+              //           0
+              //         ]
+              //       }
+              //     },
+              //     {
+              //       $toInt: {
+              //         $cond: [
+              //           { $and: [{ $ne: [{ $arrayElemAt: ["$experiences.fromYear", 0] }, ""] }, { $ne: [{ $arrayElemAt: ["$experiences.fromYear", 0] }, null] }] },
+              //           { $arrayElemAt: ["$experiences.fromYear", 0] },
+              //           0
+              //         ]
+              //       }
+              //     }
+              //   ]
+              // }
               experience: {
-                $subtract: [
-                  {
-                    $toInt: {
-                      $cond: [
-                        { $and: [{ $ne: [{ $arrayElemAt: ["$experiences.toYear", 0] }, ""] }, { $ne: [{ $arrayElemAt: ["$experiences.toYear", 0] }, null] }] },
-                        { $arrayElemAt: ["$experiences.toYear", 0] },
-                        0
-                      ]
-                    }
-                  },
-                  {
-                    $toInt: {
-                      $cond: [
-                        { $and: [{ $ne: [{ $arrayElemAt: ["$experiences.fromYear", 0] }, ""] }, { $ne: [{ $arrayElemAt: ["$experiences.fromYear", 0] }, null] }] },
-                        { $arrayElemAt: ["$experiences.fromYear", 0] },
-                        0
+                $sum: {
+                  $map: {
+                    input: "$experiences",
+                    as: "experience",
+                    in: {
+                      $subtract: [
+                        { $toInt: "$$experience.toYear" },
+                        { $toInt: "$$experience.fromYear" }
                       ]
                     }
                   }
-                ]
+                }
               }
             }
           },
@@ -1339,8 +1377,7 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
   async datatable(data: any): Promise<Response<any>> {
     try {
       let { page, limit, search, sort, token,name,email,title,status } = data;
-      console.log('datatable')
-      console.log(data);
+   
         let errorMessage = '';
         if (page !== undefined && limit !== undefined) {
             if (isNaN(page) || !Number.isInteger(Number(page)) || isNaN(limit) || !Number.isInteger(Number(limit))) {
@@ -1439,14 +1476,17 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
             {
                 $unwind: '$userDetails'
             },
-            {
-                $lookup: {
-                    from: 'interviews',
-                    localField: 'appliedDetails.user',
-                    foreignField: 'user',
-                    as: 'interviewsDetails'
-                }
-            },
+            // {
+            //     $lookup: {
+            //         from: 'interviews',
+            //         localField: 'appliedDetails.user',
+            //         foreignField: 'user',
+            //         as: 'interviewsDetails'
+            //     }
+            // },
+            // {
+            //   $unwind: '$interviewsDetails'
+            // },
             {
                 $match: searchQuery // Apply search query
             },
@@ -1462,14 +1502,14 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
             {
                 $project: {
                     _id: 1,
-
+                    jobId:'$appliedDetails.job',
                     title: 1,
                     reportToWork: 1,
                     reportAddress:1,
                     createdBy: 1,
                     candidateId: '$userDetails._id',
                     applyId: '$appliedDetails._id',
-                    interviewId: { $arrayElemAt: ["$interviewsDetails._id", 0] },
+                    // interviewId: { $arrayElemAt: ["$interviewsDetails._id", 0] },
                     appliedDate: '$appliedDetails.createdAt',
                     appliedStatus: '$appliedDetails.status',
                     firstName: '$userDetails.firstName',
@@ -1484,24 +1524,36 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
                     // city: "Shilling",
                     // experience: "10",
                     // userDetails: 1,
-                    interviewsStatus: {
-                      $cond: {
-                          if: { $isArray: "$interviewsDetails" },
-                          then: { $arrayElemAt: ["$interviewsDetails.status", 0] },
-                          else: "false"
-                      }
-                  },
+                  //   interviewsStatus: {
+                  //     $cond: {
+                  //         if: { $isArray: "$interviewsDetails" },
+                  //         then: { $arrayElemAt: ["$interviewsDetails.status", 0] },
+                  //         else: "false"
+                  //     }
+                  // },
                 }
             }
         ]);
-        const totalCount =records.length
+        // console.log("records");
+        // console.log(records);
+        // console.log("HERE");
+        const outputResult = await Promise.all(records.map(async (record: any) => {
+          const resultInterview = await this.interviewModel.findOne({ user: record.candidateId, job: record.jobId });
+          if(resultInterview){
+           return { ...record, interviewId: resultInterview._id, interviewsStatus: resultInterview.status }; 
+          }else{
+            return { ...record}
+          }
+          
+      }));
+        const totalCount =outputResult.length
         const totalPages = Math.ceil(totalCount / limit);
         const currentPage = page;
         const output = {
-          records: records,
+          records: outputResult,
           totalPages: totalPages !== null ? totalPages : 0,
           currentPage: currentPage !== null ? currentPage : 0,
-          filterCount: records.length,
+          filterCount: outputResult.length,
           totalCount: totalCount,
         };
         
@@ -1511,7 +1563,7 @@ async  updateWorkExperience(pid: string, data: any[]): Promise<Response<any>> {
 
         return new Response<any>(true, 200, 'Jobs and applied documents matching the specified job user', output);
     } catch (error: any) {
-        return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+        return new Response<any>(false, 500, 'Internal Server Error111', undefined, undefined, error.message);
     }
 }
 

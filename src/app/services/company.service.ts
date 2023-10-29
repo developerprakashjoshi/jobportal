@@ -3,6 +3,7 @@ import Service from "@libs/service";
 import moment from "moment";
 import Response from "@libs/response"
 import  Company  from "@models/company.schema";
+import Jobs from "@models/job.schema";
 import StorageService from "@services/storage.service";
 import * as AWS from 'aws-sdk';
 import { ObjectId } from 'mongodb';
@@ -15,9 +16,11 @@ const s3 = new AWS.S3({
 });
 export default class CompanyService extends Service {
   private companyModel: any;
+  private jobModel: any;
   constructor() {
     super()
     this.companyModel = AppDataSource.model('Company');
+    this.jobModel = Jobs;
   }
   async count(): Promise<Response<any[]>> {
     try {
@@ -219,6 +222,20 @@ export default class CompanyService extends Service {
       company.deleteFrom = data.ip;
 
       const result = await company.save();
+
+      const filter = { company: pid }; // Specify the filter criteria
+
+        const update = {
+            $set: {
+                deletedAt: moment().toDate(), // Set the deletedAt field to the current timestamp
+                deleteBy: data.deleteBy, // Set the deleteBy field
+                deleteFrom: data.ip // Set the deleteFrom field
+            }
+        };
+
+        // Update the documents that match the filter criteria
+        const resultUpdate = await this.jobModel.updateMany(filter, update);
+
       
 
       return new Response<any[]>(true, 200, "Delete operation successful", company);
