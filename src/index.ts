@@ -6,7 +6,7 @@ import cors from "cors";
 import morgan from "morgan";
 import bodyParser from "body-parser";
 import jwt from "jsonwebtoken";
-import {passportJwt} from "@middlewares/passport-jwt.middleware";
+import passportJwt from "@middlewares/passport-jwt.middleware";
 
 dotenv.config();
 
@@ -50,7 +50,19 @@ import searchRoute from '@routes/search.route';
 import { errorHandler, notFound } from "@libs/error.handler";
 
 const app: Application = express();
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',');
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    if (origin && allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+};
+
 app.use(cors());
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 

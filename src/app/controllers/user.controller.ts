@@ -50,6 +50,12 @@ static async login(req: Request, res: Response) {
   const result = await userService.retrieveUserByEmailandPassword(email,password)
   res.status(result.statusCode).json(result);
 }
+static async adminLogin(req: Request, res: Response) {
+  const {email,password}=req.body
+  let userService=new UserService();
+  const result = await userService.adminLogin(email,password)
+  res.status(result.statusCode).json(result);
+}
 static async updatePassword(req: Request, res: Response) {
   const {id,password}=req.body
   let userService=new UserService();

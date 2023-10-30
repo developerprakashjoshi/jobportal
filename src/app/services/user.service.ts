@@ -2,7 +2,7 @@ import AppDataSource from '@config/mongoose';
 import Service from '@libs/service';
 import Response from '@libs/response';
 import {Transporter} from "@config/mail";
-
+import https from 'https';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken' 
 
@@ -15,6 +15,7 @@ import Interview from '@models/interview.schema';
 import SearchEngine from '@libs/meili.search';
 import { ObjectId } from 'mongodb';
 import moment from 'moment';
+import axios,{ AxiosRequestConfig } from 'axios';
 
 export default class UserService extends Service {
   private userModel: any;
@@ -245,13 +246,13 @@ export default class UserService extends Service {
         };
         return new Response<any>(false, 401, 'Incorrect credentials', response);
       }
-      const jwtPayload = JSON.stringify(record._id);
+      const jwtPayload = JSON.stringify({_id: record._id,type: 'candidate'});
       const token = jwt.sign(jwtPayload, process.env.JWT_SECRET_KEY || '');
       const response=record.toObject()
       delete response.password
       delete response.addresses
       delete response.education
-      delete response.experiences
+      delete response.experiences 
       delete response.certificates
       delete response.createdAt
       delete response.createdBy
@@ -259,6 +260,53 @@ export default class UserService extends Service {
       delete response.__v
       response.token=token
       response.authentication=true
+      return new Response<any>(true, 200, 'Authentication successful', response);
+    } catch (error: any) {
+      return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);
+    }
+  }
+
+  async  fetchData(email:string,password:string) {
+    const data = JSON.stringify({
+      email: email,
+      password: password,
+    });
+  
+    const agent = new https.Agent({
+      rejectUnauthorized: false, // Disable SSL certificate verification
+    });
+
+    const config: AxiosRequestConfig = {
+      method: 'post',
+      url: 'https://simapi.simandhareducation.com/userAuth/auth/studentSignIn',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: data,
+      httpsAgent: agent,
+    };
+  
+    try {
+      const response = await axios.request(config);
+      console.log("RESPONSE")
+      console.log(response.data);
+      return response.data;
+    } catch (error) {
+      console.log("ERRRO")
+      console.error(error);
+      return null;
+    }
+  }
+  
+
+  async adminLogin(email: string,password:string): Promise<Response<any>> {
+    try {
+      let response=await this.fetchData(email, password);
+      if(response !==null){
+         const jwtPayload = JSON.stringify({_id: "admin",type: 'admin'});
+         const token = jwt.sign(jwtPayload, process.env.JWT_SECRET_KEY || '');
+         response.token=token;
+      }
       return new Response<any>(true, 200, 'Authentication successful', response);
     } catch (error: any) {
       return new Response<any>(false, 500, 'Internal Server Error', undefined, undefined, error.message);

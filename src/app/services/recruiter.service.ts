@@ -244,7 +244,7 @@ export default class RecruiterService extends Service {
         };
         return new Response<any>(false, 401, 'Incorrect credentials', response);
       }
-      const jwtPayload = JSON.stringify(record._id);
+      const jwtPayload = JSON.stringify({_id: record._id,type: 'recruiter'});
       const token = jwt.sign(jwtPayload, process.env.JWT_SECRET_KEY || '');
       const response=record.toObject()
       delete response.password

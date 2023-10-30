@@ -180,10 +180,10 @@ export default class JobService extends Service {
       Simandhar Education
       `  
 
-      const messageRec = {fromRec,toRec,subjectRec,textRec};
+      const messageRec = {from:fromRec,to:toRec,subject:subjectRec,text:textRec};
       console.log(messageRec)
 
-      const resultEmailRec = await Transporter.sendMail(message);
+      const resultEmailRec = await Transporter.sendMail(messageRec);
 
       // const searchResult = await this.searchModel.aggregate([
       //   {
