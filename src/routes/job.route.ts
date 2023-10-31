@@ -7,14 +7,14 @@ import {createJob,updateJob,deleteJob,updateApproveStatus,jobUpdateStatus} from 
 const route=express.Router();
 
 route.get('/datatable',passportJwt,JobController.datatable)
-route.get('/search',passportJwt,JobController.searchJob)
+route.get('/search',JobController.searchJob)
 route.get('/search-job',JobController.searchApprovedJob)
 route.get('/resume-datatable',passportJwt,JobController.datatableResume)
 route.get('/admin-datatable',passportJwt,JobController.datatableAdmin)
 route.get('/search-test',passportJwt,JobController.searchApprovedTest)
 route.get('/count',passportJwt,JobController.count)
-route.get('/',passportJwt,JobController.getJobs)
-route.get('/:id',passportJwt,JobController.getJob)
+route.get('/',JobController.getJobs)
+route.get('/:id',JobController.getJob)
 route.patch('/status/:id',passportJwt,validator(jobUpdateStatus),JobController.jobUpdateStatus)
 route.delete('/:id',passportJwt,validator(deleteJob),JobController.deleteJob)
 route.post('/',passportJwt,validator(createJob),JobController.createJob)

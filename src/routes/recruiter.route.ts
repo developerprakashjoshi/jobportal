@@ -16,7 +16,7 @@ route.post('/forgot-password',validator(forgotPassword),RecruiterController.forg
 route.post('/email-otp',validator(emailOTP),RecruiterController.emailOTP)
 route.post('/login',validator(loginRecruiter),RecruiterController.login)
 route.post('/',validator(createRecruiter),RecruiterController.createRecruiter)
-route.patch('/password/:id',passportJwt,validator(updatePassword),RecruiterController.updatePassword)
+route.patch('/password/:id',validator(updatePassword),RecruiterController.updatePassword)
 route.patch('/phone-verify/:id',passportJwt,validator(updatePhoneVerify),RecruiterController.updatePhoneVerify)
 route.patch('/email-verify/:id',passportJwt,validator(updateEmailVerify),RecruiterController.updatePhoneVerify)
 route.patch('/:id',passportJwt,validator(updateRecruiter),RecruiterController.updateRecruiter)
