@@ -327,7 +327,14 @@ export default class RecruiterService extends Service {
       recruiter.createdBy = data.createdBy
       recruiter.createdFrom = data.ip
       const result:any = await recruiter.save()
-      return new Response<any[]>(true, 201, "Insert operation successful", result);
+
+      const jwtPayload = JSON.stringify({_id: result._id,type: 'candidate'});
+      const token = jwt.sign(jwtPayload, process.env.JWT_SECRET_KEY || '');
+      const response=result.toObject()
+      response.token=token
+      response.authentication=true
+
+      return new Response<any[]>(true, 201, "Insert operation successful", response);
     } catch (error: any) {
       return new Response<any[]>(false, 400, error.message);
     }
