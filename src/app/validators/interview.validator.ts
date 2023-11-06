@@ -3,10 +3,12 @@ import Joi from 'joi'
 export const createInterview=Joi.object({
     candidateId:Joi.string().required(),
     jobId: Joi.string().required(),
+    interviewMode:Joi.string().required(),
     candidateName:Joi.string().required(),
     interviewDate:Joi.string().required(),
     interviewTime:Joi.string().required(),
-    interviewLink:Joi.string().required(),
+    interviewLink:Joi.string().optional(),
+    interviewAddress:Joi.string().optional(),
     description:Joi.string().required(),
     createdBy:Joi.string().required(),
 

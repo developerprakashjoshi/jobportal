@@ -9,7 +9,7 @@ const route=express.Router();
 route.get('/search',passportJwt, SearchController.search);
 route.get('/datatable',passportJwt,SearchController.datatable)
 route.get('/count',passportJwt,SearchController.count)
-route.get('/',passportJwt,SearchController.getSearchs)
+route.get('/',SearchController.getSearchs)
 route.get('/:id',passportJwt,SearchController.getSearch)
 route.post('/',passportJwt,validator(createSearch),SearchController.createSearch)
 route.patch('/:id',passportJwt,validator(updateSearch),SearchController.updateSearch)

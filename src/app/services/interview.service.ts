@@ -146,9 +146,11 @@ export default class InterviewService extends Service {
         interview.user = data.candidateId;
         interview.job = data.jobId;
         interview.candidateName = data.candidateName;
+        interview.interviewMode = data.interviewMode;
         interview.interviewDate = data.interviewDate;
         interview.interviewTime = data.interviewTime;
         interview.interviewLink = data.interviewLink;
+        interview.interviewAddress = data.interviewAddress;
         interview.description = data.description;
         interview.createdAt = new Date();
         interview.createdBy = data.createdBy;
@@ -190,6 +192,9 @@ export default class InterviewService extends Service {
       if (data.candidateName) {
         interview.candidateName = data.candidateName;
       }
+      if (data.interviewMode) {
+        interview.interviewMode = data.interviewMode;
+      }
       if (data.interviewDate) {
         interview.interviewDate = data.interviewDate;
       }
@@ -198,6 +203,9 @@ export default class InterviewService extends Service {
       }
       if (data.interviewLink) {
         interview.interviewLink = data.interviewLink;
+      }
+      if (data.interviewAddress) {
+        interview.interviewAddress = data.interviewAddress;
       }
       if (data.description) {
         interview.description = data.description;
@@ -556,9 +564,11 @@ export default class InterviewService extends Service {
             {
               $project: {
                 candidateName: 1,
+                interviewMode: 1,
                 interviewDate: 1,
                 interviewTime: 1,
                 interviewLink: 1,
+                interviewAddress: 1,
                 description: 1,
                 createdAt: 1,
                 createdBy: 1,

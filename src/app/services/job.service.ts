@@ -358,7 +358,7 @@ export default class JobService extends Service {
         let notification = new Notification()
         notification.sender = "64fe71896db3464f6df3eb4e"
         notification.content = result.title
-        notification.content = `${recruiter.firstName} ${recruiter.LastName},\n\nYour job has been approved.`
+        notification.content = `${recruiter.firstName} ${recruiter.LastName},\n\nYour ${jobId.title} job has been approved.`
         notification.createdAt = new Date();
         notification.createdBy = result.createdBy
         notification.type = "The approval has been done!."
@@ -369,7 +369,7 @@ export default class JobService extends Service {
       let from=process.env.EMAIL_FROM
       let to=recruiter.email
       let subject="The approval has been done!."
-      let text = `Hello ${recruiter.firstName} ${recruiter.LastName},\n\nYour job has been approved.`;
+      let text = `Hello ${recruiter.firstName} ${recruiter.LastName},\n\nYour ${jobId.title} job has been approved.`;
 
       const message = {from,to,subject,text};
 
@@ -379,7 +379,7 @@ export default class JobService extends Service {
         let notification = new Notification()
         notification.sender = "64fe71896db3464f6df3eb4e"
         notification.content = result.title
-        notification.content = `${recruiter.firstName} ${recruiter.LastName},\n\nYour job has not been approved.`
+        notification.content = `${recruiter.firstName} ${recruiter.LastName},\n\nYour ${jobId.title} job has not been approved.`
         notification.createdAt = new Date();
         notification.createdBy = result.createdBy
         notification.type = "The approval has not been done!."
@@ -389,7 +389,7 @@ export default class JobService extends Service {
       let from=process.env.EMAIL_FROM
       let to=recruiter.email
       let subject="The approval has not been done!."
-      let text = `Hello ${recruiter.firstName} ${recruiter.LastName},\n\nYour job has not been approved.`;
+      let text = `Hello ${recruiter.firstName} ${recruiter.LastName},\n\nYour ${jobId.title} job has not been approved.`;
 
       const message = {from,to,subject,text};
 
@@ -2893,7 +2893,7 @@ export default class JobService extends Service {
   }
   async countApply(jobId: string) {
     try {
-      const result = await this.applyModel.countDocuments({ job: new ObjectId(jobId) });
+      const result = await this.applyModel.countDocuments({ job: new ObjectId(jobId),deleted_at:null });
       return result
     } catch (error: any) {
       return error.message;
