@@ -8,7 +8,7 @@ export const createRecruiter=Joi.object({
     location:Joi.string().required(),
     phoneNumber:Joi.number().required(),
     companyName:Joi.string().required(),
-    employeeSize:Joi.string().required(),
+    employeeSize:Joi.string().optional(),
     selectIndustry:Joi.string().required(),
     yourDesignation:Joi.string().required(),
     isHiringManager:Joi.number().required(),

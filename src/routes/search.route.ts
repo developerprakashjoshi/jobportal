@@ -11,7 +11,7 @@ route.get('/datatable',passportJwt,SearchController.datatable)
 route.get('/count',passportJwt,SearchController.count)
 route.get('/',SearchController.getSearchs)
 route.get('/:id',passportJwt,SearchController.getSearch)
-route.post('/',passportJwt,validator(createSearch),SearchController.createSearch)
+route.post('/',validator(createSearch),SearchController.createSearch)
 route.patch('/:id',passportJwt,validator(updateSearch),SearchController.updateSearch)
 route.delete('/:id',passportJwt,validator(deleteSearch),SearchController.deleteSearch)
 
