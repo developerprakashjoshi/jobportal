@@ -7,8 +7,8 @@ export const createInterview=Joi.object({
     candidateName:Joi.string().required(),
     interviewDate:Joi.string().required(),
     interviewTime:Joi.string().required(),
-    interviewLink:Joi.string().optional(),
-    interviewAddress:Joi.string().optional(),
+    interviewLink:Joi.string().optional().allow('',null),
+    interviewAddress:Joi.string().optional().allow('',null),
     description:Joi.string().required(),
     createdBy:Joi.string().required(),
 

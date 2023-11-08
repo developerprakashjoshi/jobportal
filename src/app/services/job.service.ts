@@ -174,7 +174,7 @@ export default class JobService extends Service {
       let subjectRec="New job has been posted!."
       let textRec=`Hi ${recordRecruiter.firstName} ${recordRecruiter.LastName},
 
-      A new job posting for the ${data.title} position has been submitted for your review. Please wait for approval.
+      A new job posting for the ${data.title} position has been submitted for you review. Please wait for approval.
       
       Regards,
       Simandhar Education
@@ -863,7 +863,7 @@ export default class JobService extends Service {
   }
   async searchApprovedJob(data: any): Promise<Response<any>> {
     try {
-      let { page, limit, search, sort,skills,designation,company,experience,location,jobType,datePosted,payRange,salaryEstimates,others } = data;
+      let { page, limit, search, sort,skills,designation,company,experience,location,jobType,datePosted,payRange,salaryEstimates,others,token } = data;
       console.log(data)
       let errorMessage = '';
 
@@ -891,10 +891,11 @@ export default class JobService extends Service {
       if (
         skills!==undefined || designation!==undefined ||company !==undefined ||  others!==undefined ||
         experience !==undefined || location !==undefined ||jobType !==undefined|| 
-        datePosted !==undefined || payRange !==undefined || salaryEstimates !==undefined
+        datePosted !==undefined || payRange !==undefined || salaryEstimates !==undefined || token !==undefined
       ) {
+        console.log("HERE......")
         const andConditions = [];
-
+        const tokenObjectId =  new ObjectId(token);
         if (others !== undefined) {
           const matchingCompany = await this.companyModel.find({
             $or: [
@@ -1009,8 +1010,16 @@ export default class JobService extends Service {
           andConditions.push({ jobType: { $regex: jobType, $options: 'i' } });
         }
 
+        if (token !== undefined ) {
+          console.log("TOKEN");
+          console.log(token)
+          // searchQuery.$and.push({ payRange: { $regex: payRange, $options: 'i' } });
+          andConditions.push({ recruiter: { $eq: tokenObjectId  }});
+        }
+
 
         searchQuery = { $and: andConditions };
+        console.log(searchQuery)
       }
 
       if (search !== undefined) {
@@ -1130,6 +1139,13 @@ export default class JobService extends Service {
             // searchQuery.$and.push({ payRange: { $regex: payRange, $options: 'i' } });
             searchQuery.$and=[{ payRange: { $regex: payRange, $options: 'i' } }];
           }
+          const tokenObjectId =  new ObjectId(token);
+          if (token !== undefined ) {
+            console.log("TOKEN");
+            console.log(token)
+            // searchQuery.$and.push({ payRange: { $regex: payRange, $options: 'i' } });
+            searchQuery.$and=[({ recruiter: { $eq: tokenObjectId  }})];
+          }
          
         }else{
           console.log("HERE ELSE");
@@ -1226,6 +1242,13 @@ export default class JobService extends Service {
             console.log("Pay Range");
             // searchQuery.$and.push({ payRange: { $regex: payRange, $options: 'i' } });
             searchQuery.$and=[{ payRange: { $regex: payRange, $options: 'i' } }];
+          }
+          const tokenObjectId =  new ObjectId(token);
+          if (token !== undefined ) {
+            console.log("TOKEN");
+            console.log(token)
+            // searchQuery.$and.push({ payRange: { $regex: payRange, $options: 'i' } });
+            searchQuery.$and=[({ recruiter: { $eq: tokenObjectId  }})];
           }
 
 
@@ -2893,7 +2916,7 @@ export default class JobService extends Service {
   }
   async countApply(jobId: string) {
     try {
-      const result = await this.applyModel.countDocuments({ job: new ObjectId(jobId),deleted_at:null });
+      const result = await this.applyModel.countDocuments({ job: new ObjectId(jobId),deletedAt:null });
       return result
     } catch (error: any) {
       return error.message;
