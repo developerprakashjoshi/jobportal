@@ -9,7 +9,7 @@ export const createInterview=Joi.object({
     interviewTime:Joi.string().required(),
     interviewLink:Joi.string().optional().allow('',null),
     interviewAddress:Joi.string().optional().allow('',null),
-    description:Joi.string().required(),
+    description:Joi.string().optional().allow('',null),
     createdBy:Joi.string().required(),
 
 }).options({ abortEarly: false })

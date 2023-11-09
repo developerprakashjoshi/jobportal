@@ -4,6 +4,7 @@ import moment from "moment";
 import Response from "@libs/response"
 import  Company  from "@models/company.schema";
 import Jobs from "@models/job.schema";
+import Apply from '@models/apply.schema';
 import StorageService from "@services/storage.service";
 import * as AWS from 'aws-sdk';
 import { ObjectId } from 'mongodb';
@@ -17,10 +18,12 @@ const s3 = new AWS.S3({
 export default class CompanyService extends Service {
   private companyModel: any;
   private jobModel: any;
+  private applyModel: any;
   constructor() {
     super()
     this.companyModel = AppDataSource.model('Company');
     this.jobModel = Jobs;
+    this.applyModel = Apply;
   }
   async count(): Promise<Response<any[]>> {
     try {
@@ -206,43 +209,51 @@ export default class CompanyService extends Service {
   }
   async delete(pid: string, data: any) {
     try {
-      const isValidObjectId = ObjectId.isValid(pid);
-      if (!isValidObjectId) {
+      if (!ObjectId.isValid(pid)) {
         return new Response<any[]>(false, 400, "Invalid ObjectId", undefined);
       }
-      let id = new ObjectId(pid);
-
-      const company = await this.companyModel.findOne(id);
+  
+      const companyId = new ObjectId(pid);
+      
+      const company = await this.companyModel.findOneAndUpdate(
+        { _id: companyId },
+        {
+          $set: {
+            deletedAt: moment().toDate(),
+            deleteBy: data.deleteBy,
+            deleteFrom: data.ip
+          }
+        },
+        { new: true }
+      );
+  
       if (!company) {
         return new Response<any[]>(true, 404, "Company not found", company);
       }
-
-      company.deletedAt = moment().toDate(); // Set the deleted_at field to the current timestamp
-      company.deleteBy = data.deleteBy;
-      company.deleteFrom = data.ip;
-
-      const result = await company.save();
-
-      const filter = { company: pid }; // Specify the filter criteria
-
-        const update = {
-            $set: {
-                deletedAt: moment().toDate(), // Set the deletedAt field to the current timestamp
-                deleteBy: data.deleteBy, // Set the deleteBy field
-                deleteFrom: data.ip // Set the deleteFrom field
-            }
-        };
-
-        // Update the documents that match the filter criteria
-        const resultUpdate = await this.jobModel.updateMany(filter, update);
-
-      
-
+  
+      const jobFilter = { company: pid };
+      const jobUpdate = {
+        $set: {
+          deletedAt: moment().toDate(),
+          deleteBy: data.deleteBy,
+          deleteFrom: data.ip
+        }
+      };
+  
+      await this.jobModel.updateMany(jobFilter, jobUpdate);
+  
+      const records = await this.jobModel.find({ company: pid }).select('_id');
+      const jobIds = records.map((record: any) => record._id);
+  
+      const jobApplyFilter = { job: { $in: jobIds } };
+      await this.jobModel.updateMany(jobApplyFilter, jobUpdate);
+  
       return new Response<any[]>(true, 200, "Delete operation successful", company);
     } catch (error: any) {
       return new Response<any[]>(false, 400, error.message);
     }
   }
+  
 
   // async datatable(data: any): Promise<Response<any>> {
   //   try {
